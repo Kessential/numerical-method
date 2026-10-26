@@ -1,0 +1,793 @@
+% MAU LOI GIAI — cac cho dang (hai dau nho hon) ten_khoa (hai dau lon hon) duoc docs/loi_giai/sinh_loi_giai.py thay bang so lieu tinh tu interpolation/*.py
+% Khong sua loi_giai_bai_tap.tex truc tiep: sua file nay roi chay lai sinh_loi_giai.py.
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,margin=1.8cm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage{array,booktabs,adjustbox,enumitem,xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\setlength{\fboxsep}{1.5pt}
+\newcommand{\ob}[1]{\fbox{$#1$}}
+\newsavebox{\klbox}
+\newenvironment{ketluan}
+  {\par\medskip\noindent\begin{lrbox}{\klbox}\begin{minipage}{\dimexpr\linewidth-12pt\relax}\textbf{Kết luận. }}
+  {\end{minipage}\end{lrbox}\setlength{\fboxsep}{5pt}\fbox{\usebox{\klbox}}\par\medskip}
+\newenvironment{thuattoan}[1]
+  {\par\medskip\noindent\textbf{Thuật toán: #1}\begin{description}[leftmargin=1.6em,labelindent=0pt,itemsep=1pt,topsep=3pt,font=\normalfont\bfseries]}
+  {\end{description}}
+\newcommand{\pp}[1]{\par\smallskip\noindent\textbf{#1}\ }
+\titleformat{\section}{\large\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\setlist{itemsep=1pt,topsep=2pt}
+\pagestyle{fancy}\fancyhf{}\rhead{Phương pháp số MI3042 — Bài tập 3--23}\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\allowdisplaybreaks
+\setlength{\emergencystretch}{3em}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries LỜI GIẢI BÀI TẬP PHƯƠNG PHÁP SỐ (MI3042)}\\[2pt]
+{\large Câu 3 -- Câu 23 \quad(Chương 1: Xấp xỉ hàm số)}
+\end{center}
+
+\noindent\textbf{Quy ước chung.}
+\begin{itemize}
+\item Đa thức $P_n(x)=a_nx^n+\dots+a_1x+a_0$: chỉ số $=$ số mũ; vector hệ số viết \textbf{từ bậc cao xuống bậc thấp} $(a_n;\dots;a_0)$, vd $3x^3-2x-1\leftrightarrow(3;\,0;\,-2;\,-1)$.
+\item Trong các bảng (tỷ) sai phân, \textbf{các ô được chọn để lập đa thức được khoanh khung}, vd \ob{0.1234}. Trong bảng Horner, ô khung là số dư $r_j$. Đa thức bậc $\ge6$ thì bảng Horner viết dọc: mỗi hàng là một luỹ thừa, mỗi lần chia $j$ gồm cột $c\cdot b$ ($=c\times$ ô $b$ ở hàng ngay trên, cùng lần chia) và cột $b$ ($=$ ô cùng hàng ở cột kết quả lần chia trước $+$ ô $c\cdot b$).
+\item Kết quả cuối giữ 10 chữ số có nghĩa; sai phân của số liệu cách đều được ghi đúng (không làm tròn) vì là hiệu các số có cùng số chữ số thập phân.
+\item Mọi số liệu được tính bằng các chương trình trong thư mục \texttt{interpolation/} (thuật toán tương ứng trong \texttt{docs/thuat\_toan/}) và đã đối chiếu với \texttt{numpy}/\texttt{scipy} (dòng ``Kiểm tra'' ở cuối mỗi câu).
+\end{itemize}
+
+%=====================================================================
+\section{Câu 3. Mốc nội suy tối ưu}
+
+\subsection{a) Xây dựng công thức $n$ mốc nội suy tối ưu trên $[-1,1]$ và trên $[a,b]$}
+
+\pp{Đặt bài toán.} Nội suy $f$ bởi đa thức $P$ bậc $\le n-1$ qua $n$ mốc $x_0,\dots,x_{n-1}\in[a,b]$ có sai số
+\[ f(x)-P(x)=\frac{f^{(n)}(\xi)}{n!}\,w_n(x),\qquad w_n(x)=\prod_{i=0}^{n-1}(x-x_i). \]
+Phần phụ thuộc vào cách chọn mốc là $w_n$ — một đa thức bậc $n$ có hệ số cao nhất bằng 1 (đa thức monic). Mốc \emph{tối ưu} là mốc làm $\max_{x\in[a,b]}|w_n(x)|$ nhỏ nhất.
+
+\pp{Đa thức Chebyshev.} $T_n(t)=\cos(n\arccos t)$, $t\in[-1,1]$. Từ $\cos((n+1)\theta)+\cos((n-1)\theta)=2\cos\theta\cos n\theta$ có $T_{n+1}(t)=2tT_n(t)-T_{n-1}(t)$, $T_0=1$, $T_1=t$, nên quy nạp được: $T_n$ là đa thức bậc $n$ với hệ số cao nhất $2^{n-1}$ ($n\ge1$). Ngoài ra
+\begin{itemize}
+\item $|T_n(t)|\le1$ trên $[-1,1]$ và $T_n(\tau_k)=(-1)^k$ tại $n+1$ điểm $\tau_k=\cos\frac{k\pi}{n}$, $k=0..n$ (luân phiên dấu);
+\item $T_n$ có $n$ nghiệm phân biệt $t_i=\cos\dfrac{(2i+1)\pi}{2n}$, $i=0..n-1$, đều thuộc $(-1,1)$.
+\end{itemize}
+
+\pp{Định lý.} Mọi đa thức monic $p$ bậc $n$ thoả $\max_{[-1,1]}|p|\ge2^{1-n}$; dấu bằng đạt tại $\tilde T_n=2^{1-n}T_n$.
+
+\emph{Chứng minh.} $\tilde T_n$ monic và $\max|\tilde T_n|=2^{1-n}$. Giả sử có $p$ monic bậc $n$ với $\max|p|<2^{1-n}$. Đặt $q=\tilde T_n-p$: hai số hạng $t^n$ triệt tiêu nên $\deg q\le n-1$. Tại $\tau_k$: $\tilde T_n(\tau_k)=(-1)^k2^{1-n}$ còn $|p(\tau_k)|<2^{1-n}$, nên $q(\tau_k)$ cùng dấu $(-1)^k$, $k=0..n$. Vậy $q$ đổi dấu $n$ lần, có ít nhất $n$ nghiệm trong $(-1,1)$, mà $\deg q\le n-1$ $\Rightarrow q\equiv0\Rightarrow p=\tilde T_n$, mâu thuẫn với $\max|p|<2^{1-n}$. $\square$
+
+\pp{Trên $[-1,1]$.} $w_n$ monic nên $\max|w_n|$ nhỏ nhất khi $w_n=\tilde T_n$, tức các mốc là nghiệm của $T_n$:
+\[ \boxed{t_i=\cos\frac{(2i+1)\pi}{2n},\ i=0,\dots,n-1,\qquad \min\max_{[-1,1]}|w_n|=\frac{1}{2^{n-1}}.} \]
+
+\pp{Trên $[a,b]$.} Đổi biến $x=\dfrac{a+b}{2}+\dfrac{b-a}{2}t$ ánh xạ $[-1,1]$ lên $[a,b]$. Khi đó $x-x_i=\frac{b-a}{2}(t-t_i)$ nên $w_n(x)=\left(\frac{b-a}{2}\right)^n\prod(t-t_i)$; bài toán trên $[a,b]$ tương đương bài toán trên $[-1,1]$:
+\[ \boxed{x_i=\frac{a+b}{2}+\frac{b-a}{2}\cos\frac{(2i+1)\pi}{2n},\qquad \min\max_{[a,b]}|w_n|=\left(\frac{b-a}{2}\right)^n\frac{1}{2^{n-1}}=\frac{(b-a)^n}{2^{2n-1}},} \]
+và khi đó $|f(x)-P(x)|\le\dfrac{M_n}{n!}\cdot\dfrac{(b-a)^n}{2^{2n-1}}$, $M_n=\max_{[a,b]}|f^{(n)}|$.
+
+\pp{Sắp tăng dần.} $\cos$ giảm trên $[0,\pi]$ nên $t_i$ ở trên giảm theo $i$. Dùng $t_i=-\cos\frac{(2i+1)\pi}{2n}=\cos\frac{(2(n-1-i)+1)\pi}{2n}$ (cùng tập nghiệm, đánh số ngược) thì $t_0<t_1<\dots<t_{n-1}$.
+
+\subsection{b) Thuật toán xác định $n$ mốc tối ưu sắp tăng dần trên $[a,b]$}
+\begin{thuattoan}{Mốc nội suy tối ưu}
+\item[Input:] số mốc $n\in\mathbb N$, $n\ge1$; đoạn $[a,b]$.
+\item[Output:] vector $x=(x_0,\dots,x_{n-1})$, $x_0<\dots<x_{n-1}$; $W=\max_{[a,b]}|w_n|$.
+\item[Bước 0 — Xử lý dữ liệu:] chuẩn hoá số (dấu trừ Unicode, dấu phẩy thập phân); $n$ phải nguyên $\ge1$; $a=b$ $\Rightarrow$ dừng, báo lỗi; $a>b$ $\Rightarrow$ đổi chỗ $a\leftrightarrow b$ và báo.
+\item[Bước 1 — Đổi biến:] $p:=\frac{a+b}{2}$, $q:=\frac{b-a}{2}$.
+\item[Bước 2 — Với $i=0,1,\dots,n-1$:] 2.1: $t_i:=-\cos\dfrac{(2i+1)\pi}{2n}$; \quad 2.2: $x_i:=p+q\,t_i$.
+\item[Bước 3 — Độ lệch nhỏ nhất:] $W:=\dfrac{(b-a)^n}{2^{2n-1}}$ (tính qua $\log$ khi $n$ lớn để không tràn số).
+\item[Bước 4 — Kết thúc:] trả về $x$, $W$.
+\end{thuattoan}
+
+\subsection{c) Áp dụng}
+\pp{$n=9$, $[a,b]=[-1,1]$:} $p=<<c3_p_a>>$, $q=<<c3_q_a>>$.
+<<c3_bang_a>>
+<<c3_x_a>>
+$W=\dfrac{2^9}{2^{17}}=<<c3_W_a>>$, nên $|f(x)-P(x)|\le M_9\cdot\dfrac{W}{9!}=M_9\cdot<<c3_E_a>>$.
+
+\pp{$n=12$, $[a,b]=[3,6]$:} $p=<<c3_p_b>>$, $q=<<c3_q_b>>$.
+<<c3_bang_b>>
+<<c3_x_b>>
+$W=\dfrac{3^{12}}{2^{23}}=<<c3_W_b>>$, nên $|f(x)-P(x)|\le M_{12}\cdot\dfrac{W}{12!}=M_{12}\cdot<<c3_E_b>>$.
+
+\noindent\textit{Kiểm tra:} $t_i$ trùng nghiệm của $T_n$ tính bằng \texttt{numpy.polynomial.chebyshev.chebroots} (sai lệch $<<c3_kt_a>>$ và $<<c3_kt_b>>$).
+
+%=====================================================================
+\section{Câu 4. Sơ đồ Horner: giá trị, phép chia, đạo hàm}
+
+\subsection{a) Giá trị $P_n(c)$ \quad b) Chia $P_n(x)$ cho $(x-c)$}
+\pp{Cơ sở.} Viết $P_n(x)=(x-c)Q_{n-1}(x)+r$, $Q_{n-1}=b_{n-1}x^{n-1}+\dots+b_0$. Đồng nhất hệ số: $a_n=b_{n-1}$, $a_i=b_{i-1}-c\,b_i$ ($1\le i\le n-1$), $a_0=r-c\,b_0$; và $r=P_n(c)$. Do đó tính giá trị chính là lấy số dư của phép chia (một sơ đồ cho cả a và b), chỉ tốn $n$ phép nhân, $n$ phép cộng.
+\begin{thuattoan}{Horner chia (giá trị, thương, số dư)}
+\item[Input:] $a=(a_n,\dots,a_0)$, $a_n\neq0$; số $c$.
+\item[Output:] thương $b=(b_{n-1},\dots,b_0)$ và số dư $r=P_n(c)$.
+\item[Bước 0 — Xử lý dữ liệu:] đọc dãy số (khoảng trắng/\texttt{;}, dấu trừ Unicode, dấu phẩy thập phân, bỏ ô chữ và báo); NaN/$\pm\infty$ $\Rightarrow$ dừng; bỏ các hệ số 0 ở đầu tới khi $a_n\ne0$ (mọi hệ số 0 $\Rightarrow$ $P\equiv0$, dừng).
+\item[Bước 1 — Bậc 0:] nếu $n=0$: $Q\equiv0$, $r:=a_0$, dừng.
+\item[Bước 2 — Khởi tạo:] $b_{n-1}:=a_n$.
+\item[Bước 3 — Với $i=n-1,\dots,1$:] $b_{i-1}:=a_i+c\,b_i$.
+\item[Bước 4 — Số dư:] $r:=a_0+c\,b_0$; trả về $b$, $r$. \quad (Chỉ cần giá trị: chỉ giữ $r$.)
+\end{thuattoan}
+
+\subsection{c) Đạo hàm cấp $k$ của $P_n$ tại $c$}
+\pp{Cơ sở.} Chia liên tiếp cho $(x-c)$: $P_n=(x-c)Q^{(1)}+r_0$, $Q^{(1)}=(x-c)Q^{(2)}+r_1$, … nên
+$P_n(x)=r_0+r_1(x-c)+r_2(x-c)^2+\dots+r_n(x-c)^n$. Đây là khai triển Taylor tại $c$, do đó
+\[ r_j=\frac{P_n^{(j)}(c)}{j!}\quad\Longrightarrow\quad P_n^{(j)}(c)=j!\,r_j. \]
+\begin{thuattoan}{Đạo hàm cấp $0..k$ tại $c$ (Horner chia lặp)}
+\item[Input:] $a=(a_n,\dots,a_0)$; $c$; cấp $k\in\mathbb N$.
+\item[Output:] $r=(r_0,\dots,r_K)$, $K=\min(k,n)$; $v=(v_0,\dots,v_k)$, $v_j=P_n^{(j)}(c)$.
+\item[Bước 0 — Xử lý dữ liệu:] như câu a; $k$ phải nguyên $\ge0$.
+\item[Bước 1 — Khởi tạo:] $K:=\min(k,n)$; vector làm việc $b_i:=a_i$, $i=0..n$.
+\item[Bước 2 — Với $j=0,\dots,K$:] 2.1 (chia cho $x-c$): với $i=n-1,\dots,j$: $b_i:=b_i+c\,b_{i+1}$; \quad 2.2: $r_j:=b_j$, $v_j:=j!\,r_j$.
+\item[Bước 3 — Cấp lớn hơn bậc:] $v_j:=0$ với $j=K+1..k$; trả về $r$, $v$.
+\end{thuattoan}
+
+\subsection{d) Áp dụng: $P(x)=3x^3-2x-1$, $a=(3;\,0;\,-2;\,-1)$}
+\pp{Phương pháp.} Dùng sơ đồ Horner chia lặp (câu c): lần chia thứ nhất cho ngay $P(c)$ (số dư) và thương (câu a, b); các lần chia sau cho $P^{(j)}(c)=j!\,r_j$, $j=1,2,3$ ($P$ bậc 3 nên $P^{(j)}\equiv0$ với $j\ge4$). Mỗi lần chia: hàng ``$c=\dots$'' là $c\times$(số vừa tính ở hàng kết quả, cột bên trái), hàng ``$j$'' $=$ hệ số $+$ hàng ``$c$''.
+
+\pp{$c=0$:}
+<<c4_bang_0>>
+$P(0)=r_0=<<c4_P_0>>$; thương $Q_2$ có hệ số $<<c4_Qv_0>>$, tức $3x^3-2x-1=(x-0)(3x^2-2)+(-1)$. Đạo hàm:
+<<c4_dh_0>>
+
+\pp{$c=2.15$:}
+<<c4_bang_1>>
+$P(2.15)=r_0=<<c4_P_1>>$; thương và dư:
+<<c4_Q_1>>
+\[ 3x^3-2x-1=(x-2.15)\,Q_2(x)+<<c4_P_1>>. \]
+Đạo hàm: $r=<<c4_r_1>>$,
+<<c4_dh_1>>
+\begin{ketluan}
+$c=0$: $P(0)=-1$; thương $(3;\,0;\,-2)$, dư $-1$; $(P,P',P'',P''')(0)=<<c4_v_0>>$.\\
+$c=2.15$: $P(2.15)=<<c4_P_1>>$; thương $<<c4_Qv_1>>$, dư $<<c4_P_1>>$;
+\[ (P,P',P'',P''')(2.15)=<<c4_v_1>>;\qquad P^{(j)}(c)=0\ \text{với } j\ge4. \]
+\end{ketluan}
+\noindent\textit{Kiểm tra} với \texttt{numpy.polyval/polyder}: sai lệch $<<c4_kt_0>>$, $<<c4_kt_1>>$.
+
+%=====================================================================
+\section{Câu 5. Phép nhân Horner, đa thức $w_{n+1}(x)$}
+
+\subsection{a) Nhân $P_n(x)$ với $(x-c)$}
+\pp{Cơ sở.} $(x-c)\sum_{i=0}^na_ix^i=\sum_{i=0}^{n}a_ix^{i+1}-\sum_{i=0}^nc\,a_ix^i$ nên hệ số $d_i$ của $x^i$ trong tích là $d_{n+1}=a_n$, $d_i=a_{i-1}-c\,a_i$ ($1\le i\le n$), $d_0=-c\,a_0$.
+\begin{thuattoan}{Horner nhân}
+\item[Input:] $a=(a_n,\dots,a_0)$; $c$. \quad\textbf{Output:} $d=(d_{n+1},\dots,d_0)$ — hệ số của $P_n(x)(x-c)$.
+\item[Bước 0 — Xử lý dữ liệu:] như câu 4a.
+\item[Bước 1:] $d_{n+1}:=a_n$. \quad\textbf{Bước 2 — Với $i=n,\dots,1$:} $d_i:=a_{i-1}-c\,a_i$. \quad\textbf{Bước 3:} $d_0:=-c\,a_0$; trả về $d$.
+\end{thuattoan}
+
+\subsection{b) Hệ số của $w_{n+1}(x)=\prod_{k=0}^{n}(x-x_k)$}
+\begin{thuattoan}{Bảng tích (nhân Horner lặp)}
+\item[Input:] mốc $x_0,\dots,x_n$. \quad\textbf{Output:} $p=(1,p_n,\dots,p_0)$, $w_{n+1}(x)=x^{n+1}+p_nx^n+\dots+p_0$.
+\item[Bước 0 — Xử lý dữ liệu:] đọc dãy mốc như câu 4a; cần ít nhất 1 mốc.
+\item[Bước 1 — Khởi tạo:] đa thức hằng $p_0:=1$.
+\item[Bước 2 — Với $i=0,\dots,n$] (nhân thêm $(x-x_i)$ theo câu a, làm tại chỗ):
+2.1: $p_{i+1}:=p_i$; \quad 2.2: với $l=i,\dots,1$: $p_l:=p_{l-1}-x_i\,p_l$; \quad 2.3: $p_0:=-x_i\,p_0$.
+\item[Bước 3 — Kết thúc:] trả về $p$ (luôn có hệ số cao nhất bằng 1).
+\end{thuattoan}
+
+\subsection{c) Áp dụng: $x_k=2;\ 2.4;\ 2.7;\ 3;\ 3.1;\ 3.4$}
+\pp{Phương pháp.} Bảng tích: mỗi hàng là vector hệ số sau khi nhân thêm $(x-x_k)$ bằng Horner nhân (câu a); hàng cuối là $w_6$.
+<<c5_bang>>
+\begin{ketluan}
+$w_6(x)=(x-2)(x-2.4)(x-2.7)(x-3)(x-3.1)(x-3.4)$ có vector hệ số $<<c5_p>>$, tức
+<<c5_w>>
+\end{ketluan}
+\noindent\textit{Kiểm tra} với \texttt{numpy.poly}: sai lệch $<<c5_kt>>$.
+
+%=====================================================================
+\section{Câu 6. Thuật toán đa thức nội suy Lagrange}
+
+\pp{Công thức.} Với bộ điểm $(x_i,y_i)$, $i=0..n$, mốc phân biệt:
+\[ P_n(x)=\sum_{i=0}^{n}y_iL_i(x),\quad L_i(x)=\prod_{j\ne i}\frac{x-x_j}{x_i-x_j}=\frac{1}{D_i}\cdot\frac{w_{n+1}(x)}{x-x_i},\quad D_i=\prod_{j\ne i}(x_i-x_j),\quad w_{n+1}(x)=\prod_{j=0}^{n}(x-x_j), \]
+sai số $|f(x)-P_n(x)|\le\dfrac{M_{n+1}}{(n+1)!}|w_{n+1}(x)|$. Ý tưởng: lập $w_{n+1}$ một lần (bảng tích), mỗi $\frac{w_{n+1}(x)}{x-x_i}$ là \emph{thương} của phép chia Horner (dư bằng 0).
+
+\begin{thuattoan}{Đa thức nội suy Lagrange dạng chính tắc}
+\item[Input:] $x=(x_0,\dots,x_n)$, $y=(y_0,\dots,y_n)$.
+\item[Output:] $a=(a_n,\dots,a_0)$ với $P_n(x)=\sum a_lx^l$; các $D_i$.
+\item[Bước 0 — Xử lý dữ liệu:] đọc hàng $x$, hàng $y$ (bỏ nhãn, chuẩn hoá dấu trừ Unicode và dấu phẩy thập phân, bỏ ký tự lạ); hai hàng khác số ô $\Rightarrow$ dừng; ô rỗng/chữ/NaN/$\pm\infty$ $\Rightarrow$ loại cả cặp và báo; mốc trùng: cùng $y$ giữ 1, khác $y$ ít (chênh $\le10^{-3}\max(1,\max|y|)$) lấy trung bình, khác nhiều $\Rightarrow$ dừng (không có đa thức qua cả hai điểm); sắp tăng theo $x$.
+\item[Bước 1 — Bảng tích:] hệ số $p$ của $w_{n+1}$ theo câu 5b.
+\item[Bước 2 — Khởi tạo:] $a_l:=0$, $l=0..n$.
+\item[Bước 3 — Với $i=0..n$:] 3.1 (bảng chia): chia $w_{n+1}$ cho $(x-x_i)$ bằng Horner (câu 4b) $\to$ thương $q^{(i)}=(q^{(i)}_n,\dots,q^{(i)}_0)$; \ 3.2: $D_i:=\prod_{j\ne i}(x_i-x_j)$; \ 3.3 (cộng dồn): $a_l:=a_l+\frac{y_i}{D_i}q^{(i)}_l$, $l=0..n$.
+\item[Bước 4 — Kết thúc:] trả về $a$, $D$.
+\end{thuattoan}
+\begin{thuattoan}{Giá trị $P_n(\bar x)$ không lập đa thức}
+\item[Bước 1:] nếu $\bar x=x_m$: trả về $y_m$. \quad\textbf{Bước 2:} $w:=\prod_i(\bar x-x_i)$. \quad\textbf{Bước 3:} $S:=\sum_i\dfrac{y_i}{D_i(\bar x-x_i)}$. \quad\textbf{Bước 4:} $P_n(\bar x):=w\,S$.
+\end{thuattoan}
+
+%=====================================================================
+\section{Câu 7. Đa thức nội suy Lagrange của bảng số liệu}
+
+\pp{Phương pháp.} 6 mốc phân biệt $\Rightarrow$ $P_5$ bậc $\le5$. Dùng thuật toán câu 6: bảng tích $w_6$, các hệ số $D_i$, bảng chia $w_6/(x-x_i)$, rồi $P_5=\sum\frac{y_i}{D_i}\cdot\frac{w_6(x)}{x-x_i}$.
+
+\pp{Bảng tích $w_6(x)=\prod_{i=0}^5(x-x_i)$:}
+<<c7_bang_tich>>
+\pp{Hệ số $D_i$:}
+<<c7_bang_D>>
+\pp{Bảng chia} (hàng $x_i$: hệ số thương $q^{(i)}=w_6(x)/(x-x_i)$; hàng tổng $=\sum_i\frac{y_i}{D_i}q^{(i)}$):
+<<c7_bang_chia>>
+\begin{ketluan}
+Vector hệ số của $P_5$ (từ bậc 5 xuống):
+<<c7_a>>
+<<c7_P>>
+\end{ketluan}
+\noindent\textit{Kiểm tra:} $\max|P_5(x_i)-y_i|=<<c7_kt>>$; hệ số so với giải hệ Vandermonde bằng \texttt{numpy}: sai lệch tương đối $<<c7_kt2>>$.
+
+%=====================================================================
+\section{Câu 8. Đa thức nội suy Newton tiến (mốc bất kỳ)}
+
+\pp{Phương pháp.} Các mốc $1.2;\,1.5;\,1.7;\,1.9;\,2.1;\,2.4$ \textbf{không cách đều} ($h$ lần lượt $0.3;\,0.2;\,0.2;\,0.2;\,0.3$) nên dùng \textbf{tỷ sai phân}. Newton tiến lấy các tỷ sai phân trên \emph{đường chéo} của bảng tam giác dưới.
+
+\pp{Công thức.}
+\begin{align*}
+f[x_{i-k},\dots,x_i]&=\frac{f[x_{i-k+1},\dots,x_i]-f[x_{i-k},\dots,x_{i-1}]}{x_i-x_{i-k}},\\
+P_5(x)&=\sum_{k=0}^{5}c_k\,\omega_k(x),\quad c_k=f[x_0,\dots,x_k],\quad \omega_k(x)=\prod_{i=0}^{k-1}(x-x_i),\\
+f^{(j)}(\bar x)&\approx P_5^{(j)}(\bar x)=j!\,r_j\ \text{(Horner chia lặp)},\qquad |f(\bar x)-P_5(\bar x)|\le\frac{M_6}{6!}|w_6(\bar x)|.
+\end{align*}
+
+\subsection{a) Đa thức Newton tiến}
+\pp{Bảng tỷ sai phân} (hàng $i$, cột TSP$k$ $=f[x_{i-k},\dots,x_i]$; đường chéo khung $=c_k$):
+<<c8_bang_tsp>>
+Dạng Newton tiến:
+<<c8_dang_newton>>
+\pp{Rút gọn về dạng chính tắc bằng bảng tích} ($\omega_k=\omega_{k-1}\cdot(x-x_{k-1})$ — Horner nhân; $P_5=\sum c_k\omega_k$ cộng theo cột):
+<<c8_bang_tich>>
+
+\subsection{b) Tính gần đúng $f(1.8)$, $f'''(1.8)$}
+Horner chia lặp $P_5$ tại $c=1.8$ (ô khung là $r_j$):
+<<c8_horner>>
+$f(1.8)\approx P_5(1.8)=r_0=<<c8_f>>$; \quad $f'''(1.8)\approx P_5'''(1.8)=3!\,r_3=6\cdot<<c8_rk>>=<<c8_fk>>$.
+
+\pp{Sai số:} $|w_6(1.8)|=<<c8_w_tich>>=<<c8_w>>$, nên $|f(1.8)-P_5(1.8)|\le\dfrac{M_6}{6!}\cdot<<c8_w>>=M_6\cdot<<c8_E>>$.
+\begin{ketluan}
+<<c8_P>>
+Vector hệ số (từ bậc 5 xuống):
+<<c8_a>>
+$f(1.8)\approx<<c8_f>>$, \qquad $f'''(1.8)\approx<<c8_fk>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} $\max|P_5(x_i)-y_i|=<<c8_kt>>$; $f,\dots,f'''$ tại $1.8$ so với \texttt{numpy.polyder}: $<<c8_kt2>>$.
+
+%=====================================================================
+\section{Câu 9. Đa thức nội suy Newton lùi (mốc bất kỳ)}
+
+\pp{Phương pháp.} Mốc $2.2;\,2.3;\,2.6;\,2.7;\,3;\,3.2$ không cách đều $\Rightarrow$ tỷ sai phân. Newton lùi xuất phát từ $x_5=3.2$, kết nạp mốc từ phải sang trái; hệ số là các tỷ sai phân trên \emph{hàng cuối} của bảng.
+
+\pp{Công thức.}
+\[ P_5(x)=\sum_{k=0}^{5}c_k\,\omega_k(x),\quad c_k=f[x_{5-k},\dots,x_5],\quad \omega_k(x)=\prod_{i=0}^{k-1}(x-x_{5-i}),\qquad f^{(j)}(\bar x)\approx j!\,r_j. \]
+
+\subsection{a) Đa thức Newton lùi}
+\pp{Bảng tỷ sai phân} (hàng cuối khung $=c_k$):
+<<c9_bang_tsp>>
+Dạng Newton lùi:
+<<c9_dang_newton>>
+\pp{Bảng tích} ($\omega_k=\omega_{k-1}\cdot(x-x_{6-k})$):
+<<c9_bang_tich>>
+
+\subsection{b) Tính gần đúng $f(2.4)$, $f^{(4)}(2.4)$}
+<<c9_horner>>
+$f(2.4)\approx r_0=<<c9_f>>$; \quad $f^{(4)}(2.4)\approx4!\,r_4=24\cdot<<c9_rk>>=<<c9_fk>>$.
+
+\pp{Sai số:} $|w_6(2.4)|=<<c9_w_tich>>=<<c9_w>>$, $|f(2.4)-P_5(2.4)|\le M_6\cdot<<c9_E>>$.
+\begin{ketluan}
+<<c9_P>>
+Vector hệ số (từ bậc 5 xuống):
+<<c9_a>>
+$f(2.4)\approx<<c9_f>>$, \qquad $f^{(4)}(2.4)\approx<<c9_fk>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} $\max|P_5(x_i)-y_i|=<<c9_kt>>$; so với \texttt{numpy.polyder}: $<<c9_kt2>>$.
+
+%=====================================================================
+\section{Câu 10. Thuật toán đa thức nội suy Newton tiến / lùi}
+
+\pp{Công thức.} Mốc bất kỳ (TH1) dùng tỷ sai phân; mốc cách đều $x_i=x_0+ih$ (TH2) dùng sai phân $\Delta^ky_i$ và biến $t$:
+\begin{center}\begin{tabular}{lll}\toprule
+& Newton tiến & Newton lùi\\\midrule
+TH1 & $\displaystyle\sum_{k=0}^nf[x_0..x_k]\prod_{i<k}(x-x_i)$ & $\displaystyle\sum_{k=0}^nf[x_{n-k}..x_n]\prod_{i<k}(x-x_{n-i})$\\
+TH2 & $\displaystyle\sum_{k=0}^n\frac{\Delta^ky_0}{k!}t(t-1)\cdots(t-k+1),\ t=\frac{x-x_0}{h}$ & $\displaystyle\sum_{k=0}^n\frac{\nabla^ky_n}{k!}t(t+1)\cdots(t+k-1),\ t=\frac{x-x_n}{h}$\\\bottomrule
+\end{tabular}\end{center}
+Hai bảng dùng chung một sơ đồ: bảng tam giác dưới $T_{i,k}$; Newton tiến lấy đường chéo $T_{k,k}$, Newton lùi lấy hàng cuối $T_{n,k}$ (vì $\nabla^ky_n=\Delta^ky_{n-k}$). Mốc cách đều: $f^{(j)}(x)=P^{(j)}(t)/h^j$.
+
+\begin{thuattoan}{Đa thức nội suy Newton tiến / lùi}
+\item[Input:] $x=(x_0..x_n)$, $y=(y_0..y_n)$; chiều (tiến/lùi); (tuỳ chọn) điểm $\bar x$, cấp $k$.
+\item[Output:] hệ số Newton $c_k$; vector hệ số $b$ của $P_n$ theo biến $u$ ($u=x$ ở TH1, $u=t$ ở TH2); vector $a$ theo $x$; $v_j\approx f^{(j)}(\bar x)$.
+\item[Bước 0 — Xử lý dữ liệu:] như câu 6 (chuẩn hoá, loại ô lỗi, gộp/báo mốc trùng, sắp tăng). Kiểm tra cách đều: $h:=\frac{x_n-x_0}{n}$, nếu $|x_{i+1}-x_i-h|\le10^{-6}h\ \forall i$ thì TH2, ngược lại TH1. $\bar x\notin[x_0,x_n]$ $\Rightarrow$ cảnh báo ngoại suy; $k$ nguyên $\ge0$.
+\item[Bước 1 — Bảng:] $T_{i,0}:=y_i$; với $k=1..n$, $i=k..n$: TH1 $T_{i,k}:=\dfrac{T_{i,k-1}-T_{i-1,k-1}}{x_i-x_{i-k}}$; TH2 $T_{i,k}:=T_{i,k-1}-T_{i-1,k-1}$.
+\item[Bước 2 — Hệ số:] tiến: $c_k:=T_{k,k}$; lùi: $c_k:=T_{n,k}$; TH2 chia thêm $k!$.
+\item[Bước 3 — Nút tích:] TH1 tiến $z_i:=x_i$, lùi $z_i:=x_{n-i}$; TH2 tiến $z_i:=i$, lùi $z_i:=-i$ ($i=0..n-1$).
+\item[Bước 4 — Bảng tích, cộng dồn:] $\omega:=(1)$, $b:=c_0$; với $k=1..n$: $\omega:=\omega\cdot(u-z_{k-1})$ (Horner nhân, câu 5a), $b:=b+c_k\,\omega$ (cộng theo bậc).
+\item[Bước 5 — Đổi biến (TH2):] $a:=(b_n)$; với $j=n-1..0$: $a:=a\cdot(x-s)$, chia mọi hệ số cho $h$, $a_0:=a_0+b_j$ ($s=x_0$ tiến, $s=x_n$ lùi). TH1: $a:=b$.
+\item[Bước 6 — Tại $\bar x$:] $\bar u:=\bar x$ (TH1) hoặc $\bar u:=(\bar x-s)/h$ (TH2); Horner chia lặp $b$ tại $\bar u$ (câu 4c) $\to d_j=P^{(j)}(\bar u)$; $v_j:=d_j$ (TH1) hoặc $d_j/h^j$ (TH2). Sai số $\le\frac{M_{n+1}}{(n+1)!}\prod|\bar x-x_i|$.
+\item[Bước 7 — Kết thúc:] trả về $c$, $b$, $a$, $v$.
+\end{thuattoan}
+
+%=====================================================================
+\section{Câu 11. Trích xuất mốc và nội suy Newton trên bảng dài}
+
+\subsection{a) Thuật toán trích xuất $k$ điểm nội suy phù hợp để tính $f(\bar x)$}
+\pp{Cơ sở.} Với $k$ mốc, $|f(\bar x)-P(\bar x)|\le\frac{M_k}{k!}\prod|\bar x-x_i|$: tích nhỏ nhất khi chọn $k$ mốc có $|\bar x-x_i|$ nhỏ nhất. Bảng đã sắp tăng nên các mốc đó liên tiếp nhau và được \emph{kết nạp dần} về hai phía từ mốc gần $\bar x$ nhất (cũng là ý tưởng của nội suy trung tâm).
+\begin{thuattoan}{Trích xuất $k$ mốc gần $\bar x$ nhất}
+\item[Input:] bảng $(x_i,y_i)$, $i=0..n$ (cách đều hoặc không); $\bar x$; $k$, $1\le k\le n+1$.
+\item[Output:] chỉ số $L\le R$, $R-L+1=k$; bộ mốc con $(x_L..x_R)$, $(y_L..y_R)$; thứ tự kết nạp.
+\item[Bước 0 — Xử lý dữ liệu:] như câu 10 (chuẩn hoá, loại ô lỗi, mốc trùng, sắp tăng; với file Excel lấy hai cột đầu); $k$ nguyên $\ge1$, $k>n+1\Rightarrow k:=n+1$ và báo; $\bar x\notin[x_0,x_n]$ $\Rightarrow$ cảnh báo ngoại suy.
+\item[Bước 1 — Mốc gần nhất:] $j:=\arg\min_i|\bar x-x_i|$; $L:=R:=j$.
+\item[Bước 2 — Kết nạp, với $s=2..k$:] TH1 $L=0$: $R:=R+1$; TH2 $R=n$: $L:=L-1$; TH3 còn lại: nếu $\bar x-x_{L-1}\le x_{R+1}-\bar x$ thì $L:=L-1$, ngược lại $R:=R+1$.
+\item[Bước 3 — Kết thúc:] trả về $L$, $R$ và bộ mốc con.
+\end{thuattoan}
+Khi bảng cách đều và không chạm biên: $k$ lẻ thì mốc gần nhất nằm chính giữa bộ con ($|\bar t|\le\frac12$); $k$ chẵn thì $\bar x$ nằm giữa hai mốc chính giữa — đúng các yêu cầu của Gauss, Stirling, Bessel (câu 12--17).
+
+\subsection{b) Trích xuất 9 điểm cho $\bar x=3.52$}
+\pp{Xử lý dữ liệu.} File \texttt{data Câu 11.xlsx} (sheet đầu): cột A là $x$, cột B là $y$; ô B1 $=2.95$ không có $x$ đi kèm nên bị loại (dòng 1, ô $x$ rỗng). Còn $<<c11_N>>$ mốc $x=<<c11_x0>>,\dots,<<c11_xn>>$, cách đều $h=<<c11_h>>$.
+
+Kết nạp dần mốc gần $\bar x=3.52$ nhất:
+<<c11_trich>>
+$\Rightarrow$ $L=<<c11_L>>$, $R=<<c11_R>>$; đánh số lại $0..8$:
+<<c11_bang_xy>>
+
+\subsection{c) Đa thức Newton tiến, $f(\bar x)$, $f'(\bar x)$}
+\pp{Phương pháp.} 9 mốc cách đều $h=0.1$ $\Rightarrow$ Newton tiến mốc cách đều, biến $t=\dfrac{x-x_0}{h}=\dfrac{x-3.1}{0.1}$:
+\[ P_8(x_0+th)=\sum_{k=0}^{8}\frac{\Delta^ky_0}{k!}\,t(t-1)\cdots(t-k+1),\qquad f'(\bar x)\approx\frac{P_8'(\bar t)}{h},\qquad |R(\bar x)|\le\frac{M_9h^9}{9!}\prod_{i=0}^{8}|\bar t-i|. \]
+\pp{Bảng sai phân} (hàng $i$, cột $\Delta^k$ là $\Delta^ky_{i-k}$; đường chéo khung $=\Delta^ky_0$):
+<<c11_bang_sp>>
+<<c11_bang_c>>
+\pp{Bảng tích theo $t$} ($\omega_k=\omega_{k-1}\cdot(t-(k-1))$):
+<<c11_bang_tich>>
+<<c11_Pt>>
+với $t=(x-3.1)/0.1$. Thay $t$ và khai triển (Horner nhân, bước 5 câu 10) được vector hệ số của $P_8$ theo $x$ (từ bậc 8 xuống):
+<<c11_Px>>
+
+\pp{Tính tại $\bar x=3.52$:} $\bar t=\dfrac{3.52-3.1}{0.1}=<<c11_t>>$. Horner chia lặp tại $\bar t$:
+<<c11_horner>>
+$f(3.52)\approx P_8(\bar t)=<<c11_P>>$; \quad $f'(3.52)\approx\dfrac{P_8'(\bar t)}{h}=\dfrac{<<c11_dP>>}{0.1}=<<c11_df>>$.
+
+\pp{Sai số:} $\prod_{i=0}^8|\bar t-i|=<<c11_prod>>$, $|f(3.52)-P_8(3.52)|\le M_9\dfrac{0.1^9}{9!}\cdot<<c11_prod>>=M_9\cdot<<c11_E>>$.
+\begin{ketluan}
+9 mốc trích xuất: $x=3.1;3.2;\dots;3.9$. \ $P_8$ như trên ($t=(x-3.1)/0.1$). \ $f(3.52)\approx<<c11_f>>$, \ $f'(3.52)\approx<<c11_df>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra} (giải hệ Vandermonde theo $t$ bằng \texttt{numpy}): sai lệch $f$: $<<c11_kt>>$, $f'$: $<<c11_kt2>>$.
+
+%=====================================================================
+\section{Câu 12. Đa thức nội suy Gauss I}
+
+\pp{Phương pháp.} 9 mốc cách đều $h=0.1$, số mốc lẻ $\Rightarrow$ mốc trung tâm là mốc chính giữa $x_0=<<c12_x0>>$, chỉ số tương đối $i=<<c12_p>>..<<c12_pn>>$. $\bar x=9.68$ có $\bar t=0.8>0$ (lệch phải) nên chọn \textbf{Gauss I} (kết nạp $x_0,x_1,x_{-1},x_2,x_{-2},\dots$).
+
+\pp{Công thức} ($t=\frac{x-x_0}{h}$; bảng sai phân viết theo slide: hàng $i$ chứa $y_i,\Delta y_i,\Delta^2y_i,\dots$):
+\[ P(x_0+th)=y_0+t\Delta y_0+\frac{\Delta^2y_{-1}}{2!}t(t-1)+\frac{\Delta^3y_{-1}}{3!}(t+1)t(t-1)+\frac{\Delta^4y_{-2}}{4!}(t+1)t(t-1)(t-2)+\cdots \]
+tức $P=\sum_kc_k\pi_k(t)$, $c_k=\dfrac{\Delta^ky_{-\lfloor k/2\rfloor}}{k!}$, $\pi_k=\pi_{k-1}\cdot(t-z_{k-1})$ với $z=0,1,-1,2,-2,3,-3,4$.
+
+\subsection{a) Lập đa thức Gauss I}
+\pp{Bảng sai phân} (ô khung: $\Delta^ky_{-\lfloor k/2\rfloor}$ — đường zigzag quanh hàng $0$):
+<<c12_bang_sp>>
+\pp{Hệ số:}
+<<c12_bang_c>>
+\pp{Bảng tích:}
+<<c12_bang_tich>>
+<<c12_Pt>>
+với $t=(x-9.6)/0.1$. Thay $t$ và khai triển (Horner nhân, bước 5 câu 10) được vector hệ số của $P_8$ theo $x$ (từ bậc 8 xuống):
+<<c12_Px>>
+
+\subsection{b) Tính gần đúng $f(9.68)$}
+$\bar t=\dfrac{9.68-9.6}{0.1}=<<c12_t>>$:
+<<c12_horner>>
+Sai số: $\prod_{i=-4}^{4}|\bar t-i|=<<c12_prod>>$, $|f(9.68)-P_8(9.68)|\le M_9\dfrac{0.1^9}{9!}\cdot<<c12_prod>>=M_9\cdot<<c12_E>>$.
+\begin{ketluan}
+Đa thức Gauss I như trên; \quad $f(9.68)\approx P_8(0.8)=<<c12_f>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} hệ số $P(t)$ so với hệ Vandermonde: $<<c12_kt>>$; $f(9.68)$ so với công thức Lagrange trực tiếp: $<<c12_kt2>>$ (dùng đủ 9 mốc thì Gauss I, Gauss II, Stirling cho cùng một đa thức).
+
+%=====================================================================
+\section{Câu 13. Đa thức nội suy Stirling}
+
+\pp{Phương pháp.} 9 mốc cách đều (số lẻ) $\Rightarrow$ Stirling $=\frac12$(Gauss I $+$ Gauss II), mốc trung tâm $x_0=<<c13_x0>>$, $i=<<c13_p>>..<<c13_pn>>$, $h=0.1$.
+
+\pp{Công thức.}
+\[ P(x_0+th)=y_0+t\,\frac{\Delta y_{-1}+\Delta y_0}{2}+\frac{t^2}{2!}\Delta^2y_{-1}+\frac{t(t^2-1)}{3!}\cdot\frac{\Delta^3y_{-2}+\Delta^3y_{-1}}{2}+\frac{t^2(t^2-1)}{4!}\Delta^4y_{-2}+\cdots \]
+$c_{2j-1}=\dfrac{\Delta^{2j-1}y_{-j}+\Delta^{2j-1}y_{-j+1}}{2\,(2j-1)!}$, $c_{2j}=\dfrac{\Delta^{2j}y_{-j}}{(2j)!}$; $\pi_1=t$, $\pi_{2j}=t\,\pi_{2j-1}$, $\pi_{2j+1}=\pi_{2j-1}(t^2-j^2)$; \quad $f'(\bar x)\approx P'(\bar t)/h$.
+
+\subsection{a) Lập đa thức Stirling}
+\pp{Bảng sai phân} (ô khung: cặp $\Delta^{2j-1}y_{-j},\Delta^{2j-1}y_{-j+1}$ và $\Delta^{2j}y_{-j}$ — đối xứng quanh hàng $0$):
+<<c13_bang_sp>>
+<<c13_bang_c>>
+\pp{Bảng tích:}
+<<c13_bang_tich>>
+<<c13_Pt>>
+với $t=(x-1.8)/0.1$. Thay $t$ và khai triển (Horner nhân, bước 5 câu 10) được vector hệ số của $P_8$ theo $x$ (từ bậc 8 xuống):
+<<c13_Px>>
+
+\subsection{b) Giá trị và đạo hàm tại $\bar x=1.63$}
+$\bar t=\dfrac{1.63-1.8}{0.1}=<<c13_t>>$:
+<<c13_horner>>
+$f(1.63)\approx P_8(\bar t)=<<c13_P>>$; \quad $f'(1.63)\approx\dfrac{P_8'(\bar t)}{h}=\dfrac{<<c13_dP>>}{0.1}=<<c13_df>>$.\\
+Sai số: $\prod_{i=-4}^4|\bar t-i|=<<c13_prod>>$, $|R|\le M_9\cdot<<c13_E>>$.
+\begin{ketluan}
+Đa thức Stirling như trên; \quad $f(1.63)\approx<<c13_f>>$, \quad $f'(1.63)\approx<<c13_df>>$.
+\end{ketluan}
+\noindent\textit{Ghi chú:} $|\bar t|=1.7>\frac14$ nên $\bar x$ không ở vùng ``tối ưu'' của Stirling; tuy nhiên đề cho đúng 9 mốc và dùng hết nên đa thức là duy nhất. Sai phân bậc cao ($\Delta^6..\Delta^8$) không giảm — dấu hiệu số liệu có sai số làm tròn ở chữ số thứ 7; đóng góp của chúng tại $\bar t$ cỡ $10^{-7}$.\\
+\textit{Kiểm tra:} hệ số so với Vandermonde: $<<c13_kt>>$; $f(1.63)$ so với Lagrange trực tiếp: $<<c13_kt2>>$.
+
+%=====================================================================
+\section{Câu 14. Đa thức nội suy Bessel}
+
+\pp{Đề (đã sửa).} Câu 14b hỏi tại $\bar x=1.63$ (nằm ngoài bảng $[5;5.7]$, chép nhầm từ câu 13); theo đính chính dùng $\bar x=5.23$.
+
+\pp{Phương pháp.} 8 mốc cách đều $h=0.1$ (số chẵn) $\Rightarrow$ Bessel $=\frac12$(Gauss I tại $x_0$ $+$ Gauss II tại $x_1$), hai mốc chính giữa $x_0=<<c14_x0>>$, $x_1=5.4$; chỉ số $i=<<c14_p>>..<<c14_pn>>$.
+
+\pp{Công thức.}
+\begin{align*}
+P(x_0+th)&=\frac{y_0+y_1}{2}+\Big(t-\frac12\Big)\Delta y_0+\frac{t(t-1)}{2!}\cdot\frac{\Delta^2y_{-1}+\Delta^2y_0}{2}+\frac{(t-\frac12)t(t-1)}{3!}\Delta^3y_{-1}\\
+&\quad+\frac{(t+1)t(t-1)(t-2)}{4!}\cdot\frac{\Delta^4y_{-2}+\Delta^4y_{-1}}{2}+\cdots
+\end{align*}
+$c_{2j}=\dfrac{\Delta^{2j}y_{-j}+\Delta^{2j}y_{-j+1}}{2\,(2j)!}$, $c_{2j+1}=\dfrac{\Delta^{2j+1}y_{-j}}{(2j+1)!}$; $\pi_0=1$, $\pi_{2j}=\pi_{2j-2}(t+j-1)(t-j)$, $\pi_{2j+1}=(t-\frac12)\pi_{2j}$.
+
+\noindent\textit{Ghi chú về slide:} công thức Bessel cuối slide 16 (tr.20) ghi $\frac{\Delta y_0}{2}(t-\frac12)$ và $\frac{\Delta^3y_{-1}}{2\times3!}t(t-1)(t-\frac12)$ — thiếu hệ số 2; đúng là $\Delta y_0(t-\frac12)$ và $\frac{\Delta^3y_{-1}}{3!}t(t-1)(t-\frac12)$ (trung bình của $t\Delta y_0$ và $(t-1)\Delta y_0$; với 2 mốc phải có $P(0)=y_0$).
+
+\subsection{a) Lập đa thức Bessel}
+\pp{Bảng sai phân} (ô khung: cặp $\Delta^{2j}y_{-j},\Delta^{2j}y_{-j+1}$ và $\Delta^{2j+1}y_{-j}$ — đối xứng quanh nửa khoảng $[x_0,x_1]$):
+<<c14_bang_sp>>
+<<c14_bang_c>>
+\pp{Bảng tích:}
+<<c14_bang_tich>>
+<<c14_Pt>>
+với $t=(x-5.3)/0.1$. Thay $t$ và khai triển (Horner nhân, bước 5 câu 10) được vector hệ số của $P_7$ theo $x$ (từ bậc 7 xuống):
+<<c14_Px>>
+
+\subsection{b) Giá trị và đạo hàm tại $\bar x=5.23$}
+$\bar t=\dfrac{5.23-5.3}{0.1}=<<c14_t>>$:
+<<c14_horner>>
+$f(5.23)\approx P_7(\bar t)=<<c14_P>>$; \quad $f'(5.23)\approx\dfrac{<<c14_dP>>}{0.1}=<<c14_df>>$.\\
+Sai số: $\prod_{i=-3}^4|\bar t-i|=<<c14_prod>>$, $|R|\le M_8\dfrac{0.1^8}{8!}\cdot<<c14_prod>>=M_8\cdot<<c14_E>>$.
+\begin{ketluan}
+Đa thức Bessel như trên; \quad $f(5.23)\approx<<c14_f>>$, \quad $f'(5.23)\approx<<c14_df>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} hệ số so với Vandermonde: $<<c14_kt>>$; $f(5.23)$ so với Lagrange trực tiếp: $<<c14_kt2>>$.
+
+%=====================================================================
+\section{Câu 15. Thuật toán Gauss I, Gauss II, Stirling, Bessel}
+
+\pp{Bảng chọn ô.} Mốc cách đều, chỉ số tương đối với mốc trung tâm $x_0$, $t=\frac{x-x_0}{h}$, $P=\sum c_k\pi_k(t)$:
+\begin{center}\small\begin{adjustbox}{max width=\linewidth}\begin{tabular}{llll}\toprule
+Công thức & Bộ mốc ($n+1$ mốc) & $c_k$ & $\pi_k(t)$, $\pi_0=1$\\\midrule
+Gauss I & $x_{-\lfloor n/2\rfloor}..x_{\lceil n/2\rceil}$ & $\Delta^ky_{-\lfloor k/2\rfloor}/k!$ & $\pi_{k-1}(t-z_{k-1})$, $z=0,1,-1,2,\dots$\\
+Gauss II & $x_{-\lceil n/2\rceil}..x_{\lfloor n/2\rfloor}$ & $\Delta^ky_{-\lceil k/2\rceil}/k!$ & $\pi_{k-1}(t-z_{k-1})$, $z=0,-1,1,-2,\dots$\\
+Stirling & $n=2r$: $x_{-r}..x_r$ & $\frac{\Delta^{2j-1}y_{-j}+\Delta^{2j-1}y_{-j+1}}{2(2j-1)!}$; $\frac{\Delta^{2j}y_{-j}}{(2j)!}$ & $\pi_1=t$, $\pi_{2j}=t\pi_{2j-1}$, $\pi_{2j+1}=\pi_{2j-1}(t^2-j^2)$\\
+Bessel & $n=2r-1$: $x_{-r+1}..x_r$ & $\frac{\Delta^{2j}y_{-j}+\Delta^{2j}y_{-j+1}}{2(2j)!}$; $\frac{\Delta^{2j+1}y_{-j}}{(2j+1)!}$ & $\pi_{2j}=\pi_{2j-2}(t+j-1)(t-j)$, $\pi_{2j+1}=(t-\frac12)\pi_{2j}$\\\bottomrule
+\end{tabular}\end{adjustbox}\end{center}
+
+\begin{thuattoan}{Nội suy trung tâm (a: Gauss I/II, b: Stirling, c: Bessel)}
+\item[Input:] bảng $(x_i,y_i)$; công thức; điểm $\bar x$; cấp đạo hàm $k$; số mốc dùng $m$ (mặc định cả bảng).
+\item[Output:] vector $b$ của $P(t)$; $x_0$, $h$; $v_j\approx f^{(j)}(\bar x)$, $j=0..k$; đánh giá sai số.
+\item[Bước 0 — Xử lý dữ liệu:] như câu 10; \textbf{bắt buộc cách đều} (không $\Rightarrow$ dừng, dùng Newton mốc bất kỳ). $m\ge2$ nguyên, $m>$ số mốc $\Rightarrow$ dùng cả bảng. Stirling cần $m$ lẻ, Bessel cần $m$ chẵn — sai thì $m:=m-1$ và báo.
+\item[Bước 1 — Trích xuất:] $m$ mốc gần $\bar x$ nhất (câu 11a); đánh số $0..n$, $n=m-1$.
+\item[Bước 2 — Mốc trung tâm:] vị trí $q:=\lfloor n/2\rfloor$ (Gauss I, Bessel) hoặc $q:=\lceil n/2\rceil$ (Gauss II, Stirling); $x_0:=$ mốc thứ $q$; chỉ số tương đối $i=-q..n-q$; $\bar t:=(\bar x-x_0)/h$.
+\item[Bước 3 — Bảng sai phân:] $D_{i,0}:=y_i$; với $k=1..n$, $i=-q..n-q-k$: $D_{i,k}:=D_{i+1,k-1}-D_{i,k-1}$ ($=\Delta^ky_i$).
+\item[Bước 4 — Hệ số:] $c_k$ theo bảng chọn ô ở trên ($k!$ tính dần), ghi lại các ô được chọn.
+\item[Bước 5 — Bảng tích:] $\pi_0:=(1)$; $\pi_k$ theo cột cuối bảng chọn ô, mỗi thừa số bậc nhất nhân bằng Horner (câu 5a); $b:=\sum_kc_k\pi_k$ (cộng theo bậc).
+\item[Bước 6 — Tại $\bar x$:] Horner chia lặp $b$ tại $\bar t$ $\to d_j=P^{(j)}(\bar t)$; $v_j:=d_j/h^j$; sai số $\le\frac{M_{n+1}h^{n+1}}{(n+1)!}\prod_{i}|\bar t-i|$.
+\item[Bước 7 — Kết thúc:] trả về $b$, $v$ (nếu cần đa thức theo $x$: đổi biến $t=(x-x_0)/h$ như bước 5 câu 10).
+\end{thuattoan}
+
+%=====================================================================
+\section{Câu 16. Trích xuất 9 điểm và nội suy Stirling tại $\bar x=7.83$}
+
+\subsection{a) Trích xuất}
+Dữ liệu \texttt{data Câu 11.xlsx} đã xử lý ở câu 11b (141 mốc, $h=0.1$). Thuật toán câu 11a với $\bar x=7.83$, $k=9$:
+<<c16_trich>>
+$\Rightarrow$ $L=<<c16_L>>$, $R=<<c16_R>>$: 9 mốc $x=<<c16_xs>>$; số mốc lẻ, mốc gần nhất $7.8$ nằm chính giữa.
+
+\subsection{b) Đa thức Stirling, $f(\bar x)$, $f'(\bar x)$}
+\pp{Phương pháp, công thức:} như câu 13 với $x_0=<<c16_x0>>$, $i=<<c16_p>>..<<c16_pn>>$, $h=0.1$, $\bar t=\dfrac{7.83-7.8}{0.1}=<<c16_t>>$ ($|\bar t|\approx\frac14$: vùng phù hợp của Stirling).
+
+\pp{Bảng sai phân:}
+<<c16_bang_sp>>
+<<c16_bang_c>>
+\pp{Bảng tích:}
+<<c16_bang_tich>>
+<<c16_Pt>>
+với $t=(x-7.8)/0.1$. Thay $t$ và khai triển (Horner nhân, bước 5 câu 10) được vector hệ số của $P_8$ theo $x$ (từ bậc 8 xuống):
+<<c16_Px>>
+
+\pp{Tại $\bar t=<<c16_t>>$:}
+<<c16_horner>>
+$f(7.83)\approx<<c16_P>>$; \quad $f'(7.83)\approx\dfrac{<<c16_dP>>}{0.1}=<<c16_df>>$; \quad sai số $|R|\le M_9\cdot<<c16_E>>$.
+\begin{ketluan}
+Mốc $7.4;7.5;\dots;8.2$; \quad $f(7.83)\approx<<c16_f>>$, \quad $f'(7.83)\approx<<c16_df>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} hệ số so với Vandermonde: $<<c16_kt>>$; $f(7.83)$ so với Lagrange trực tiếp: $<<c16_kt2>>$.
+
+%=====================================================================
+\section{Câu 17. Trích xuất 8 điểm và nội suy Bessel tại $\bar x=7.83$}
+
+\subsection{a) Trích xuất}
+Thuật toán câu 11a với $\bar x=7.83$, $k=8$ (dữ liệu như câu 11b):
+<<c17_trich>>
+$\Rightarrow$ $L=<<c17_L>>$, $R=<<c17_R>>$: 8 mốc $x=<<c17_xs>>$; $\bar x$ nằm giữa hai mốc chính giữa $7.8$ và $7.9$.
+
+\subsection{b) Đa thức Bessel, $f(\bar x)$, $f'(\bar x)$}
+\pp{Phương pháp, công thức:} như câu 14 với $x_0=<<c17_x0>>$, $x_1=7.9$, $i=<<c17_p>>..<<c17_pn>>$, $\bar t=<<c17_t>>$.
+
+\pp{Bảng sai phân:}
+<<c17_bang_sp>>
+<<c17_bang_c>>
+\pp{Bảng tích:}
+<<c17_bang_tich>>
+<<c17_Pt>>
+với $t=(x-7.8)/0.1$. Thay $t$ và khai triển (Horner nhân, bước 5 câu 10) được vector hệ số của $P_7$ theo $x$ (từ bậc 7 xuống):
+<<c17_Px>>
+
+\pp{Tại $\bar t=<<c17_t>>$:}
+<<c17_horner>>
+$f(7.83)\approx<<c17_P>>$; \quad $f'(7.83)\approx\dfrac{<<c17_dP>>}{0.1}=<<c17_df>>$; \quad sai số $|R|\le M_8\cdot<<c17_E>>$.
+\begin{ketluan}
+Mốc $7.5;7.6;\dots;8.2$; \quad $f(7.83)\approx<<c17_f>>$, \quad $f'(7.83)\approx<<c17_df>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} hệ số so với Vandermonde: $<<c17_kt>>$; Lagrange trực tiếp: $<<c17_kt2>>$. So với Stirling 9 mốc (câu 16): chênh $f$: $<<c17_ss>>$, chênh $f'$: $<<c17_ss1>>$ — hai cách cho kết quả khớp tới sai số nội suy.
+
+%=====================================================================
+\section{Câu 18. Thuật toán cho bài toán nội suy ngược}
+
+\pp{Bài toán.} Hàm $y=f(x)$ cho dạng bảng $(x_i,y_i)$, $i=0..n$; giải phương trình $f(x)=\bar y$.
+
+\subsection{a) Tất cả các khoảng cách ly của $f(x)=\bar y$}
+\begin{thuattoan}{Khoảng cách ly}
+\item[Input:] bảng $(x_i,y_i)$ đã sắp tăng theo $x$; $\bar y$.
+\item[Output:] danh sách nghiệm đúng tại mốc và danh sách khoảng cách ly $(x_i,x_{i+1})$.
+\item[Bước 0 — Xử lý dữ liệu:] chuẩn hoá, loại ô lỗi, mốc trùng, sắp tăng (như câu 10). $\bar y\notin[\min y,\max y]\Rightarrow$ báo ``không có nghiệm trong bảng'', dừng.
+\item[Bước 1 — Độ lệch:] $g_i:=y_i-\bar y$, $i=0..n$.
+\item[Bước 2 — Với $i=0..n$:] 2.1: nếu $g_i=0$ thì $x_i$ là nghiệm; \ 2.2: nếu $i<n$ và $g_i\,g_{i+1}<0$ thì $(x_i,x_{i+1})$ là khoảng cách ly.
+\item[Bước 3 — Kết thúc:] trả về hai danh sách (giả thiết lưới đủ mịn: mỗi khoảng chứa không quá một nghiệm).
+\end{thuattoan}
+
+\subsection{b) Các khoảng đơn điệu}
+\begin{thuattoan}{Khoảng đơn điệu}
+\item[Input:] bảng $(x_i,y_i)$, $n\ge1$. \quad\textbf{Output:} các đoạn $[x_a,x_b]$ kèm chiều tăng/giảm/hằng (hai đoạn kề chung một mốc — mốc cực trị).
+\item[Bước 0 — Xử lý dữ liệu:] như câu a.
+\item[Bước 1:] $s_i:=\operatorname{sign}(y_{i+1}-y_i)$, $i=0..n-1$; $a:=0$.
+\item[Bước 2 — Với $i=1..n-1$:] nếu $s_i\ne s_{i-1}$: ghi đoạn $[x_a,x_i]$ chiều $s_{i-1}$; $a:=i$.
+\item[Bước 3:] ghi đoạn cuối $[x_a,x_n]$ chiều $s_{n-1}$; trả về danh sách.
+\end{thuattoan}
+
+\subsection{c) Phương pháp hàm ngược}
+\pp{Ý tưởng.} Trên đoạn mà $f$ đơn điệu chặt, tồn tại hàm ngược $x=f^{-1}(y)$; nội suy nó qua các mốc $(y_j,x_j)$ (mốc bất kỳ $\Rightarrow$ Newton tỷ sai phân) rồi thay $y=\bar y$. Sai số $\le\frac{\max|(f^{-1})^{(m)}|}{m!}\prod|\bar y-y_j|$ nên chọn các mốc có $|y_j-\bar y|$ nhỏ nhất.
+\begin{thuattoan}{Hàm ngược}
+\item[Input:] bảng; $\bar y$; một khoảng cách ly $(x_k,x_{k+1})$ nằm trong đoạn đơn điệu $[x_a,x_b]$ (câu a, b); số mốc $m\ge2$.
+\item[Output:] nghiệm gần đúng $\bar x$ và ước lượng sai số.
+\item[Bước 0 — Xử lý dữ liệu:] như câu a; $m$ nguyên $\ge2$.
+\item[Bước 1 — Chọn mốc:] $L:=k$, $R:=k+1$; khi $R-L+1<m$: TH1 $L=a,R=b$: hết đoạn đơn điệu, dừng chọn (báo); TH2 $L=a$: $R:=R+1$; TH3 $R=b$: $L:=L-1$; TH4: kết nạp phía có $|y-\bar y|$ nhỏ hơn.
+\item[Bước 2 — Đổi vai:] $u_s:=y_{L+s}$, $v_s:=x_{L+s}$; đoạn giảm thì đảo thứ tự để $u_0<u_1<\cdots$.
+\item[Bước 3 — Tỷ sai phân:] bảng của $v$ theo $u$ (bước 1 câu 10, TH1); $c_j:=v[u_0..u_j]$.
+\item[Bước 4 — Giá trị:] $\omega_0:=1$, $S:=c_0$; với $j\ge1$: $\omega_j:=\omega_{j-1}(\bar y-u_{j-1})$, $S:=S+c_j\omega_j$.
+\item[Bước 5 — Kết thúc:] $\bar x:=S$; $|c_{\text{cuối}}\,\omega_{\text{cuối}}|$ là ước lượng sai số.
+\end{thuattoan}
+
+\subsection{d) Phương pháp lặp}
+\pp{Ý tưởng.} Mốc cách đều, khoảng cách ly $(x_k,x_{k+1})$. Từ Newton tiến tại $x_k$: $\bar y=y_k+t\Delta y_k+\sum_{j\ge2}\frac{\Delta^jy_k}{j!}t(t-1)\cdots(t-j+1)$, giải theo $t$ ở số hạng bậc nhất:
+\[ t=\varphi(t)=\frac{\bar y-y_k}{\Delta y_k}-\frac{1}{\Delta y_k}\sum_{j=2}^{m-1}\frac{\Delta^jy_k}{j!}t(t-1)\cdots(t-j+1),\qquad x=x_k+th. \]
+Newton lùi tại $x_{k+1}$ (khi không đủ mốc bên phải): thay $\Delta^jy_k\to\nabla^jy_{k+1}$, $t(t-1)\cdots\to t(t+1)\cdots$, $x=x_{k+1}+th$. Lặp hội tụ khi $|\varphi'(t)|<1$ quanh nghiệm.
+\begin{thuattoan}{Lặp}
+\item[Input:] bảng cách đều bước $h$; $\bar y$; khoảng cách ly $(x_k,x_{k+1})$; số mốc $m$; $\varepsilon$; số lần lặp tối đa $N$.
+\item[Output:] $\bar x$ và số lần lặp, hoặc thông báo không hội tụ.
+\item[Bước 0 — Xử lý dữ liệu:] như câu a; kiểm tra cách đều (không $\Rightarrow$ dùng hàm ngược); $\varepsilon>0$, $N\ge1$ nguyên.
+\item[Bước 1 — Chọn hướng:] TH1 $k+m-1\le n$: tiến, mốc $x_k..x_{k+m-1}$, $s:=k$; TH2 ngược lại mà $k+2-m\ge0$: lùi, mốc $x_{k+2-m}..x_{k+1}$, $s:=k+1$.
+\item[Bước 2 — Sai phân:] bảng $T$ (bước 1 câu 10, TH2) trên $m$ mốc vừa chọn, đánh số lại $0..m-1$; TH1: $d_j:=T_{j,j}=\Delta^jy_k$ (đường chéo); TH2: $d_j:=T_{m-1,j}=\nabla^jy_{k+1}$ (hàng cuối).
+\item[Bước 3 — Hàm lặp:] $\varphi(t)=A-\sum_{j=2}^{m-1}B_j\,\omega_j(t)$, $A=\frac{\bar y-d_0}{d_1}$, $B_j=\frac{d_j}{j!\,d_1}$, $\omega_j=t(t\mp1)\cdots(t\mp(j-1))$ (dấu $-$ TH1, $+$ TH2).
+\item[Bước 4 — Khởi tạo:] $t_0:=A$.
+\item[Bước 5 — Với $j=0..N-1$:] $t_{j+1}:=\varphi(t_j)$; nếu $h|t_{j+1}-t_j|<\varepsilon$: $\bar x:=x_s+t_{j+1}h$, trả về, dừng.
+\item[Bước 6 — Không hội tụ:] hết $N$ lần $\Rightarrow$ báo ``Không hội tụ'' (in $t_N$ để tham khảo).
+\end{thuattoan}
+
+%=====================================================================
+\section{Câu 19. Giải phương trình $f(x)=\bar y$ từ file dữ liệu}
+
+\pp{Dữ liệu.} \texttt{data Câu 19.xlsx}: $<<c19_N>>$ mốc $x=1;1.1;\dots;15$ cách đều $h=0.1$ (dòng đầu file trống, bỏ qua). Các khoảng đơn điệu (câu 18b):
+<<c19_dd>>
+
+\subsection{a) Phương pháp hàm ngược, $\bar y=2.5$}
+\pp{Khoảng cách ly} (câu 18a):
+<<c19a_cl>>
+Chỉ có một nghiệm, trong $(x_{<<c19a_k>>};x_{<<c19a_k>>+1})=(<<c19a_xk>>;\ <<c19a_xk1>>)\subset<<c19a_doan>>$ — đoạn $f$ tăng chặt nên có hàm ngược.
+
+\pp{Chọn 6 mốc} có $|y_j-\bar y|$ nhỏ nhất trong đoạn đơn điệu:
+<<c19a_chon>>
+\pp{Bảng tỷ sai phân của $x$ theo $y$} ($u=y$ tăng dần; đường chéo khung $=c_j$):
+<<c19a_tsp>>
+\pp{Giá trị tại $\bar y$:} $\bar x=\sum_jc_j\,\omega_j(\bar y)$, $\omega_j=\prod_{l<j}(\bar y-u_l)$:
+<<c19a_tong>>
+\begin{ketluan}
+$f(x)=2.5$ có đúng một nghiệm trong $[1;15]$: $\bar x\approx<<c19a_x>>$ (số hạng cuối $<<c19a_cuoi>>$ — ước lượng sai số).
+\end{ketluan}
+\noindent\textit{Kiểm tra:} thay $\bar x$ vào đa thức nội suy trực tiếp $y(x)$ qua 6 mốc gần nhất: $|y(\bar x)-2.5|=<<c19a_kt>>$. Phương pháp lặp (câu b) cho $<<c19a_lap>>$, chênh $<<c19a_ss>>$.
+
+\subsection{b) Phương pháp lặp, $\bar y=3.15$}
+\pp{Khoảng cách ly:}
+<<c19b_cl>>
+Có $<<c19b_so>>$ nghiệm. Mỗi khoảng dùng $m=6$ mốc, $\varepsilon=10^{-6}$, $N=100$.
+<<c19b_khoi>>
+\begin{ketluan}
+$f(x)=3.15$ có 3 nghiệm trong $[1;15]$: $\bar x=<<c19b_x>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} $|y(\bar x)-3.15|$ (nội suy trực tiếp): $<<c19b_kt>>$.\\
+\textit{Nhận xét:} cả ba khoảng đều sát cực trị ($x=2.8$ cực đại, $x=3.5$ cực tiểu) nên $\Delta y$ nhỏ, hàm ngược có đạo hàm rất lớn; phương pháp hàm ngược ở đây sai nhiều: cho $<<c19b_hn1>>$; $<<c19b_hn2>>$; $<<c19b_hn3>>$ (lệch $<<c19b_hnss1>>$; $<<c19b_hnss2>>$; $<<c19b_hnss3>>$). Phương pháp lặp nội suy $y$ theo $x$ nên không bị ảnh hưởng — đây là lý do câu b dùng phương pháp lặp.
+
+%=====================================================================
+\section{Câu 20. Hàm ghép trơn (spline)}
+
+\pp{Bài toán.} Cho $(x_i,y_i)$, $i=0..n$, $x_0<\dots<x_n$, $h_k=x_{k+1}-x_k$. Tìm $S(x)=S_k(x)$ trên $[x_k,x_{k+1}]$, $S_k$ đa thức bậc $p$, $S\in C^{p-1}$, $S(x_i)=y_i$. Đếm: $n(p+1)$ hệ số; nội suy $2n$ phương trình; trơn cấp $1..p-1$ tại $n-1$ mốc trong: $(p-1)(n-1)$; còn thiếu \textbf{$p-1$ điều kiện biên}.
+
+\subsection{a) Xây dựng công thức}
+\pp{Spline cấp 3.} Đặt $\sigma_k=S''(x_k)$. $S_k''$ bậc nhất nên $S_k''(x)=\dfrac{\sigma_k(x_{k+1}-x)+\sigma_{k+1}(x-x_k)}{h_k}$; tích phân hai lần:
+\[ S_k(x)=\frac{\sigma_k(x_{k+1}-x)^3+\sigma_{k+1}(x-x_k)^3}{6h_k}+\alpha_k(x-x_k)+\beta_k(x_{k+1}-x). \]
+$S_k(x_k)=y_k\Rightarrow\beta_k=\dfrac{y_k}{h_k}-\dfrac{\sigma_kh_k}{6}$; \ $S_k(x_{k+1})=y_{k+1}\Rightarrow\alpha_k=\dfrac{y_{k+1}}{h_k}-\dfrac{\sigma_{k+1}h_k}{6}$. Đặt $s_k=\dfrac{y_{k+1}-y_k}{h_k}$:
+\[ S_k'(x)=\frac{-\sigma_k(x_{k+1}-x)^2+\sigma_{k+1}(x-x_k)^2}{2h_k}+s_k-\frac{(\sigma_{k+1}-\sigma_k)h_k}{6}, \]
+\[ S_k'(x_{k+1})=s_k+\frac{h_k}{6}\sigma_k+\frac{h_k}{3}\sigma_{k+1},\qquad S_{k+1}'(x_{k+1})=s_{k+1}-\frac{h_{k+1}}{3}\sigma_{k+1}-\frac{h_{k+1}}{6}\sigma_{k+2}. \]
+Trơn cấp 1 tại $x_{k+1}$ cho $n-1$ phương trình ($k=0..n-2$):
+\[ \boxed{\frac{h_k}{6}\sigma_k+\frac{h_k+h_{k+1}}{3}\sigma_{k+1}+\frac{h_{k+1}}{6}\sigma_{k+2}=s_{k+1}-s_k} \]
+cộng 2 điều kiện biên: $S''(x_0)=A\Rightarrow\sigma_0=A$; $S'(x_0)=A\Rightarrow\frac{h_0}{3}\sigma_0+\frac{h_0}{6}\sigma_1=s_0-A$; $S''(x_n)=B\Rightarrow\sigma_n=B$; $S'(x_n)=B\Rightarrow\frac{h_{n-1}}{6}\sigma_{n-1}+\frac{h_{n-1}}{3}\sigma_n=B-s_{n-1}$. Hệ ba đường chéo, chéo trội. Khai triển được dạng chính tắc $S_k=a_kx^3+b_kx^2+c_kx+d_k$:
+\[ a_k=\frac{\sigma_{k+1}-\sigma_k}{6h_k},\ b_k=\frac{\sigma_kx_{k+1}-\sigma_{k+1}x_k}{2h_k},\ c_k=\frac{-\sigma_kx_{k+1}^2+\sigma_{k+1}x_k^2}{2h_k}+s_k-\frac{(\sigma_{k+1}-\sigma_k)h_k}{6}, \]
+\[ d_k=\frac{\sigma_kx_{k+1}^3-\sigma_{k+1}x_k^3}{6h_k}+\frac{y_kx_{k+1}-y_{k+1}x_k}{h_k}+\frac{(\sigma_{k+1}x_k-\sigma_kx_{k+1})h_k}{6}. \]
+
+\pp{Spline cấp 4.} Đặt $m_k=S'(x_k)$, $\sigma_k=S''(x_k)$, $M_k=S'''(x_k)$ ($S\in C^3$ nên các giá trị này chung cho hai mảnh kề). $S_k'''$ bậc nhất: $S_k'''(x)=M_k+\frac{M_{k+1}-M_k}{h_k}u$, $u=x-x_k$. Tích phân ba lần với giá trị ban đầu tại $x_k$ (khai triển Taylor):
+\[ S_k(x)=y_k+m_ku+\frac{\sigma_k}{2}u^2+\frac{M_k}{6}u^3+\frac{M_{k+1}-M_k}{24h_k}u^4,\qquad u=x-x_k. \]
+Liên tục của $S,S',S''$ tại $x_{k+1}$ ($S'''$ liên tục sẵn), $k=0..n-1$:
+\[ \boxed{\begin{aligned}
+&y_k+m_kh_k+\frac{\sigma_k}{2}h_k^2+\frac{3M_k+M_{k+1}}{24}h_k^3=y_{k+1},\\
+&m_k+\sigma_kh_k+\frac{2M_k+M_{k+1}}{6}h_k^2=m_{k+1},\\
+&\sigma_k+\frac{M_k+M_{k+1}}{2}h_k=\sigma_{k+1}.
+\end{aligned}} \]
+$3n$ phương trình, $3(n+1)$ ẩn $(m_k,\sigma_k,M_k)$ $\Rightarrow$ cần 3 điều kiện biên (vd $S'(x_0),S''(x_0),S'(x_n)$). Dạng chính tắc: khai triển $u=x-x_k$ bằng Horner nhân.
+
+\noindent\textit{Đối chiếu:} cùng cách đó với $p=3$: $S_k=y_k+m_ku+\frac{\sigma_k}{2}u^2+\frac{\sigma_{k+1}-\sigma_k}{6h_k}u^3$, điều kiện $y_k+m_kh_k+\frac{2\sigma_k+\sigma_{k+1}}{6}h_k^2=y_{k+1}$, $m_{k+1}=m_k+\frac{\sigma_k+\sigma_{k+1}}{2}h_k$; khử $m_k$ được đúng hệ ba đường chéo ở trên.
+
+\subsection{b) Thuật toán spline cấp $p\le4$}
+\pp{Dạng tổng quát} (gộp các trường hợp trên): ẩn $D_{k,r}=S^{(r)}(x_k)$, $r=1..p-1$, $k=0..n$ ($D_{k,0}=y_k$);
+\[ S_k(x)=\sum_{j=0}^{p-1}\frac{D_{k,j}}{j!}(x-x_k)^j+\frac{D_{k+1,p-1}-D_{k,p-1}}{p!\,h_k}(x-x_k)^p \]
+($S^{(p-1)}$ tuyến tính từng khúc, tự liên tục). Điều kiện $S_k^{(r)}(x_{k+1})=D_{k+1,r}$, $r=0..p-2$:
+\[ \sum_{j=\max(r,1)}^{p-1}\frac{h_k^{j-r}}{(j-r)!}D_{k,j}+\frac{h_k^{p-r-1}}{(p-r)!}(D_{k+1,p-1}-D_{k,p-1})-[r\ge1]D_{k+1,r}=[r=0](y_{k+1}-y_k). \]
+\begin{thuattoan}{Spline cấp $p\le4$}
+\item[Input:] $(x_i,y_i)$, $i=0..n$; bậc $p\in\{1,2,3,4\}$; $p-1$ điều kiện biên $S^{(r)}(\xi)=v$ với $\xi\in\{x_0,x_n\}$, $1\le r\le p-1$.
+\item[Output:] với mỗi $k$: hệ số chính tắc của $S_k$ (từ bậc cao xuống).
+\item[Bước 0 — Xử lý dữ liệu:] chuẩn hoá số, loại ô lỗi; mốc trùng khác $y$ $\Rightarrow$ dừng (spline phải qua mọi điểm); \textbf{sắp tăng theo $x$}; $n\ge1$; $p$ nguyên $1..4$; điều kiện biên: đọc dạng \texttt{S'(0)=0}, điểm phải là $x_0$ hoặc $x_n$, cấp $1..p-1$, không lặp, đúng $p-1$ điều kiện (sai $\Rightarrow$ dừng, báo rõ).
+\item[Bước 1 — Chọn cách giải:] $p=1$: $S_k=\frac{y_{k+1}-y_k}{h_k}x+\frac{y_kx_{k+1}-y_{k+1}x_k}{h_k}$, sang bước 5. $p=2$ (cho $S'(x_0)$ hoặc $S'(x_n)$): bước 2. $p=3$, mỗi đầu một điều kiện $S'$/$S''$: bước 3. Còn lại: bước 4.
+\item[Bước 2 — Cấp 2:] $m_k=S'(x_k)$: $\gamma_k:=\frac{2(y_{k+1}-y_k)}{h_k}$; cho $m_0$: $m_{k+1}:=\gamma_k-m_k$ ($k=0..n-1$); cho $m_n$: $m_k:=\gamma_k-m_{k+1}$ ($k=n-1..0$). Hệ số: $a_k=\frac{m_{k+1}-m_k}{2h_k}$, $b_k=\frac{m_kx_{k+1}-m_{k+1}x_k}{h_k}$, $c_k=\frac{-m_kx_{k+1}^2+m_{k+1}x_k^2}{2h_k}+y_k+\frac{m_kh_k}{2}$. Sang bước 5.
+\item[Bước 3 — Cấp 3:] lập hệ ba đường chéo $\ell_i\sigma_{i-1}+d_i\sigma_i+u_i\sigma_{i+1}=r_i$ ($i=0..n$, hàng trong và hàng biên như câu a); giải bằng truy đuổi: $P_0=-u_0/d_0$, $Q_0=r_0/d_0$; $\mu=d_i+\ell_iP_{i-1}$ ($\mu=0\Rightarrow$ suy biến, dừng), $P_i=-u_i/\mu$, $Q_i=(r_i-\ell_iQ_{i-1})/\mu$; $\sigma_n=Q_n$, $\sigma_i=P_i\sigma_{i+1}+Q_i$. Hệ số $a_k,b_k,c_k,d_k$ theo câu a. Sang bước 5.
+\item[Bước 4 — Tổng quát:] lập hệ $(p-1)(n+1)$ phương trình (điều kiện tại $x_{k+1}$ ở trên và $D_{k,r}=v$ ở biên); khử Gauss chọn trụ (trụ $\approx0\Rightarrow$ điều kiện biên không xác định duy nhất spline, dừng); hệ số địa phương $e_{k,j}=D_{k,j}/j!$, $e_{k,p}=\frac{D_{k+1,p-1}-D_{k,p-1}}{p!h_k}$; khai triển $u=x-x_k$ (Horner nhân) ra dạng chính tắc.
+\item[Bước 5 — Kết thúc:] trả về các $S_k$.
+\end{thuattoan}
+
+%=====================================================================
+\section{Câu 21. Spline cho bảng dữ liệu}
+
+\pp{Xử lý dữ liệu.} Bảng đề cho $x=0;\,0.5236;\,1.5708;\,1.0472;\,3.1416$ \textbf{không tăng dần} (cặp $(1.0472;-0.866)$ đứng sau $(1.5708;0)$). Giữ nguyên số liệu, sắp lại theo $x$:
+<<c21_xy>>
+(Lưu ý: số liệu gần $y=\cos x$ nhưng $\cos1.0472=0.5\ne-0.866$; nếu đúng là $\cos x$ thì mốc phải là $2.618$. Ở đây giải đúng số liệu đề cho.)
+<<c21_h>>
+
+\subsection{a) Spline cấp 2 với $S'(0)=0$}
+\pp{Phương pháp.} $m_k=S'(x_k)$, $m_0=S'(0)=0$; từ $S_k(x_{k+1})=y_{k+1}$: $m_k+m_{k+1}=\gamma_k=\frac{2(y_{k+1}-y_k)}{h_k}$ $\Rightarrow$ truy hồi xuôi $m_{k+1}=\gamma_k-m_k$;
+$S_k(x)=\frac{-m_k(x-x_{k+1})^2+m_{k+1}(x-x_k)^2}{2h_k}+y_k+\frac{m_kh_k}{2}=a_kx^2+b_kx+c_k$ (công thức hệ số ở câu 20b, bước 2).
+<<c21a_m>>
+$m=<<c21a_mv>>$.
+<<c21a_he>>
+\begin{ketluan}
+<<c21a_S>>
+\end{ketluan}
+\noindent\textit{Kiểm tra:} nội suy $<<c21a_kt>>$.
+
+\subsection{b) Spline cấp 3 với $S''(0)=-1$, $S''(3.1416)=1$}
+\pp{Đề.} Đề ghi ``$S''(0)=-1,\ S''(0)=1$'' — lặp mốc 0 (mâu thuẫn); hiểu là $S''(0)=-1$, $S''(3.1416)=1$ (khớp với $y\approx\cos x$: $-\cos0=-1$, $-\cos\pi=1$).
+
+\pp{Phương pháp.} Hệ ba đường chéo theo $\sigma_k=S''(x_k)$ (câu 20a) với hàng biên $\sigma_0=-1$, $\sigma_4=1$; giải bằng truy đuổi.
+<<c21b_he_pt>>
+<<c21b_duoi>>
+$\sigma=<<c21b_sigma>>$. Hệ số chính tắc (câu 20a):
+<<c21b_he>>
+\begin{ketluan}
+<<c21b_S>>
+\end{ketluan}
+\noindent\textit{Kiểm tra:} nội suy $<<c21b_kt>>$; $\sigma$ so với \texttt{scipy.interpolate.CubicSpline}: $<<c21b_sc>>$.
+
+\subsection{c) Spline cấp 3 với $S'(0)=S'(3.1416)=0$}
+\pp{Phương pháp.} Như câu b, hàng biên thay bằng điều kiện đạo hàm cấp 1:
+$\frac{h_0}{3}\sigma_0+\frac{h_0}{6}\sigma_1=s_0-0$, \quad $\frac{h_3}{6}\sigma_3+\frac{h_3}{3}\sigma_4=0-s_3$.
+<<c21c_he_pt>>
+<<c21c_duoi>>
+$\sigma=<<c21c_sigma>>$.
+<<c21c_he>>
+\begin{ketluan}
+<<c21c_S>>
+\end{ketluan}
+\noindent\textit{Kiểm tra:} nội suy $<<c21c_kt>>$; $\sigma$ so với \texttt{scipy}: $<<c21c_sc>>$.
+
+%=====================================================================
+\section{Câu 22. Thuật toán phương pháp bình phương tối thiểu}
+
+\subsection{a) Hàm thực nghiệm với tập cơ sở $\{\varphi_j\}_{j=1}^m$ và sai số trung bình phương}
+\pp{Cơ sở.} Tìm $g=\sum_{j=1}^ma_j\varphi_j$ cực tiểu $S(a)=\sum_{i=1}^n\big(g(x_i)-y_i\big)^2$. Với $\Phi=(\varphi_j(x_i))_{n\times m}$: $S=a^tMa-2y^t\Phi a+y^ty$, $M=\Phi^t\Phi$; $\nabla S=0\Leftrightarrow Ma=\Phi^ty$ (hệ chuẩn; $M$ đối xứng, xác định dương khi các cột $\Phi$ độc lập). Sai số trung bình phương $\sigma=\sqrt{\frac1n\sum(g(x_i)-y_i)^2}$.
+\begin{thuattoan}{Bình phương tối thiểu tuyến tính theo tham số}
+\item[Input:] $(x_i,y_i)$, $i=1..n$; cơ sở $\varphi_1..\varphi_m$ (biểu thức theo $x$).
+\item[Output:] $a=(a_1..a_m)$; $\sigma$.
+\item[Bước 0 — Xử lý dữ liệu:] đọc cặp $(x_i,y_i)$ (file nhiều bộ dữ liệu cạnh nhau thì chọn bộ); chuẩn hoá số, loại ô lỗi và báo; \emph{không} gộp mốc trùng (cho phép nhiều quan sát tại một $x$), không cần sắp xếp; loại điểm làm $\varphi_j(x_i)$ không xác định (vd $1/x$ tại $x=0$); cần $n\ge m$.
+\item[Bước 1 — Ma trận cơ sở:] $\Phi_{ij}:=\varphi_j(x_i)$.
+\item[Bước 2 — Hệ chuẩn:] $M_{jk}:=\sum_i\Phi_{ij}\Phi_{ik}$, $b_j:=\sum_i\Phi_{ij}y_i$.
+\item[Bước 3 — Giải $Ma=b$:] khử Gauss chọn trụ: với $c=1..m$: chọn hàng trụ $|M_{pc}|$ lớn nhất ($\approx0\Rightarrow$ ``ma trận suy biến: cơ sở phụ thuộc tuyến tính trên dữ liệu'', dừng), đổi hàng, khử phía dưới; thế ngược.
+\item[Bước 4 — Sai số:] $g_i:=\sum_ja_j\Phi_{ij}$; $\sigma:=\sqrt{\frac1n\sum_i(g_i-y_i)^2}$.
+\item[Bước 5 — Kết thúc:] trả về $a$, $\sigma$.
+\end{thuattoan}
+
+\subsection{b) Dạng $y=a\,e^{b_1\varphi_1(x)+b_2\varphi_2(x)}$ và $y=a\,x^b$}
+\pp{Tuyến tính hoá.} $y_i$ cùng dấu $s$: $\ln(sy)=\ln(sa)+b_1\varphi_1+b_2\varphi_2$ — tuyến tính theo $(\ln(sa),b_1,b_2)$ với cơ sở $(1,\varphi_1,\varphi_2)$ ($\varphi_j$ không được là hằng, vì hằng trùng vai trò với $\ln a$). $y=ax^b$: $\ln(sy)=\ln(sa)+b\ln x$ (dạng trên với $\varphi_1=\ln x$, cần $x_i>0$).
+
+\pp{Lưu ý.} Bình phương tối thiểu trên $\ln y$ cực tiểu $\sum(\ln y_i-\ln g_i)^2\approx\sum\big(\frac{y_i-g_i}{y_i}\big)^2$ — sai số \emph{tương đối}, nên điểm có $|y_i|$ nhỏ (cỡ nhiễu) bị khuếch đại. Vì vậy thêm bước hiệu chỉnh Gauss--Newton để cực tiểu đúng $\sum(y_i-g_i)^2$; mỗi bước lại là một bài toán bình phương tối thiểu tuyến tính có trọng số.
+\begin{thuattoan}{Hàm dạng mũ / luỹ thừa}
+\item[Input:] $(x_i,y_i)$; cơ sở $\varphi_1,\varphi_2$ (luỹ thừa: $\varphi_1=\ln x$); $\varepsilon$, $N$ cho bước hiệu chỉnh.
+\item[Output:] $a$, $b_j$, $\sigma$ (trên $y$ gốc).
+\item[Bước 0 — Xử lý dữ liệu:] như câu a; thêm: $y_i=0$ hoặc trái dấu đa số $\Rightarrow$ loại điểm và báo (không lấy $\ln$ được), loại quá nửa $\Rightarrow$ dừng; dạng luỹ thừa loại $x_i\le0$; $\varphi_j$ là hằng trên lưới $\Rightarrow$ dừng.
+\item[Bước 1 — Dấu:] $s:=\operatorname{sign}y_i$.
+\item[Bước 2 — Đổi biến:] $z_i:=\ln(sy_i)$; cơ sở $(1,\varphi_1,\varphi_2)$.
+\item[Bước 3 — Bình phương tối thiểu:] $(c_0,c_1,c_2)$ theo câu a với dữ liệu $(x_i,z_i)$.
+\item[Bước 4 — Trả biến:] $a:=s\,e^{c_0}$, $b_j:=c_j$; $\sigma:=\sqrt{\frac1n\sum(a\,e^{\sum b_j\varphi_j(x_i)}-y_i)^2}$.
+\item[Bước 5 — Hiệu chỉnh (Gauss--Newton):] khởi tạo $c$ bằng bình phương tối thiểu có trọng số $w_i=y_i^2$ trên $z_i$; lặp $j=0..N-1$: $g_i:=s\,e^{(\Phi c)_i}$, $\tilde z_i:=\ln(sg_i)+\frac{y_i-g_i}{g_i}$, $w_i:=g_i^2$, $c^{\text{mới}}$ := nghiệm của $\Phi^tW\Phi c=\Phi^tW\tilde z$; dừng khi $\max|c^{\text{mới}}-c|<\varepsilon(1+\max|c|)$; hết $N$ lần $\Rightarrow$ báo không hội tụ, giữ kết quả bước 4.
+\item[Bước 6 — Kết thúc:] chọn kết quả có $\sigma$ nhỏ hơn; trả về $a$, $b$, $\sigma$.
+\end{thuattoan}
+
+%=====================================================================
+\section{Câu 23. Hàm thực nghiệm từ file dữ liệu}
+
+\pp{Dữ liệu.} \texttt{data Câu 23.xlsx} có 4 bộ dữ liệu đặt cạnh nhau (``Câu a'' … ``Câu d''), mỗi bộ 60 cặp $(x_i,y_i)$. Bộ a, b, d sạch; bộ c có một mốc trùng $x=2.63$ với hai giá trị $y$ khác nhau — giữ cả hai (bình phương tối thiểu cho phép). Trong các bảng dưới chỉ in 5 dòng đầu, 2 dòng cuối và dòng tổng $\sum$ (ô khung — đúng các phần tử của hệ chuẩn); bảng đầy đủ 60 dòng in bởi chương trình. Cột có thừa số là hàm hằng $1$ được bỏ vì trùng cột khác (vd $\sum1\cdot y_i=\sum y_i$, $\sum1\cdot1=n$).
+
+\subsection{a) $y=ax+\dfrac bx$}
+\pp{Phương pháp.} Tuyến tính theo $(a,b)$, cơ sở $\varphi_1=x$, $\varphi_2=\frac1x$. Hệ chuẩn:
+\[ \begin{cases} a\sum x_i^2+b\sum1=\sum x_iy_i\\ a\sum1+b\sum\frac1{x_i^2}=\sum\frac{y_i}{x_i}\end{cases}\qquad(\textstyle\sum1=n=60). \]
+<<c23a_bang>>
+<<c23a_he>>
+Khử Gauss:
+<<c23a_tg>>
+$\Rightarrow a=<<c23a_a>>$, $b=<<c23a_b>>$; \ $\sigma=\sqrt{\frac1{60}\sum(g(x_i)-y_i)^2}=<<c23a_sigma>>$.
+\begin{ketluan}
+$y\approx<<c23a_a>>\,x+\dfrac{<<c23a_b>>}{x}$, \quad $\sigma=<<c23a_sigma>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra} với \texttt{numpy.linalg.lstsq}: $<<c23a_kt>>$.
+
+\subsection{b) $y=ax^2+b\cos x+c$}
+\pp{Phương pháp.} Cơ sở $\varphi_1=x^2$, $\varphi_2=\cos x$, $\varphi_3=1$; hệ chuẩn $3\times3$ $M_{jk}=\sum\varphi_j\varphi_k$, $b_j=\sum\varphi_jy_i$:
+<<c23b_bang>>
+<<c23b_he>>
+Khử Gauss chọn trụ:
+<<c23b_tg>>
+$\Rightarrow a=<<c23b_a>>$, $b=<<c23b_b>>$, $c=<<c23b_c>>$; \ $\sigma=<<c23b_sigma>>$.
+\begin{ketluan}
+$y\approx<<c23b_a>>\,x^2+(<<c23b_b>>)\cos x+<<c23b_c>>$, \quad $\sigma=<<c23b_sigma>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra} với \texttt{numpy.linalg.lstsq}: $<<c23b_kt>>$.
+
+\subsection{c) $y=a\,e^{bx+cx^2}$}
+\pp{Phương pháp (theo slide).} $y_i>0$ mọi $i$ $\Rightarrow$ $z=\ln y=\ln a+bx+cx^2$, cơ sở $(1,x,x^2)$:
+<<c23c_bang>>
+<<c23c_he>>
+<<c23c_tg>>
+$\Rightarrow(\ln a,b,c)=<<c23c_c>>$, $a=<<c23c_a>>$. Sai số trên $z$: $\sigma_z=<<c23c_sz>>$; trên $y$ gốc: $\sigma=<<c23c_sigma>>$ — \textbf{rất lớn} so với độ lớn của $y$ ($\le2.5$).
+
+\pp{Nhận xét, hiệu chỉnh.} Từ $x\approx2.7$ trở đi $y$ chỉ còn cỡ $10^{-3}$--$10^{-2}$ và dao động ngẫu nhiên (nhiễu đo), $\ln y$ của các điểm này sai tới vài đơn vị nên chi phối hệ chuẩn (tuyến tính hoá cực tiểu sai số tương đối). Hiệu chỉnh Gauss--Newton (câu 22b, bước 5) cực tiểu đúng $\sum(y_i-g_i)^2$:
+<<c23c_gn>>
+Hội tụ sau $<<c23c_gn_lan>>$ lần: $a=<<c23c_a2>>$, $b=<<c23c_b2>>$, $c=<<c23c_cc2>>$, $\sigma=<<c23c_sigma2>>$.
+\begin{ketluan}
+Tuyến tính hoá (slide): $y\approx<<c23c_a>>\,e^{<<c23c_b>>x+<<c23c_cc>>x^2}$, $\sigma=<<c23c_sigma>>$ (không dùng được).\\
+Sau hiệu chỉnh: $y\approx<<c23c_a2>>\,e^{<<c23c_b2>>x<<c23c_cc2>>x^2}$, \quad $\sigma=<<c23c_sigma2>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} tuyến tính hoá so với \texttt{numpy}: $<<c23c_kt>>$; Gauss--Newton so với \texttt{scipy curve\_fit}: $<<c23c_kt2>>$.
+
+\subsection{d) $y=a\,x^b$}
+\pp{Phương pháp.} $y_i<0$ mọi $i$ ($s=-1$), $x_i>0$ $\Rightarrow$ $z=\ln(-y)=\ln(-a)+b\ln x$, cơ sở $(1,\ln x)$:
+<<c23d_bang>>
+<<c23d_he>>
+<<c23d_tg>>
+$\Rightarrow(\ln(-a),b)=<<c23d_c>>$, $a=-e^{\ln(-a)}=<<c23d_a>>$, $b=<<c23d_b>>$; $\sigma=<<c23d_sigma>>$ ($\sigma_z=<<c23d_sz>>$).
+
+\pp{Hiệu chỉnh Gauss--Newton:}
+<<c23d_gn>>
+$a=<<c23d_a2>>$, $b=<<c23d_b2>>$, $\sigma=<<c23d_sigma2>>$ — chỉ cải thiện nhỏ vì $|y_i|$ không nhỏ.
+\begin{ketluan}
+Tuyến tính hoá: $y\approx<<c23d_a>>\,x^{<<c23d_b>>}$, $\sigma=<<c23d_sigma>>$; \quad hiệu chỉnh: $y\approx<<c23d_a2>>\,x^{<<c23d_b2>>}$, $\sigma=<<c23d_sigma2>>$.
+\end{ketluan}
+\noindent\textit{Kiểm tra:} tuyến tính hoá so với \texttt{numpy}: $<<c23d_kt>>$; Gauss--Newton so với \texttt{scipy}: $<<c23d_kt2>>$.
+
+\end{document}

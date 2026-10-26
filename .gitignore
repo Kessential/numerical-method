@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# LaTeX — file phu khi chay xelatex
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.xdv
+
+# File sinh tu mau_loi_giai.tex (chay lai sinh_loi_giai.py la co)
+docs/loi_giai/loi_giai_bai_tap.tex
+
+# Tai lieu mon hoc (slide, de cuong, bai tap) — chi de doc
+slide_example/
+
+# Cau hinh may ca nhan
+.claude/settings.local.json
+.vscode/
+.idea/
+
+# He dieu hanh
+Thumbs.db
+desktop.ini
+.DS_Store
