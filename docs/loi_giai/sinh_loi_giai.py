@@ -305,6 +305,13 @@ def tong_hang(nhan, k, gia):
     return [r"\multicolumn{" + str(k) + r"}{l}{$" + nhan + "$}"] + [ob(so(t)) for t in gia]
 
 
+def rut_lap(rows):
+    """Hang bang lap: chi in lan 1, 2, ap chot, cuoi (giua in \\vdots); tong <= 4 hang thi in het."""
+    if len(rows) <= 4:
+        return rows
+    return rows[:2] + [[r"\vdots"] * len(rows[0])] + rows[-2:]
+
+
 def bang_horner_lap(a, c, k, bien="x"):
     """Bang Horner chia lap tai c (muc 2, horner.md), o r_j dong khung. Tra ve (bang, r, v)."""
     n = len(a) - 1
@@ -329,7 +336,6 @@ def cau3():
                                    [[str(i), so(t[i]), so(x[i])] for i in range(n)])
         V[f"c3_p_{ten}"], V[f"c3_q_{ten}"] = so(p), so(q)
         V[f"c3_W_{ten}"] = so(W)
-        V[f"c3_E_{ten}"] = se(W / math.factorial(n))
         V[f"c3_x_{ten}"] = vec_hien(x, "x")
         # kiem tra voi chebroots
         tc = np.sort(np.polynomial.chebyshev.chebroots([0] * n + [1]))
@@ -340,18 +346,13 @@ def cau3():
 
 def cau4():
     a = [3.0, 0.0, -2.0, -1.0]
-    ten_dh = ["P", "P'", "P''", "P'''"]
     for c, ten in ((0.0, "0"), (2.15, "1")):
         B, r, v = bang_horner_lap(a, c, 3)
         V[f"c4_bang_{ten}"] = B
         Q = nw.horner_dao_ham(list(a), c, 0)[2][0][:-1]
         V[f"c4_P_{ten}"] = so(r[0])
-        V[f"c4_Q_{ten}"] = da_thuc(Q, ten=r"Q_2(x)")
         V[f"c4_Qv_{ten}"] = vecl(Q)
-        V[f"c4_r_{ten}"] = vecl(r)
         V[f"c4_v_{ten}"] = vecl(v)
-        V[f"c4_dh_{ten}"] = (r"\[ P^{(j)}(c)=j!\,r_j:\qquad " +
-                             r",\quad ".join(f"{t}({sl(c)})={so(v[j])}" for j, t in enumerate(ten_dh)) + r". \]")
         # kiem tra numpy
         V[f"c4_kt_{ten}"] = so(max(abs(np.polyval(np.polyder(a, j) if j else a, c) - v[j]) for j in range(4)))
 
@@ -368,7 +369,6 @@ def cau5():
             hang = [ob(t) for t in hang]
         rows.append([sl(z)] + [""] * (m - i - 1) + hang)
     V["c5_bang"] = bang(["x_k"] + cot_mu(m), rows)
-    V["c5_p"] = vecl(p)
     V["c5_w"] = da_thuc(p, ten="w_6(x)", rong_max=RONG_KL)
     V["c5_kt"] = so(float(np.max(np.abs(np.array(p) - np.poly(xs)))))
 
@@ -384,16 +384,10 @@ def cau7():
     for i, p in enumerate(bang_t):
         rows.append([sl(x[i])] + [""] * (n - i) + [so(t) for t in p])
     V["c7_bang_tich"] = bang(["x_i"] + cot_mu(n + 1), rows)
-    V["c7_bang_D"] = bang(["i", "x_i", "y_i", "D_i", "y_i/D_i"],
-                          [[str(i), sl(x[i]), sl(y[i]), so(D[i]), so(y[i] / D[i])] for i in range(n + 1)])
-    rows = []
-    for i, (q, du) in enumerate(bang_c):
-        du = 0.0 if abs(du) < 1e-9 * max(1.0, max(abs(t) for t in bang_t[-1])) else du   # du = 0 (sai so lam tron)
-        rows.append([str(i), sl(x[i]), so(y[i] / D[i])] + [so(t) for t in q] + [so(du)])
+    rows = [[str(i), sl(x[i]), so(D[i]), so(y[i] / D[i])] + [so(t) for t in q] for i, (q, _) in enumerate(bang_c)]
     rows.append(None)
-    rows.append(tong_hang(r"\sum_i\frac{y_i}{D_i}\,q^{(i)}", 3, a) + [""])
-    V["c7_bang_chia"] = bang(["i", "x_i", "y_i/D_i"] + cot_mu(n) + [r"\text{dư}"], rows)
-    V["c7_a"] = vec_hien(a, "a", RONG_KL)
+    rows.append(tong_hang(r"\sum_i\frac{y_i}{D_i}\,q^{(i)}", 4, a))
+    V["c7_bang_chia"] = bang(["i", "x_i", "D_i", "y_i/D_i"] + cot_mu(n), rows)
     V["c7_P"] = da_thuc(a, ten="P_5(x)", rong_max=RONG_KL)
     V["c7_kt"] = so(float(np.max(np.abs(np.polyval(a, x) - np.array(y)))))
     V["c7_kt2"] = so(float(np.max(np.abs(np.array(a) - np.linalg.solve(np.vander(x), y))) / np.max(np.abs(a))))
@@ -439,7 +433,6 @@ def newton_bat_ky(x, y, chieu, xbar, k, tien_to):
     V[tien_to + "_bang_tich"] = bang(["k", nut] + cot_mu(n), rows,
                                      nhom=(3, n + 3, r"ma trận $A$ (hàng $k$: hệ số của $\omega_k(x)$)"))
     V[tien_to + "_CA"] = vec_hien(R["b"], r"a=C\cdot A")
-    V[tien_to + "_a"] = vec_hien(R["b"], "a", RONG_KL)
     V[tien_to + "_P"] = da_thuc(R["b"], ten=f"P_{{{n}}}(x)", rong_max=RONG_KL)
     r, v, _ = nw.horner_dao_ham(list(R["b"]), xbar, k)          # Horner chia lap (Cau 4c), khong in bang
     V[tien_to + "_f"] = so(v[0])
@@ -469,27 +462,14 @@ def doc_excel(ten):
     return [round(v, 10) for v in x], y, bao
 
 
-def bang_trich_xuat(x, xbar, thu_tu):
-    """Bang qua trinh trich xuat (Cau 11a): moc tam = moc dau tien, dem so moc trai / phai sau moi lan ket nap.
-    Tra ve (bang, cau ket luan)."""
+def cau_trich_xuat(x, thu_tu):
+    """Qua trinh trich xuat (Cau 11a) trong 1 cau: moc tam = moc dau tien, thu tu ket nap, so moc trai / phai, L, R."""
     tam = thu_tu[0]
-    rows, trai, phai = [], 0, 0
-    for s, j in enumerate(thu_tu, 1):
-        trai, phai = trai + (j < tam), phai + (j > tam)
-        phia = "tâm" if j == tam else ("trái" if j < tam else "phải")
-        rows.append([str(s), str(j), sl(x[j]), so(abs(xbar - x[j])), rf"\text{{{phia}}}", str(trai), str(phai)])
+    trai, phai = sum(j < tam for j in thu_tu), sum(j > tam for j in thu_tu)
     L_, R_ = min(thu_tu), max(thu_tu)
-
-    def ben(so_moc, a, b, ten):
-        if so_moc == 0:
-            return f"không có mốc {ten}"
-        ds = f"x_{{{a}}}" if a == b else f"x_{{{a}}},\\dots,x_{{{b}}}"
-        return f"${so_moc}$ mốc {ten} (${ds}$)"
-
-    cau = (f"Mốc tâm (gần $\\bar x$ nhất) là $x_{{{tam}}}={sl(x[tam])}$; {ben(trai, L_, tam - 1, 'trái')}, "
-           f"{ben(phai, tam + 1, R_, 'phải')} $\\Rightarrow L={L_}$, $R={R_}$.")
-    return bang([r"\text{lần}", r"j\ \text{(chỉ số gốc)}", "x_j", r"|\bar x-x_j|", r"\text{phía}",
-                 r"\text{số mốc trái}", r"\text{số mốc phải}"], rows), cau
+    them = ("; kết nạp lần lượt $" + ",".join(f"x_{{{j}}}" for j in thu_tu[1:]) + "$") if len(thu_tu) > 1 else ""
+    return (f"mốc tâm (gần $\\bar x$ nhất) là $x_{{{tam}}}={sl(x[tam])}${them} $\\Rightarrow$ "
+            f"${trai}$ mốc trái, ${phai}$ mốc phải, $L={L_}$, $R={R_}$.")
 
 
 # ===== CAU 11 =====
@@ -502,7 +482,7 @@ def cau11():
     V["c11_h"] = sl(h)
     xbar, m = 3.52, 9
     L_, R_, thu_tu = nw.trich_xuat(x, xbar, m)
-    V["c11_trich"], V["c11_ket_trich"] = bang_trich_xuat(x, xbar, thu_tu)
+    V["c11_ket_trich"] = cau_trich_xuat(x, thu_tu)
     xs, ys = x[L_:R_ + 1], y[L_:R_ + 1]
     V["c11_bang_xy"] = bang(["i"] + [str(i) for i in range(m)],
                             [["x_i"] + [sl(t) for t in xs], ["y_i"] + [sl(t) for t in ys]])
@@ -539,7 +519,7 @@ def trung_tam(x, y, ct, xbar, k, m, tien_to):
     h = tt.cach_deu(x)
     if m < N + 1:
         L_, R_, thu_tu = tt.trich_xuat(x, xbar, m)
-        V[tien_to + "_trich"], V[tien_to + "_ket_trich"] = bang_trich_xuat(x, xbar, thu_tu)
+        V[tien_to + "_ket_trich"] = cau_trich_xuat(x, thu_tu)
     else:
         L_, R_ = 0, N
     xs, ys = x[L_:R_ + 1], y[L_:R_ + 1]
@@ -641,6 +621,24 @@ def cau12_17(x11, y11):
 CHIEU = {1: "tăng", -1: "giảm", 0: "hằng"}
 
 
+def mo_ta_lap(huong, m, k=None, hoa=False):
+    """Mo ta lap Newton tien / lui (Cau 18d): moc xuat phat, cac moc dung, d_j. k = None: viet theo chi so k."""
+    def chi(d):
+        if k is not None:
+            return str(k + d)
+        return "k" if d == 0 else (f"k+{d}" if d > 0 else f"k{d}")
+    if huong == "tien":
+        s, a, b, ten = chi(0), chi(0), chi(m - 1), "\\Delta"
+        dau = "đủ mốc bên phải nên dùng lặp Newton tiến"
+    else:
+        s, a, b, ten = chi(1), chi(2 - m), chi(1), "\\nabla"
+        dau = "không đủ mốc bên phải nên dùng lặp Newton lùi"
+    if hoa:
+        dau = dau[0].upper() + dau[1:]
+    return (f"{dau} (Câu 18d) xuất phát từ $x_{{{s}}}$: $t=(x-x_{{{s}}})/h$, dùng các mốc "
+            f"$x_{{{a}}},\\dots,x_{{{b}}}$, $d_j={ten}^jy_{{{s}}}$ (các ô khung)")
+
+
 def cau19():
     x, y, bao = doc_excel("data Câu 19.xlsx")
     V["c19_N"] = str(len(x))
@@ -690,10 +688,18 @@ def cau19():
                           "[{};\\ {}]".format(*(sl(x[e]) for e in next(dd for dd in doan if dd[0] <= k < dd[1])[:2]))]
                          for k in kh])
     V["c19b_so"] = str(len(kh))
+    lps = [nsn.lap(x, y, yb, k, h, m, 1e-6, 100) for k in kh]
+    chung = len({(lp["huong"], lp["m"]) for lp in lps}) == 1      # cung chieu, cung so moc: mo ta 1 lan
+    lap_txt = (r"$t_0=A=\dfrac{\bar y-d_0}{d_1}$, $t_{l+1}=\varphi(t_l)$, "
+               r"dừng khi $h|t_{l+1}-t_l|<\varepsilon$.")
+    if chung:
+        V["c19b_chung"] = ("Cả $%d$ khoảng đều " % len(kh) if len(kh) > 1 else "Khoảng này ") + \
+            mo_ta_lap(lps[0]["huong"], lps[0]["m"]) + "; " + lap_txt
+    else:
+        V["c19b_chung"] = "Mỗi khoảng: " + lap_txt
     khoi = []
     nghiem = []
-    for r, k in enumerate(kh, 1):
-        lp = nsn.lap(x, y, yb, k, h, m, 1e-6, 100)
+    for r, (k, lp) in enumerate(zip(kh, lps), 1):
         idx, D, d = lp["idx"], lp["D"], lp["d"]
         mm = lp["m"]
         rows = []
@@ -710,31 +716,24 @@ def cau19():
         rows = [[str(j), f"{ten_d}^{{{j}}}y_{{{s}}}", sd(d[j], 7), "" if j < 2 else so(lp["B"][j])] for j in range(mm)]
         b_B = bang(["j", "", "d_j", r"B_j=\dfrac{d_j}{j!\,d_1}"], rows)
         t = lp["t"]
-        rows = [["0", so(t[0]), so(x[s] + t[0] * h), ""]]
-        for j in range(1, len(t)):
-            rows.append([str(j), so(t[j]), so(x[s] + t[j] * h), so(h * abs(t[j] - t[j - 1]))])
-        rows[-1][2] = ob(rows[-1][2])
-        b_it = bang(["l", "t_l", r"x_{" + str(s) + r"}+t_lh", r"h|t_l-t_{l-1}|"], rows)
+        rows = [[str(j), so(t[j]), so(h * abs(t[j] - t[j - 1]))] for j in range(1, len(t))]
+        rows[-1][1] = ob(rows[-1][1])
+        b_it = bang(["l", "t_l", r"h|t_l-t_{l-1}|"], rut_lap(rows))
         phi = hien(r"\varphi(t)", [so(lp["A"])] + [
             ("- " if lp["B"][j] >= 0 else "+ ") + so(abs(lp["B"][j])) +
             "".join(f"(t{'-' if lp['huong'] == 'tien' else '+'}{l})" if l else "t" for l in range(j))
             for j in range(2, mm)])
+        rieng = "" if chung else " " + mo_ta_lap(lp["huong"], mm, k, hoa=True) + ":"
         khoi.append(L(r"""
-\paragraph{Nghiệm @r@: khoảng cách ly $(x_{@k@};x_{@k1@})=(@xk@;\ @xk1@)$.}
-@huong_txt@, dùng $@m@$ mốc $x_{@i0@},\dots,x_{@i1@}$, $d_j=@ten_d@^jy_{@s@}$ (các ô khung):
+\paragraph{Nghiệm @r@: khoảng cách ly $(x_{@k@};x_{@k1@})=(@xk@;\ @xk1@)$.}@rieng@
 @b_sp@
 @b_B@
 @phi@
-\[t_0=\frac{\bar y-d_0}{d_1}=@t0@,\qquad t_{l+1}=\varphi(t_l),\ \text{dừng khi } h|t_{l+1}-t_l|<\varepsilon=10^{-6}.\]
+$t_0=@t0@$:
 @b_it@
-Hội tụ sau $@lan@$ lần lặp; $|\varphi'(t^*)|=@q@<1$ (điều kiện hội tụ thoả). Nghiệm
-$\bar x_{@r@}=x_{@s@}+t^*h=@x@$.
-""", r=r, k=k, k1=k + 1, xk=sl(x[k]), xk1=sl(x[k + 1]), m=mm, i0=idx[0], i1=idx[-1], ten_d=ten_d, s=s,
-            huong_txt=("Đủ mốc bên phải nên dùng lặp Newton tiến xuất phát từ $x_{%d}=%s$, $t=(x-x_{%d})/h$"
-                       % (s, sl(x[s]), s)) if lp["huong"] == "tien" else
-            ("Không đủ mốc bên phải nên dùng lặp Newton lùi xuất phát từ $x_{%d}=%s$, $t=(x-x_{%d})/h$"
-             % (s, sl(x[s]), s)),
-            b_sp=b_sp, b_B=b_B, phi=phi, t0=so(t[0]), b_it=b_it, lan=len(t) - 1, q=so(lp["q"]), x=so(lp["xbar"])))
+Hội tụ sau $@lan@$ lần lặp; $\bar x_{@r@}=x_{@s@}+t^*h=@x@$.
+""", r=r, k=k, k1=k + 1, xk=sl(x[k]), xk1=sl(x[k + 1]), s=s, rieng=rieng,
+            b_sp=b_sp, b_B=b_B, phi=phi, t0=so(t[0]), b_it=b_it, lan=len(t) - 1, x=so(lp["xbar"])))
         nghiem.append(lp["xbar"])
         V[f"c19b_kt{r}"] = so(abs(nsn.y_tai(x, y, lp["xbar"], m) - yb))
         hn_ = nsn.ham_nguoc(x, y, yb, k, *next(dd for dd in doan if dd[0] <= k < dd[1])[:2], m)
@@ -781,20 +780,9 @@ def cau21():
     # b), c) bac 3
     for ten, dk in (("b", [(2, 0, -1.0), (2, n, 1.0)]), ("c", [(1, 0, 0.0), (1, n, 0.0)])):
         hh, s, (Lr, Dg, U, R), P, Q, sg, he = sp.spline3(x, y, dk)
-        M = [[0.0] * (n + 1) for _ in range(n + 1)]
-        for i in range(n + 1):
-            M[i][i] = Dg[i]
-            if i:
-                M[i][i - 1] = Lr[i]
-            if i < n:
-                M[i][i + 1] = U[i]
-        V[f"c21{ten}_he_pt"] = bang([""] + [f"\\sigma_{{{j}}}" for j in range(n + 1)] + [r"\text{vế phải}"],
-                                    [[f"i={i}"] + [so(v) for v in M[i]] + [so(R[i])] for i in range(n + 1)])
         V[f"c21{ten}_duoi"] = bang(["i", r"\ell_i", "d_i", "u_i", "r_i", "P_i", "Q_i", r"\sigma_i"],
                                    [[str(i), so(Lr[i]), so(Dg[i]), so(U[i]), so(R[i]), so(P[i]),
                                      so(Q[i]), ob(so(sg[i]))] for i in range(n + 1)])
-        V[f"c21{ten}_sigma"] = vecl(sg)
-        V[f"c21{ten}_he"] = bang_he(he, 3)
         V[f"c21{ten}_S"] = ham(he)
         V[f"c21{ten}_kt"] = kiem_spline(x, y, he, 3, dk)
         from scipy.interpolate import CubicSpline
@@ -812,6 +800,43 @@ def kiem_spline(x, y, he, p, dk):
 
 
 # ===== CAU 23 =====
+
+def ten_tich(u, v):
+    """Ten LaTeX cua tich hai ham co so theo x (hoac ham co so nhan y, z)."""
+    bac = {"x": 1, "x^2": 2, "x^3": 3, "x^4": 4}
+    if u in bac and v in bac:
+        return f"x^{bac[u] + bac[v]}"
+    if v in ("y", "z"):
+        return f"{v}/x" if u == "1/x" else (u + v if u in bac else v + u)
+    if u == v:
+        return {"1/x": "1/x^2", r"\cos x": r"\cos^2x", r"\ln x": r"(\ln x)^2"}.get(u, f"({u})^2")
+    return u + v
+
+
+def bang_bptt(du_lieu, cs, Phi, w, ten_w):
+    """Bang tinh he chuan: chi in dong tong cua cac cot can cho he (phi_j*phi_k, phi_j*w; bo cot trung,
+    cot hang 1 vi tong = n). du_lieu: [(ten, gia)] cac cot du lieu, chi in neu tong cua no nam trong he."""
+    cot = [[ten, np.asarray(v, dtype=float), False] for ten, v in du_lieu]
+
+    def them(ten_c, v):
+        if np.allclose(v, 1.0):
+            return
+        for c in cot:
+            if np.allclose(c[1], v):
+                c[2] = True                              # trung cot co san: tong cua no la phan tu he chuan
+                return
+        cot.append([ten_c.replace("x", "x_i").replace("y", "y_i").replace("z", "z_i"), v, True])
+
+    ten = [t for t, _ in cs]
+    m = len(cs)
+    cap = sorted(((j, k) for j in range(m) for k in range(j, m)), key=lambda p: "1" not in (ten[p[0]], ten[p[1]]))
+    for j, k in cap:                                     # tich voi ham hang 1 truoc (cot phi_j), sau do phi_j*phi_k
+        them(ten[k] if ten[j] == "1" else ten[j] if ten[k] == "1" else ten_tich(ten[j], ten[k]), Phi[:, j] * Phi[:, k])
+    for j in range(m):
+        them(ten_w if ten[j] == "1" else ten_tich(ten[j], ten_w), Phi[:, j] * w)
+    cot = [c for c in cot if c[2]]
+    return bang([""] + [c[0] for c in cot], [[r"\sum"] + [so(float(np.sum(c[1]))) for c in cot]])
+
 
 def he_chuan_tex(M, b, an):
     m = len(b)
@@ -834,6 +859,7 @@ def cau23():
         x, y, _ = du[ten]
         Phi = np.column_stack([f(x) for _, f in cs])
         a, M, b, A, g, sigma = bp.bptt(Phi, y)
+        V[f"c23{ten}_bang"] = bang_bptt([("x_i", x), ("y_i", y)], cs, Phi, y, "y")
         V[f"c23{ten}_he"] = he_chuan_tex(M, b, an)
         for j, t in enumerate(an):
             V[f"c23{ten}_{t}"] = so(a[j])
@@ -848,6 +874,7 @@ def cau23():
         Phi1 = np.column_stack([f(x) for _, f in cs])
         c, M, b, A, z, gY, sigma, sz = bp.tuyen_tinh_hoa(Phi1, y, s)
         m = len(cs)
+        V[f"c23{ten}_bang"] = bang_bptt([("x_i", x), ("y_i", y), ("z_i", z)], cs, Phi1, z, "z")
         V[f"c23{ten}_he"] = he_chuan_tex(M, b, an)
         V[f"c23{ten}_c"] = vecl(c)
         V[f"c23{ten}_a"] = so(s * math.exp(c[0]))
@@ -859,7 +886,7 @@ def cau23():
         c2, lan, ok = bp.gauss_newton(Phi1, y, s)
         rows = [[str(j)] + [so(v) for v in cc] + [so(sg)] for j, cc, sg in lan]
         rows[-1] = rows[-1][:1] + [ob(v) for v in rows[-1][1:]]
-        V[f"c23{ten}_gn"] = bang(["l"] + an + [r"\sigma"], rows)
+        V[f"c23{ten}_gn"] = bang(["l"] + an + [r"\sigma"], rut_lap(rows))
         V[f"c23{ten}_gn_lan"] = str(len(lan) - 1)
         V[f"c23{ten}_a2"] = so(s * math.exp(c2[0]))
         V[f"c23{ten}_b2"] = so(c2[1])
