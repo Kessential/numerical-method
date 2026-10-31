@@ -21,7 +21,7 @@
 \newenvironment{thuattoan}[1]
   {\par\medskip\noindent\textbf{Thuật toán: #1}\begin{description}[style=standard,align=left,leftmargin=4.3em,labelwidth=3.9em,labelsep=0.4em,itemsep=1pt,topsep=3pt,font=\normalfont\bfseries]}
   {\end{description}}
-% Buoc con (2.1, 2.2 / TH1, TH2) trong mot buoc
+% Buoc con (2.1, 2.2) trong mot buoc
 \newenvironment{con}
   {\begin{description}[style=standard,align=left,leftmargin=2.1em,labelwidth=1.8em,labelsep=0.3em,itemsep=0pt,topsep=1pt,font=\normalfont]}
   {\end{description}}
@@ -74,7 +74,7 @@ và khi đó $|f(x)-P(x)|\le\dfrac{M_n}{n!}\cdot\dfrac{(b-a)^n}{2^{2n-1}}$, $M_n
 \begin{thuattoan}{Mốc nội suy tối ưu}
 \item[Input:] số mốc $n$; đoạn $[a,b]$.
 \item[Output:] mảng $x=(x_0,\dots,x_{n-1})$, $x_0<x_1<\dots<x_{n-1}$.
-\item[Bước 0:] Nếu $n$ không nguyên hoặc $n<1$ thì báo lỗi, dừng thuật toán.\newline Nếu $a=b$ thì báo lỗi, dừng thuật toán.\newline Nếu $a>b$ thì đổi chỗ $a$ và $b$.
+\item[Bước 0:] Nếu $n<1$ thì báo lỗi, dừng thuật toán.\newline Nếu $a=b$ thì báo lỗi, dừng thuật toán.\newline Nếu $a>b$ thì đổi chỗ $a$ và $b$.
 \item[Bước 1:] Lặp $i=0,\dots,n-1$: tính $x_i:=\dfrac{a+b}{2}-\dfrac{b-a}{2}\cos\dfrac{(2i+1)\pi}{2n}$.
 \item[Bước 2:] Dừng thuật toán, trả về $x$.
 \end{thuattoan}
@@ -97,8 +97,8 @@ và khi đó $|f(x)-P(x)|\le\dfrac{M_n}{n!}\cdot\dfrac{(b-a)^n}{2^{2n-1}}$, $M_n
 \begin{thuattoan}{Horner chia (giá trị, thương, số dư)}
 \item[Input:] vector hệ số $a=(a_n,\dots,a_0)$; số $c$.
 \item[Output:] thương $b=(b_{n-1},\dots,b_0)$; số dư $r=P_n(c)$.
-\item[Bước 0:] Bỏ các hệ số $0$ ở đầu vector $a$.\newline Nếu không còn hệ số nào thì báo $P_n\equiv0$, dừng thuật toán.\newline Đặt $n:=(\text{số phần tử của }a)-1$.
-\item[Bước 1:] Nếu $n=0$ thì đặt $r:=a_0$, dừng thuật toán, trả về $r$.
+\item[Bước 0:] Bỏ các hệ số $0$ ở đầu vector $a$.\newline Nếu không còn hệ số nào ($P_n\equiv0$) thì dừng thuật toán, trả về $b:=(0)$ và $r:=0$.\newline Đặt $n:=(\text{số phần tử của }a)-1$.
+\item[Bước 1:] Nếu $n=0$ thì dừng thuật toán, trả về $b:=(0)$ và $r:=a_0$.
 \item[Bước 2:] Đặt $b_{n-1}:=a_n$.
 \item[Bước 3:] Lặp $i=n-1,\dots,1$: tính $b_{i-1}:=a_i+c\,b_i$.
 \item[Bước 4:] Tính $r:=a_0+c\,b_0$.\newline Dừng thuật toán, trả về $b$ và $r$.
@@ -108,7 +108,7 @@ và khi đó $|f(x)-P(x)|\le\dfrac{M_n}{n!}\cdot\dfrac{(b-a)^n}{2^{2n-1}}$, $M_n
 \begin{thuattoan}{Đạo hàm cấp $0..k$ tại $c$ (Horner chia lặp)}
 \item[Input:] vector hệ số $a=(a_n,\dots,a_0)$; số $c$; cấp $k$.
 \item[Output:] vector $r=(r_0,\dots,r_K)$, $K=\min(k,n)$; vector $v=(v_0,\dots,v_k)$ với $v_j=P_n^{(j)}(c)$.
-\item[Bước 0:] Bỏ các hệ số $0$ ở đầu vector $a$.\newline Nếu không còn hệ số nào thì báo $P_n\equiv0$, dừng thuật toán.\newline Đặt $n:=(\text{số phần tử của }a)-1$.\newline Nếu $k$ không nguyên hoặc $k<0$ thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $k<0$ thì báo lỗi, dừng thuật toán.\newline Bỏ các hệ số $0$ ở đầu vector $a$.\newline Nếu không còn hệ số nào ($P_n\equiv0$) thì dừng thuật toán, trả về $r:=(0)$ và $v:=(0,\dots,0)$ ($k+1$ phần tử).\newline Đặt $n:=(\text{số phần tử của }a)-1$.
 \item[Bước 1:] Đặt $K:=\min(k,n)$.\newline Lặp $i=0,\dots,n$: đặt $b_i:=a_i$.
 \item[Bước 2:] Lặp $j=0,\dots,K$:
   \begin{con}
@@ -140,7 +140,7 @@ $(P,P',P'',P''')(2.15)=(0!\,r_0;\ 1!\,r_1;\ 2!\,r_2;\ 3!\,r_3)=<<c4_v_1>>$.
 \begin{thuattoan}{Horner nhân}
 \item[Input:] vector hệ số $a=(a_n,\dots,a_0)$; số $c$.
 \item[Output:] vector $d=(d_{n+1},\dots,d_0)$ với $P_n(x)\,(x-c)=\sum_{i=0}^{n+1}d_ix^i$.
-\item[Bước 0:] Bỏ các hệ số $0$ ở đầu vector $a$.\newline Nếu không còn hệ số nào thì báo $P_n\equiv0$, dừng thuật toán.\newline Đặt $n:=(\text{số phần tử của }a)-1$.
+\item[Bước 0:] Bỏ các hệ số $0$ ở đầu vector $a$.\newline Nếu không còn hệ số nào ($P_n\equiv0$) thì dừng thuật toán, trả về $d:=(0)$.\newline Đặt $n:=(\text{số phần tử của }a)-1$.
 \item[Bước 1:] Đặt $d_{n+1}:=a_n$.
 \item[Bước 2:] Lặp $i=n,\dots,1$: tính $d_i:=a_{i-1}-c\,a_i$.
 \item[Bước 3:] Tính $d_0:=-c\,a_0$.\newline Dừng thuật toán, trả về $d$.
@@ -195,14 +195,14 @@ Dạng chính tắc của $w_6(x)=(x-2)(x-2.4)(x-2.7)(x-3)(x-3.1)(x-3.4)$:
 \pp{Công thức} (thuật toán Câu 6):
 \[ P_5(x)=\sum_{i=0}^{5}\frac{y_i}{D_i}\,q^{(i)}(x),\qquad q^{(i)}(x)=\frac{w_6(x)}{x-x_i},\qquad D_i=\prod_{j\ne i}(x_i-x_j). \]
 
-\pp{Bảng tích} (hàng cuối là hệ số của $w_6=\sum p_lx^l$): $A_{0,0}=1$, $A_{k,l}=A_{k-1,l-1}-x_{k-1}A_{k-1,l}$):
+\pp{Bảng tích} (hàng cuối là hệ số của $w_6=\sum p_lx^l$; $A_{0,0}=1$, $A_{k,l}=A_{k-1,l-1}-x_{k-1}A_{k-1,l}$):
 <<c7_bang_tich>>
 \pp{Bảng thương} (hàng $i$: chia $w_6$ cho $(x-x_i)$ bằng Horner; $Q_{i,l}$ là hệ số của $x^l$ trong $q^{(i)}$, $p_l$ lấy ở hàng cuối bảng tích):
 \[ Q_{i,5}=p_6=1,\qquad Q_{i,l-1}=p_l+x_i\,Q_{i,l}\ \ (l=5,\dots,1),\qquad \text{dư}=p_0+x_i\,Q_{i,0}=0. \]
 <<c7_bang_thuong>>
 \pp{Bảng hệ số} (ô hàng $i$, cột $j$: $x_i-x_j$; $D_i$ là tích các ô $j\ne i$ của hàng $i$):
 <<c7_bang_he_so>>
-\pp{Hệ số của $P_5$:} với vector hàng $Y=\bigl(\frac{y_0}{D_0},\dots,\frac{y_5}{D_5}\bigr)$ và ma trận $Q$ (6 cột hệ số của bảng thương), vector hệ số của $P_5$ là $Y\cdot Q$:
+\pp{Hệ số của $P_5$:} với vector hàng $Y=\bigl(\frac{y_0}{D_0},\dots,\frac{y_5}{D_5}\bigr)$ và ma trận $Q$ (6 cột hệ số của bảng thương):
 <<c7_YQ>>
 \begin{ketluan}
 <<c7_P>>
@@ -262,12 +262,12 @@ Horner chia lặp $P_5$ tại $c=2.4$ (Câu 4c):
 \begin{thuattoan}{Newton tiến / lùi, mốc bất kỳ}
 \item[Input:] vector $x=(x_0,\dots,x_n)$, $y=(y_0,\dots,y_n)$; chiều (tiến hoặc lùi); điểm $\bar x$; cấp đạo hàm $r$.
 \item[Output:] vector $a=(a_n,\dots,a_0)$ với $P_n(x)=\sum_la_lx^l$; vector $f=(f_0,\dots,f_r)$, $f_j\approx f^{(j)}(\bar x)$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $r$ không nguyên hoặc $r<0$ thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $r<0$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Khởi tạo ma trận $T$ cỡ $(n+1)\times(n+1)$ ($T_{i,k}=f[x_{i-k},\dots,x_i]$).\newline Lặp $i=0,\dots,n$: đặt $T_{i,0}:=y_i$.\newline Lặp lồng $k=1,\dots,n$; $i=k,\dots,n$: tính $T_{i,k}:=\dfrac{T_{i,k-1}-T_{i-1,k-1}}{x_i-x_{i-k}}$.
 \item[Bước 2:] Lặp $k=0,\dots,n$:\thut nếu tiến thì đặt $c_k:=T_{k,k}$;\thut nếu lùi thì đặt $c_k:=T_{n,k}$.
-\item[Bước 3:] Khởi tạo vector $e$, $a$, mỗi vector $n+1$ phần tử (chỉ số $=$ số mũ):\thut $(e_0,e_1,\dots,e_n):=(1,0,\dots,0)$;\thut $(a_0,a_1,\dots,a_n):=(c_0,0,\dots,0)$.\newline Lặp $k=1,\dots,n$:
+\item[Bước 3:] Khởi tạo vector $e=(e_0,e_1,\dots,e_n):=(1,0,\dots,0)$, $a=(a_0,a_1,\dots,a_n):=(c_0,0,\dots,0)$, gồm $n+1$ phần tử.\newline Lặp $k=1,\dots,n$:
   \begin{con}
-  \item[3.1:] Nếu tiến thì đặt $z:=x_{k-1}$; nếu lùi thì đặt $z:=x_{n-k+1}$.\newline Nhân vector $e$ với $(x-z)$ theo thuật toán Câu 5a ($e$ thành hệ số của $\omega_k(x)$).
+  \item[3.1:] Nếu tiến thì đặt $z:=x_{k-1}$; nếu lùi thì đặt $z:=x_{n-k+1}$.\newline Nhân vector $e$ với $(x-z)$ theo thuật toán Câu 5a.
   \item[3.2:] Lặp $l=0,\dots,k$: tính $a_l:=a_l+c_k\,e_l$.
   \end{con}
 \item[Bước 4:] Gọi thuật toán Câu 4c với vector $a$, $c:=\bar x$, cấp $k:=r$, được vector $f=(f_0,\dots,f_r)$, $f_j=P_n^{(j)}(\bar x)$.\newline Dừng thuật toán, trả về $a$ và $f$.
@@ -276,13 +276,13 @@ Horner chia lặp $P_5$ tại $c=2.4$ (Câu 4c):
 \begin{thuattoan}{Newton tiến / lùi, mốc cách đều}
 \item[Input:] vector $x=(x_0,\dots,x_n)$ cách đều, $y=(y_0,\dots,y_n)$; chiều (tiến hoặc lùi); điểm $\bar x$; cấp đạo hàm $r$.
 \item[Output:] vector $b=(b_n,\dots,b_0)$ với $P_n(t)=\sum_lb_lt^l$ ($t=\frac{x-x_0}{h}$ nếu tiến, $t=\frac{x-x_n}{h}$ nếu lùi); vector $f=(f_0,\dots,f_r)$, $f_j\approx f^{(j)}(\bar x)$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Nếu $r$ không nguyên hoặc $r<0$ thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Nếu $r<0$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dùng thuật toán mốc bất kỳ, dừng thuật toán.
 \item[Bước 2:] Khởi tạo ma trận $T$ cỡ $(n+1)\times(n+1)$ ($T_{i,k}=\Delta^ky_{i-k}$).\newline Lặp $i=0,\dots,n$: đặt $T_{i,0}:=y_i$.\newline Lặp lồng $k=1,\dots,n$; $i=k,\dots,n$: tính $T_{i,k}:=T_{i,k-1}-T_{i-1,k-1}$.
 \item[Bước 3:] Lặp $k=0,\dots,n$:\thut nếu tiến thì tính $c_k:=T_{k,k}/k!$;\thut nếu lùi thì tính $c_k:=T_{n,k}/k!$.
-\item[Bước 4:] Khởi tạo vector $e$, $b$, mỗi vector $n+1$ phần tử (chỉ số $=$ số mũ của $t$):\thut $(e_0,e_1,\dots,e_n):=(1,0,\dots,0)$;\thut $(b_0,b_1,\dots,b_n):=(c_0,0,\dots,0)$.\newline Lặp $k=1,\dots,n$:
+\item[Bước 4:] Khởi tạo vector $e=(e_0,e_1,\dots,e_n):=(1,0,\dots,0)$, $b=(b_0,b_1,\dots,b_n):=(c_0,0,\dots,0)$, gồm $n+1$ phần tử.\newline Lặp $k=1,\dots,n$:
   \begin{con}
-  \item[4.1:] Nếu tiến thì đặt $z:=k-1$; nếu lùi thì đặt $z:=-(k-1)$.\newline Nhân vector $e$ với $(t-z)$ theo thuật toán Câu 5a ($e$ thành hệ số của $\omega_k(t)$).
+  \item[4.1:] Nếu tiến thì đặt $z:=k-1$; nếu lùi thì đặt $z:=-(k-1)$.\newline Nhân vector $e$ với $(t-z)$ theo thuật toán Câu 5a.
   \item[4.2:] Lặp $l=0,\dots,k$: tính $b_l:=b_l+c_k\,e_l$.
   \end{con}
 \item[Bước 5:] Nếu tiến thì tính $\bar t:=(\bar x-x_0)/h$; nếu lùi thì tính $\bar t:=(\bar x-x_n)/h$.
@@ -296,9 +296,9 @@ Horner chia lặp $P_5$ tại $c=2.4$ (Câu 4c):
 \begin{thuattoan}{Trích xuất $k$ mốc gần $\bar x$ nhất}
 \item[Input:] vector $x=(x_0,\dots,x_n)$ cách đều, $y=(y_0,\dots,y_n)$; điểm $\bar x$; số mốc $k$.
 \item[Output:] chỉ số $L$, $R$ ($R-L+1=k$); vector $X=(x_L,\dots,x_R)$, $Y=(y_L,\dots,y_R)$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $k$ không nguyên hoặc $k<1$ thì báo lỗi, dừng thuật toán.\newline Nếu $k>n+1$ thì báo ``không đủ mốc'', đặt $k:=n+1$.\newline Nếu $\bar x<x_0$ hoặc $\bar x>x_n$ thì cảnh báo ngoại suy.
-\item[Bước 1:] Tìm mốc gần $\bar x$ nhất: tính $j:=\operatorname{round}\dfrac{\bar x-x_0}{h}$ (số nguyên gần nhất).\newline Nếu $j<0$ thì đặt $j:=0$; nếu $j>n$ thì đặt $j:=n$.\newline Đặt $L:=j$, $R:=j$ (các mốc đã chọn là $x_L,\dots,x_R$).
-\item[Bước 2:] Lặp $s=2,\dots,k$ (mỗi lần thêm mốc kề bên trái hoặc phải, phía gần $\bar x$ hơn):\thut nếu $L=0$ thì $R:=R+1$;\thut ngược lại nếu $R=n$ thì $L:=L-1$;\thut ngược lại nếu $\bar x-x_{L-1}\le x_{R+1}-\bar x$ thì $L:=L-1$, còn không thì $R:=R+1$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $k<1$ thì báo lỗi, dừng thuật toán.\newline Nếu $k>n+1$ thì báo ``không đủ mốc'', đặt $k:=n+1$.\newline Nếu $\bar x<x_0$ hoặc $\bar x>x_n$ thì cảnh báo ngoại suy.
+\item[Bước 1:] Tìm mốc gần $\bar x$ nhất: tính $j:=\operatorname{round}\dfrac{\bar x-x_0}{h}$ (số nguyên gần nhất).\newline Nếu $j<0$ thì đặt $j:=0$; nếu $j>n$ thì đặt $j:=n$.\newline Đặt $L:=j$, $R:=j$.
+\item[Bước 2:] Lặp $s=2,\dots,k$:\thut nếu $L=0$ thì $R:=R+1$;\thut ngược lại nếu $R=n$ thì $L:=L-1$;\thut ngược lại nếu $\bar x-x_{L-1}\le x_{R+1}-\bar x$ thì $L:=L-1$, còn không thì $R:=R+1$.
 \item[Bước 3:] Đặt $X:=(x_L,\dots,x_R)$, $Y:=(y_L,\dots,y_R)$.\newline Dừng thuật toán, trả về $L$, $R$, $X$, $Y$.
 \end{thuattoan}
 
@@ -316,10 +316,10 @@ Thuật toán câu a ($\bar x=3.52$, $k=9$): <<c11_ket_trich>> Đánh số lại
 <<c11_bang_sp>>
 \pp{Hệ số:}
 <<c11_C>>
-\pp{Bảng tích theo $t$} (hàng $k$: $\omega_k(t)=\omega_{k-1}(t)\cdot(t-z_{k-1})$, $z_{k-1}=k-1$, tức $\omega_k(t)=t(t-1)\cdots(t-k+1)$; $A_{k,l}$ là hệ số của $t^l$):
+\pp{Bảng tích theo $t$} (hàng $k$: $\omega_k(t)=\omega_{k-1}(t)\cdot(t-z_{k-1})$, $z_{k-1}=k-1$; $A_{k,l}$ là hệ số của $t^l$):
 \[ A_{0,0}=1,\qquad A_{k,l}=A_{k-1,l-1}-(k-1)\,A_{k-1,l}\quad(l=0,\dots,k). \]
 <<c11_bang_tich>>
-Vector hệ số của $P_8(t)=\sum_{k=0}^{8}c_k\,\omega_k(t)$ là $C\cdot A$:
+Vector hệ số của $P_8(t)=\sum_{k=0}^{8}c_k\,\omega_k(t)$:
 <<c11_CA>>
 <<c11_Pt>>
 
@@ -341,7 +341,7 @@ Vector hệ số của $P_8(t)=\sum_{k=0}^{8}c_k\,\omega_k(t)$ là $C\cdot A$:
 \pp{Bảng tích} (hàng $k$: $\omega_k(t)=\omega_{k-1}(t)\cdot(t-z_{k-1})$, $z=0,1,-1,2,-2,3,-3,4$; $A_{k,l}$ là hệ số của $t^l$):
 \[ A_{0,0}=1,\qquad A_{k,l}=A_{k-1,l-1}-z_{k-1}\,A_{k-1,l}\quad(l=0,\dots,k). \]
 <<c12_bang_tich>>
-Vector hệ số của $P_8(t)=\sum_{k=0}^{8}c_k\,\omega_k(t)$ là $C\cdot A$:
+Vector hệ số của $P_8(t)=\sum_{k=0}^{8}c_k\,\omega_k(t)$:
 <<c12_CA>>
 <<c12_Pt>>
 với $t=(x-9.6)/0.1$.
@@ -409,13 +409,13 @@ $\bar t=\dfrac{\bar x-x_0}{h}=<<c14_t>>$, $\bar v=\bar t-\frac12=<<c14_v>>$. Hor
 \begin{thuattoan}{Gauss I / Gauss II}
 \item[Input:] vector $x$, $y$ (mốc cách đều); điểm $\bar x$; cấp đạo hàm $r$; số mốc dùng $m$; công thức (Gauss I hoặc Gauss II).
 \item[Output:] vector $b=(b_n,\dots,b_0)$ với $P(t)=\sum_lb_lt^l$, $t=\frac{x-x_0}{h}$; vector $f=(f_0,\dots,f_r)$, $f_j\approx f^{(j)}(\bar x)$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $m$, $r$ không nguyên, $m<1$ hoặc $r<0$ thì báo lỗi, dừng thuật toán.\newline Nếu $m>n+1$ thì đặt $m:=n+1$.
-\item[Bước 1:] Trích $m$ mốc gần $\bar x$ nhất theo thuật toán Câu 11a.\newline Đặt $n:=m-1$.\newline Nếu Gauss I thì đặt $q:=\lfloor n/2\rfloor$; nếu Gauss II thì đặt $q:=\lceil n/2\rceil$.\newline Lấy mốc thứ $q$ (đếm từ $0$) làm $x_0$, đánh số lại $i=-q,\dots,n-q$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $m<1$ hoặc $r<0$ thì báo lỗi, dừng thuật toán.\newline Nếu $m>n+1$ thì đặt $m:=n+1$.
+\item[Bước 1:] Gọi thuật toán Câu 11a với $x$, $y$, $\bar x$, $k:=m$, được $X$, $Y$.\newline Đặt $n:=m-1$.\newline Nếu Gauss I thì đặt $q:=\lfloor n/2\rfloor$; nếu Gauss II thì đặt $q:=\lceil n/2\rceil$.\newline Lấy mốc thứ $q$ của $X$ (đếm từ $0$) làm $x_0$, đánh số lại $X$, $Y$ thành $x_i$, $y_i$, $i=-q,\dots,n-q$.
 \item[Bước 2:] Khởi tạo ma trận $D$, hàng $i=-q,\dots,n-q$, cột $k=0,\dots,n$ ($D_{i,k}=\Delta^ky_i$).\newline Lặp $i=-q,\dots,n-q$: đặt $D_{i,0}:=y_i$.\newline Lặp lồng $k=1,\dots,n$; $i=-q,\dots,n-q-k$: tính $D_{i,k}:=D_{i+1,k-1}-D_{i,k-1}$.
 \item[Bước 3:] Lặp $k=0,\dots,n$:\thut nếu Gauss I thì tính $c_k:=D_{-\lfloor k/2\rfloor,k}/k!$ và đặt $z_k:=(-1)^{k+1}\lceil k/2\rceil$ ($z=0,1,-1,2,\dots$);\thut nếu Gauss II thì tính $c_k:=D_{-\lceil k/2\rceil,k}/k!$ và đặt $z_k:=(-1)^{k}\lceil k/2\rceil$ ($z=0,-1,1,-2,\dots$).
-\item[Bước 4:] Khởi tạo vector $e$, $b$, mỗi vector $n+1$ phần tử (chỉ số $=$ số mũ của $t$):\thut $(e_0,e_1,\dots,e_n):=(1,0,\dots,0)$;\thut $(b_0,b_1,\dots,b_n):=(c_0,0,\dots,0)$.\newline Lặp $k=1,\dots,n$:
+\item[Bước 4:] Khởi tạo vector $e=(e_0,e_1,\dots,e_n):=(1,0,\dots,0)$, $b=(b_0,b_1,\dots,b_n):=(c_0,0,\dots,0)$, gồm $n+1$ phần tử.\newline Lặp $k=1,\dots,n$:
   \begin{con}
-  \item[4.1:] Nhân vector $e$ với $(t-z_{k-1})$ theo thuật toán Câu 5a ($e$ thành hệ số của $\omega_k(t)$).
+  \item[4.1:] Nhân vector $e$ với $(t-z_{k-1})$ theo thuật toán Câu 5a.
   \item[4.2:] Lặp $l=0,\dots,k$: tính $b_l:=b_l+c_k\,e_l$.
   \end{con}
 \item[Bước 5:] Tính $\bar t:=(\bar x-x_0)/h$.\newline Gọi thuật toán Câu 4c với vector $b$, $c:=\bar t$, cấp $k:=r$, được vector $d=(d_0,\dots,d_r)$.\newline Lặp $j=0,\dots,r$: tính $f_j:=d_j/h^j$.\newline Dừng thuật toán, trả về $b$ và $f$.
@@ -425,13 +425,13 @@ $\bar t=\dfrac{\bar x-x_0}{h}=<<c14_t>>$, $\bar v=\bar t-\frac12=<<c14_v>>$. Hor
 \begin{thuattoan}{Stirling}
 \item[Input:] vector $x$, $y$ (mốc cách đều); điểm $\bar x$; cấp đạo hàm $r$; số mốc dùng $m$.
 \item[Output:] vector $b=(b_n,\dots,b_0)$ với $P(t)=\sum_lb_lt^l$, $t=\frac{x-x_0}{h}$; vector $f=(f_0,\dots,f_r)$, $f_j\approx f^{(j)}(\bar x)$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $m$, $r$ không nguyên, $m<1$ hoặc $r<0$ thì báo lỗi, dừng thuật toán.\newline Nếu $m>n+1$ thì đặt $m:=n+1$.\newline Nếu $m$ chẵn thì đặt $m:=m-1$.
-\item[Bước 1:] Trích $m$ mốc gần $\bar x$ nhất theo thuật toán Câu 11a.\newline Đặt $n:=m-1$, $s:=n/2$.\newline Lấy mốc chính giữa làm $x_0$, đánh số lại $i=-s,\dots,s$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $r<0$ thì báo lỗi, dừng thuật toán.\newline Nếu $m>n+1$ thì đặt $m:=n+1$.\newline Nếu $m$ chẵn thì đặt $m:=m-1$.\newline Nếu $m<3$ thì báo lỗi (cần ít nhất 3 mốc), dừng thuật toán.
+\item[Bước 1:] Gọi thuật toán Câu 11a với $x$, $y$, $\bar x$, $k:=m$, được $X$, $Y$.\newline Đặt $n:=m-1$, $s:=n/2$.\newline Lấy mốc chính giữa của $X$ làm $x_0$, đánh số lại $X$, $Y$ thành $x_i$, $y_i$, $i=-s,\dots,s$.
 \item[Bước 2:] Khởi tạo ma trận $D$, hàng $i=-s,\dots,s$, cột $k=0,\dots,n$ ($D_{i,k}=\Delta^ky_i$).\newline Lặp $i=-s,\dots,s$: đặt $D_{i,0}:=y_i$.\newline Lặp lồng $k=1,\dots,n$; $i=-s,\dots,s-k$: tính $D_{i,k}:=D_{i+1,k-1}-D_{i,k-1}$.
 \item[Bước 3:] Lặp $j=1,\dots,s$:\thut tính $c_{2j-1}:=\dfrac{D_{-j,2j-1}+D_{-j+1,2j-1}}{2\,(2j-1)!}$;\thut tính $c_{2j}:=\dfrac{D_{-j,2j}}{(2j)!}$.
-\item[Bước 4:] Khởi tạo vector $e$, $\alpha$, $\beta$, mỗi vector $s$ phần tử (chỉ số $=$ số mũ của $u=t^2$; $\alpha$, $\beta$ là hệ số của $P_{\text{lẻ}}(u)$, $P_{\text{chẵn}}(u)$):\thut $(e_0,e_1,\dots,e_{s-1}):=(1,0,\dots,0)$;\thut $(\alpha_0,\dots,\alpha_{s-1}):=(c_1,0,\dots,0)$, $(\beta_0,\dots,\beta_{s-1}):=(c_2,0,\dots,0)$.\newline Lặp $j=1,\dots,s-1$:
+\item[Bước 4:] Khởi tạo vector $e=(e_0,e_1,\dots,e_{s-1}):=(1,0,\dots,0)$, $\alpha=(\alpha_0,\dots,\alpha_{s-1}):=(c_1,0,\dots,0)$, $\beta=(\beta_0,\dots,\beta_{s-1}):=(c_2,0,\dots,0)$, gồm $s$ phần tử ($u=t^2$; $\alpha$, $\beta$ là hệ số của $P_{\text{lẻ}}(u)$, $P_{\text{chẵn}}(u)$).\newline Lặp $j=1,\dots,s-1$:
   \begin{con}
-  \item[4.1:] Nhân vector $e$ với $(u-j^2)$ theo thuật toán Câu 5a ($e$ thành hệ số của $\Omega_j(u)$).
+  \item[4.1:] Nhân vector $e$ với $(u-j^2)$ theo thuật toán Câu 5a.
   \item[4.2:] Lặp $l=0,\dots,j$: tính $\alpha_l:=\alpha_l+c_{2j+1}e_l$, $\beta_l:=\beta_l+c_{2j+2}e_l$.
   \end{con}
 \item[Bước 5:] Ghép $P(t)=y_0+t\,P_{\text{lẻ}}(t^2)+t^2P_{\text{chẵn}}(t^2)$:\thut đặt $b_0:=y_0$;\thut lặp $l=0,\dots,s-1$: đặt $b_{2l+1}:=\alpha_l$, $b_{2l+2}:=\beta_l$.
@@ -442,13 +442,13 @@ $\bar t=\dfrac{\bar x-x_0}{h}=<<c14_t>>$, $\bar v=\bar t-\frac12=<<c14_v>>$. Hor
 \begin{thuattoan}{Bessel}
 \item[Input:] vector $x$, $y$ (mốc cách đều); điểm $\bar x$; cấp đạo hàm $r$; số mốc dùng $m$.
 \item[Output:] vector $b=(b_n,\dots,b_0)$ với $P(v)=\sum_lb_lv^l$, $v=t-\frac12$; vector $f=(f_0,\dots,f_r)$, $f_j\approx f^{(j)}(\bar x)$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $m$, $r$ không nguyên, $m<1$ hoặc $r<0$ thì báo lỗi, dừng thuật toán.\newline Nếu $m>n+1$ thì đặt $m:=n+1$.\newline Nếu $m$ lẻ thì đặt $m:=m-1$.
-\item[Bước 1:] Trích $m$ mốc gần $\bar x$ nhất theo thuật toán Câu 11a.\newline Đặt $n:=m-1$, $s:=\frac{n+1}{2}$.\newline Lấy mốc thứ $s-1$ (đếm từ $0$) làm $x_0$ ($x_0$, $x_1$ là hai mốc chính giữa), đánh số lại $i=-(s-1),\dots,s$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì báo ``mốc không cách đều'', dừng thuật toán.\newline Nếu $r<0$ thì báo lỗi, dừng thuật toán.\newline Nếu $m>n+1$ thì đặt $m:=n+1$.\newline Nếu $m$ lẻ thì đặt $m:=m-1$.\newline Nếu $m<2$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.
+\item[Bước 1:] Gọi thuật toán Câu 11a với $x$, $y$, $\bar x$, $k:=m$, được $X$, $Y$.\newline Đặt $n:=m-1$, $s:=\frac{n+1}{2}$.\newline Lấy mốc thứ $s-1$ của $X$ (đếm từ $0$) làm $x_0$ ($x_0$, $x_1$ là hai mốc chính giữa), đánh số lại $X$, $Y$ thành $x_i$, $y_i$, $i=-(s-1),\dots,s$.
 \item[Bước 2:] Khởi tạo ma trận $D$, hàng $i=-(s-1),\dots,s$, cột $k=0,\dots,n$ ($D_{i,k}=\Delta^ky_i$).\newline Lặp $i=-(s-1),\dots,s$: đặt $D_{i,0}:=y_i$.\newline Lặp lồng $k=1,\dots,n$; $i=-(s-1),\dots,s-k$: tính $D_{i,k}:=D_{i+1,k-1}-D_{i,k-1}$.
 \item[Bước 3:] Lặp $j=0,\dots,s-1$:\thut tính $c_{2j}:=\dfrac{D_{-j,2j}+D_{-j+1,2j}}{2\,(2j)!}$;\thut tính $c_{2j+1}:=\dfrac{D_{-j,2j+1}}{(2j+1)!}$.
-\item[Bước 4:] Khởi tạo vector $e$, $\alpha$, $\beta$, mỗi vector $s$ phần tử (chỉ số $=$ số mũ của $u=v^2$; $\alpha$, $\beta$ là hệ số của $P_{\text{lẻ}}(u)$, $P_{\text{chẵn}}(u)$):\thut $(e_0,e_1,\dots,e_{s-1}):=(1,0,\dots,0)$;\thut $(\alpha_0,\dots,\alpha_{s-1}):=(c_1,0,\dots,0)$, $(\beta_0,\dots,\beta_{s-1}):=(c_0,0,\dots,0)$.\newline Lặp $j=1,\dots,s-1$:
+\item[Bước 4:] Khởi tạo vector $e=(e_0,e_1,\dots,e_{s-1}):=(1,0,\dots,0)$, $\alpha=(\alpha_0,\dots,\alpha_{s-1}):=(c_1,0,\dots,0)$, $\beta=(\beta_0,\dots,\beta_{s-1}):=(c_0,0,\dots,0)$, gồm $s$ phần tử ($u=v^2$; $\alpha$, $\beta$ là hệ số của $P_{\text{lẻ}}(u)$, $P_{\text{chẵn}}(u)$).\newline Lặp $j=1,\dots,s-1$:
   \begin{con}
-  \item[4.1:] Nhân vector $e$ với $\big(u-(j-\frac12)^2\big)$ theo thuật toán Câu 5a ($e$ thành hệ số của $\Omega_j(u)$).
+  \item[4.1:] Nhân vector $e$ với $\big(u-(j-\frac12)^2\big)$ theo thuật toán Câu 5a.
   \item[4.2:] Lặp $l=0,\dots,j$: tính $\alpha_l:=\alpha_l+c_{2j+1}e_l$, $\beta_l:=\beta_l+c_{2j}e_l$.
   \end{con}
 \item[Bước 5:] Ghép $P(v)=P_{\text{chẵn}}(v^2)+v\,P_{\text{lẻ}}(v^2)$:\thut lặp $l=0,\dots,s-1$: đặt $b_{2l}:=\beta_l$, $b_{2l+1}:=\alpha_l$.
@@ -535,11 +535,11 @@ với $v=t-\frac12=(x-<<c17_s0>>)/0.1$.
 \begin{thuattoan}{Hàm ngược}
 \item[Input:] vector $x$, $y$; $\bar y$; khoảng cách ly $(x_k,x_{k+1})$ nằm trong đoạn đơn điệu $[x_a,x_b]$ (câu a, b); số mốc $m$.
 \item[Output:] nghiệm gần đúng $\bar x$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $m$ không nguyên hoặc $m<2$ thì báo lỗi, dừng thuật toán.
-\item[Bước 1:] Đặt $L:=k$, $R:=k+1$ (các mốc đã chọn là $x_L,\dots,x_R$).
-\item[Bước 2:] Lặp $s=3,\dots,m$ (mỗi lần thêm mốc kề trong $[x_a,x_b]$ có $|y-\bar y|$ nhỏ hơn):\thut nếu $L=a$ và $R=b$ thì dừng lặp (đoạn đơn điệu hết mốc);\thut ngược lại nếu $L=a$ thì $R:=R+1$;\thut ngược lại nếu $R=b$ thì $L:=L-1$;\thut ngược lại nếu $|y_{L-1}-\bar y|\le|y_{R+1}-\bar y|$ thì $L:=L-1$, còn không thì $R:=R+1$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $m<2$ thì báo lỗi, dừng thuật toán.
+\item[Bước 1:] Đặt $L:=k$, $R:=k+1$.
+\item[Bước 2:] Lặp $s=3,\dots,m$:\thut nếu $L=a$ và $R=b$ thì dừng lặp;\thut ngược lại nếu $L=a$ thì $R:=R+1$;\thut ngược lại nếu $R=b$ thì $L:=L-1$;\thut ngược lại nếu $|y_{L-1}-\bar y|\le|y_{R+1}-\bar y|$ thì $L:=L-1$, còn không thì $R:=R+1$.
 \item[Bước 3:] Đặt $u:=(y_L,\dots,y_R)$, $v:=(x_L,\dots,x_R)$ (đánh số lại $0,\dots,R-L$).\newline Nếu đoạn giảm thì đảo thứ tự $u$, $v$ để $u_0<u_1<\cdots$.
-\item[Bước 4:] Khởi tạo ma trận $T$ cỡ $(R-L+1)\times(R-L+1)$ (tỷ sai phân của $v$ theo $u$).\newline Lặp $i=0,\dots,R-L$: đặt $T_{i,0}:=v_i$.\newline Lặp lồng $k=1,\dots,R-L$; $i=k,\dots,R-L$: tính $T_{i,k}:=\dfrac{T_{i,k-1}-T_{i-1,k-1}}{u_i-u_{i-k}}$.\newline Lặp $j=0,\dots,R-L$: đặt $c_j:=T_{j,j}$.
+\item[Bước 4:] Khởi tạo ma trận $T$ cỡ $(R-L+1)\times(R-L+1)$ (tỷ sai phân của $v$ theo $u$).\newline Lặp $i=0,\dots,R-L$: đặt $T_{i,0}:=v_i$.\newline Lặp lồng $j=1,\dots,R-L$; $i=j,\dots,R-L$: tính $T_{i,j}:=\dfrac{T_{i,j-1}-T_{i-1,j-1}}{u_i-u_{i-j}}$.\newline Lặp $j=0,\dots,R-L$: đặt $c_j:=T_{j,j}$.
 \item[Bước 5:] Đặt $\omega:=1$, $S:=c_0$.\newline Lặp $j=1,\dots,R-L$:\thut tính $\omega:=\omega\,(\bar y-u_{j-1})$;\thut tính $S:=S+c_j\,\omega$.
 \item[Bước 6:] Đặt $\bar x:=S$.\newline Dừng thuật toán, trả về $\bar x$ (số hạng cuối $|c_{R-L}\,\omega|$ là ước lượng sai số).
 \end{thuattoan}
@@ -548,44 +548,51 @@ với $v=t-\frac12=(x-<<c17_s0>>)/0.1$.
 \begin{thuattoan}{Lặp Newton tiến / lùi}
 \item[Input:] vector $x$, $y$ ($n+1$ mốc cách đều bước $h$); $\bar y$; khoảng cách ly $(x_k,x_{k+1})$; số mốc $m$; sai số $\varepsilon$; số lần lặp tối đa $N$.
 \item[Output:] nghiệm gần đúng $\bar x$, hoặc thông báo ``Không hội tụ''.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì dùng phương pháp hàm ngược (câu c), dừng thuật toán.\newline Nếu $m$ không nguyên hoặc $m<2$ thì báo lỗi, dừng thuật toán.\newline Nếu $k+m-1>n$ và $k+2-m<0$ thì đặt $m:=\max(n-k+1,\,k+2)$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì: cùng $y$ giữ một mốc, khác $y$ báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Đặt $h:=\dfrac{x_n-x_0}{n}$.\newline Lặp $i=0,\dots,n-1$:\thut nếu $|x_{i+1}-x_i-h|>10^{-6}h$ thì tìm đoạn đơn điệu $[x_a,x_b]$ chứa $(x_k,x_{k+1})$ theo thuật toán câu b, gọi thuật toán câu c với $x$, $y$, $\bar y$, $k$, $a$, $b$, $m$ được $\bar x$, dừng thuật toán, trả về $\bar x$.\newline Nếu $m<2$, $\varepsilon\le0$ hoặc $N<1$ thì báo lỗi, dừng thuật toán.\newline Nếu $k+m-1>n$ và $k+2-m<0$ thì đặt $m:=\max(n-k+1,\,k+2)$.
 \item[Bước 1:] Chọn chiều:\thut nếu $k+m-1\le n$ thì lặp tiến, đặt $s:=k$;\thut trái lại lặp lùi, đặt $s:=k+1$.
-\item[Bước 2:] Lập bảng sai phân $T$ ($T_{i,0}:=y_i$, $T_{i,k}:=T_{i,k-1}-T_{i-1,k-1}$), đánh số lại $0..m-1$:\thut nếu tiến thì của các mốc $x_k,\dots,x_{k+m-1}$, đặt $d_j:=T_{j,j}=\Delta^jy_k$;\thut nếu lùi thì của các mốc $x_{k+2-m},\dots,x_{k+1}$, đặt $d_j:=T_{m-1,j}=\nabla^jy_{k+1}$ ($j=0..m-1$).
+\item[Bước 2:] Khởi tạo ma trận $T$ cỡ $m\times m$ (bảng sai phân của $m$ mốc, đánh số lại $0,\dots,m-1$).\newline Lặp $i=0,\dots,m-1$:\thut nếu tiến thì đặt $T_{i,0}:=y_{k+i}$;\thut nếu lùi thì đặt $T_{i,0}:=y_{k+2-m+i}$.\newline Lặp lồng $j=1,\dots,m-1$; $i=j,\dots,m-1$: tính $T_{i,j}:=T_{i,j-1}-T_{i-1,j-1}$.\newline Lặp $j=0,\dots,m-1$:\thut nếu tiến thì đặt $d_j:=T_{j,j}$ ($=\Delta^jy_k$);\thut nếu lùi thì đặt $d_j:=T_{m-1,j}$ ($=\nabla^jy_{k+1}$).
 \item[Bước 3:] Nếu tiến thì $\varphi(t):=\dfrac{\bar y-d_0}{d_1}-\sum_{j=2}^{m-1}\dfrac{d_j}{j!\,d_1}\,t(t-1)\cdots(t-j+1)$.\newline Nếu lùi thì $\varphi(t):=\dfrac{\bar y-d_0}{d_1}-\sum_{j=2}^{m-1}\dfrac{d_j}{j!\,d_1}\,t(t+1)\cdots(t+j-1)$.
 \item[Bước 4:] Đặt $t_0:=\dfrac{\bar y-d_0}{d_1}$, $l:=0$.
 \item[Bước 5:] Tính $t_{l+1}:=\varphi(t_l)$.
-\item[Bước 6:] Nếu $h\,|t_{l+1}-t_l|<\varepsilon$ thì đặt $\bar x:=x_s+t_{l+1}h$, dừng thuật toán.
+\item[Bước 6:] Nếu $h\,|t_{l+1}-t_l|<\varepsilon$ thì đặt $\bar x:=x_s+t_{l+1}h$, dừng thuật toán, trả về $\bar x$.
 \item[Bước 7:] Nếu $l+1=N$ thì báo ``Không hội tụ'', dừng thuật toán.\newline Trái lại đặt $l:=l+1$, quay lại bước 5.
 \end{thuattoan}
 
 %=====================================================================
 \section{Câu 19. Giải phương trình $f(x)=\bar y$ từ file dữ liệu}
 
-\pp{Dữ liệu.} \texttt{data Câu 19.xlsx}: $<<c19_N>>$ mốc $x=1;1.1;\dots;15$ cách đều $h=0.1$ (dòng đầu file trống, bỏ qua). Các khoảng đơn điệu (câu 18b):
+\pp{Dữ liệu.} \texttt{data Câu 19.xlsx} (dòng đầu trống, bỏ qua): $<<c19_N>>$ mốc $x=1;1.1;\dots;15$, $h=0.1$.
+
+\pp{Khoảng đơn điệu} (18b): $\Delta y_i=y_{i+1}-y_i$ đổi dấu tại $i=<<c19_doi>>$:
 <<c19_dd>>
+\pp{Khoảng cách ly} (18a): $g_i=y_i-\bar y$ đổi dấu giữa $x_k$ và $x_{k+1}$, không có $g_i=0$:
+<<c19_cl>>
 
 \subsection{a) Phương pháp hàm ngược, $\bar y=2.5$}
-\pp{Khoảng cách ly} (câu 18a):
-<<c19a_cl>>
-Chỉ có một nghiệm, trong $(x_{<<c19a_k>>};x_{<<c19a_k>>+1})=(<<c19a_xk>>;\ <<c19a_xk1>>)\subset<<c19a_doan>>$ — đoạn $f$ tăng chặt nên có hàm ngược.
+Nghiệm trong $(x_{<<c19a_k>>};x_{<<c19a_k1>>})=(<<c19a_xk>>;\ <<c19a_xk1>>)\subset<<c19a_doan>>$, đoạn tăng nên có hàm ngược.
 
 \pp{Chọn 6 mốc} có $|y_j-\bar y|$ nhỏ nhất trong đoạn đơn điệu:
 <<c19a_chon>>
-\pp{Bảng tỷ sai phân của $x$ theo $y$} ($u=y$ tăng dần; đường chéo khung $=c_j$):
+\pp{Bảng tỷ sai phân của $x$ theo $y$} ($u=y$, $v=x$; đường chéo khung $=c_j$):
+\[ v[u_{s-k},\dots,u_s]=\frac{v[u_{s-k+1},\dots,u_s]-v[u_{s-k},\dots,u_{s-1}]}{u_s-u_{s-k}}. \]
 <<c19a_tsp>>
-\pp{Giá trị tại $\bar y$:} $\bar x=\sum_jc_j\,\omega_j(\bar y)$, $\omega_j=\prod_{l<j}(\bar y-u_l)$:
+\pp{Giá trị tại $\bar y$:} $\bar x=\sum_jc_j\,\omega_j(\bar y)$, $\omega_0=1$, $\omega_j=\omega_{j-1}\cdot(\bar y-u_{j-1})$:
 <<c19a_tong>>
 \begin{ketluan}
 $f(x)=2.5$ có đúng một nghiệm trong $[1;15]$: $\bar x\approx<<c19a_x>>$ (số hạng cuối $<<c19a_cuoi>>$ — ước lượng sai số).
 \end{ketluan}
 
 \subsection{b) Phương pháp lặp, $\bar y=3.15$}
-\pp{Khoảng cách ly:}
-<<c19b_cl>>
-Có $<<c19b_so>>$ nghiệm. Mỗi khoảng dùng $m=6$ mốc, $\varepsilon=10^{-6}$, $N=100$. <<c19b_chung>>
+\pp{Công thức} (18d; mỗi khoảng $(x_k;x_{k+1})$ đủ 6 mốc $x_k,\dots,x_{k+5}$ bên phải nên lặp Newton tiến, $t=\frac{x-x_k}{h}$, $\varepsilon=10^{-6}$):
+\begin{gather*}
+\Delta^0y_i=y_i,\qquad \Delta^jy_i=\Delta^{j-1}y_{i+1}-\Delta^{j-1}y_i\quad\text{(bảng sai phân, ô khung }\Delta^jy_k\text{)};\\
+\bar y=y_k+\Delta y_k\,t+\frac{\Delta^2y_k}{2!}t(t-1)+\dots+\frac{\Delta^5y_k}{5!}t(t-1)\cdots(t-4)\\
+\Longrightarrow\ t=\varphi(t)=\frac{\bar y-y_k}{\Delta y_k}-\frac{\Delta^2y_k}{2!\,\Delta y_k}t(t-1)-\dots-\frac{\Delta^5y_k}{5!\,\Delta y_k}t(t-1)\cdots(t-4),\\
+t_0=\frac{\bar y-y_k}{\Delta y_k},\qquad t_{l+1}=\varphi(t_l),\qquad\text{dừng khi } h\,|t_{l+1}-t_l|<\varepsilon,\qquad \bar x=x_k+t_{l+1}h.
+\end{gather*}
 <<c19b_khoi>>
 \begin{ketluan}
-$f(x)=3.15$ có 3 nghiệm trong $[1;15]$: $\bar x=<<c19b_x>>$.
+$f(x)=3.15$ có $<<c19b_so>>$ nghiệm trong $[1;15]$: $\bar x=<<c19b_x>>$.
 \end{ketluan}
 
 %=====================================================================
@@ -617,31 +624,27 @@ $3n$ phương trình, $3(n+1)$ ẩn $(m_k,\sigma_k,M_k)$ $\Rightarrow$ cần 3 �
 
 \subsection{b) Thuật toán spline cấp $p\le4$}
 \begin{thuattoan}{Spline cấp 1}
-\item[Input:] $(x_i,y_i)$, $i=0..n$.
+\item[Input:] vector $x$, $y$.
 \item[Output:] $S_k(x)=a_kx+b_k$, $k=0..n-1$.
-\item[Bước 0:] Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.
 \item[Bước 1:] Lặp $k=0,\dots,n-1$:\thut tính $h_k:=x_{k+1}-x_k$;\thut tính $a_k:=\dfrac{y_{k+1}-y_k}{h_k}$, $b_k:=\dfrac{y_kx_{k+1}-y_{k+1}x_k}{h_k}$.\newline Dừng thuật toán, trả về các $S_k$.
 \end{thuattoan}
 
 \begin{thuattoan}{Spline cấp 2}
-\item[Input:] $(x_i,y_i)$, $i=0..n$; một điều kiện biên $S'(x_0)=A$ hoặc $S'(x_n)=B$.
+\item[Input:] vector $x$, $y$; một điều kiện biên $S'(x_0)=A$ hoặc $S'(x_n)=B$.
 \item[Output:] $S_k(x)=a_kx^2+b_kx+c_k$, $k=0..n-1$.
-\item[Bước 0:] Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Nếu số điều kiện biên khác $1$ hoặc có điều kiện không đặt tại $x_0$, $x_n$ thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Nếu số điều kiện biên khác $1$ hoặc có điều kiện không đặt tại $x_0$, $x_n$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Lặp $k=0,\dots,n-1$: tính $h_k:=x_{k+1}-x_k$ và $\gamma_k:=\dfrac{2(y_{k+1}-y_k)}{h_k}$.
-\item[Bước 2:] Tính $m_k=S'(x_k)$:
-  \begin{con}
-  \item[TH1:] Nếu cho $S'(x_0)=A$ thì:\thut đặt $m_0:=A$;\thut lặp $k=0,\dots,n-1$: tính $m_{k+1}:=\gamma_k-m_k$.
-  \item[TH2:] Nếu cho $S'(x_n)=B$ thì:\thut đặt $m_n:=B$;\thut lặp $k=n-1,\dots,0$: tính $m_k:=\gamma_k-m_{k+1}$.
-  \end{con}
+\item[Bước 2:] Tính $m_k=S'(x_k)$.\newline Nếu cho $S'(x_0)=A$ thì:\thut đặt $m_0:=A$;\thut lặp $k=0,\dots,n-1$: tính $m_{k+1}:=\gamma_k-m_k$.\newline Nếu cho $S'(x_n)=B$ thì:\thut đặt $m_n:=B$;\thut lặp $k=n-1,\dots,0$: tính $m_k:=\gamma_k-m_{k+1}$.
 \item[Bước 3:] Lặp $k=0,\dots,n-1$: tính
   \[ a_k:=\frac{m_{k+1}-m_k}{2h_k},\ \ b_k:=\frac{m_kx_{k+1}-m_{k+1}x_k}{h_k},\ \ c_k:=\frac{-m_kx_{k+1}^2+m_{k+1}x_k^2}{2h_k}+y_k+\frac{m_kh_k}{2}. \]
   Dừng thuật toán, trả về các $S_k$.
 \end{thuattoan}
 
 \begin{thuattoan}{Spline cấp 3}
-\item[Input:] $(x_i,y_i)$, $i=0..n$; hai điều kiện biên dạng $S'(\xi)=v$ hoặc $S''(\xi)=v$, $\xi\in\{x_0,x_n\}$.
+\item[Input:] vector $x$, $y$; hai điều kiện biên dạng $S'(\xi)=v$ hoặc $S''(\xi)=v$, $\xi\in\{x_0,x_n\}$.
 \item[Output:] $S_k(x)=a_kx^3+b_kx^2+c_kx+d_k$, $k=0..n-1$.
-\item[Bước 0:] Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Nếu số điều kiện biên khác $2$ hoặc có điều kiện không đặt tại $x_0$, $x_n$ thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Nếu số điều kiện biên khác $2$ hoặc có điều kiện không đặt tại $x_0$, $x_n$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Lặp $k=0,\dots,n-1$: tính $h_k:=x_{k+1}-x_k$ và $s_k:=\dfrac{y_{k+1}-y_k}{h_k}$.
 \item[Bước 2:] Lập hệ $n+1$ phương trình ẩn $\sigma_0,\dots,\sigma_n$:\thut $n-1$ phương trình trơn (khung, câu a);\thut 2 phương trình biên (câu a).
 \item[Bước 3:] Nếu mỗi đầu có một điều kiện thì hệ có dạng ba đường chéo $\ell_i\sigma_{i-1}+d_i\sigma_i+u_i\sigma_{i+1}=r_i$, giải bằng truy đuổi:
@@ -649,14 +652,14 @@ $3n$ phương trình, $3(n+1)$ ẩn $(m_k,\sigma_k,M_k)$ $\Rightarrow$ cần 3 �
   \item[3.1:] Đặt $P_0:=-u_0/d_0$, $Q_0:=r_0/d_0$.\newline Lặp $i=1,\dots,n$:\thut tính $\mu:=d_i+\ell_iP_{i-1}$; nếu $\mu=0$ thì báo hệ suy biến, dừng thuật toán;\thut tính $P_i:=-u_i/\mu$, $Q_i:=(r_i-\ell_iQ_{i-1})/\mu$.
   \item[3.2:] Đặt $\sigma_n:=Q_n$.\newline Lặp $i=n-1,\dots,0$: tính $\sigma_i:=P_i\sigma_{i+1}+Q_i$.\newline Sang bước 5.
   \end{con}
-\item[Bước 4:] Nếu hai điều kiện cùng một đầu thì giải hệ bằng khử Gauss chọn trụ.
+\item[Bước 4:] Nếu hai điều kiện cùng một đầu thì giải hệ bằng khử Gauss chọn trụ; nếu trụ bằng $0$ thì báo ``điều kiện biên không xác định duy nhất spline'', dừng thuật toán.
 \item[Bước 5:] Lặp $k=0,\dots,n-1$: tính $a_k,b_k,c_k,d_k$ theo câu a.\newline Dừng thuật toán, trả về các $S_k$.
 \end{thuattoan}
 
 \begin{thuattoan}{Spline cấp 4}
-\item[Input:] $(x_i,y_i)$, $i=0..n$; ba điều kiện biên $S^{(r)}(\xi)=v$, $r\in\{1,2,3\}$, $\xi\in\{x_0,x_n\}$.
+\item[Input:] vector $x$, $y$; ba điều kiện biên $S^{(r)}(\xi)=v$, $r\in\{1,2,3\}$, $\xi\in\{x_0,x_n\}$.
 \item[Output:] hệ số của $S_k(x)$ (bậc 4, từ bậc cao xuống), $k=0..n-1$.
-\item[Bước 0:] Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Nếu số điều kiện biên khác $3$ hoặc có điều kiện không đặt tại $x_0$, $x_n$ thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Sắp các mốc tăng theo $x$.\newline Nếu hai mốc trùng nhau thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số mốc})-1$.\newline Nếu $n<1$ thì báo lỗi (cần ít nhất 2 mốc), dừng thuật toán.\newline Nếu số điều kiện biên khác $3$ hoặc có điều kiện không đặt tại $x_0$, $x_n$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Lặp $k=0,\dots,n-1$: tính $h_k:=x_{k+1}-x_k$.
 \item[Bước 2:] Lập hệ $3(n+1)$ phương trình ẩn $m_k,\sigma_k,M_k$ ($k=0..n$):\thut $3n$ phương trình liên tục (khung, câu a);\thut 3 phương trình biên: $S'(\xi)=v\Rightarrow m=v$, $S''(\xi)=v\Rightarrow\sigma=v$, $S'''(\xi)=v\Rightarrow M=v$ tại mốc $\xi$.
 \item[Bước 3:] Giải hệ bằng khử Gauss chọn trụ.\newline Nếu trụ bằng $0$ thì báo ``điều kiện biên không xác định duy nhất spline'', dừng thuật toán.
@@ -671,14 +674,15 @@ $3n$ phương trình, $3(n+1)$ ẩn $(m_k,\sigma_k,M_k)$ $\Rightarrow$ cần 3 �
 %=====================================================================
 \section{Câu 21. Spline cho bảng dữ liệu}
 
-\pp{Xử lý dữ liệu.} Bảng đề cho $x=0;\,0.5236;\,1.5708;\,1.0472;\,3.1416$ \textbf{không tăng dần} (cặp $(1.0472;-0.866)$ đứng sau $(1.5708;0)$). Giữ nguyên số liệu, sắp lại theo $x$:
+\pp{Xử lý dữ liệu.} Bảng đề cho $x$ \textbf{không tăng dần} (cặp $(1.0472;-0.866)$ đứng sau $(1.5708;0)$), sắp lại theo $x$; $h_k=x_{k+1}-x_k$, $s_k=\frac{y_{k+1}-y_k}{h_k}$:
 <<c21_xy>>
 <<c21_h>>
 
 \subsection{a) Spline cấp 2 với $S'(0)=0$}
-\pp{Phương pháp.} Thuật toán spline cấp 2 (Câu 20b), TH1: $m_0=S'(0)=0$, truy hồi xuôi $m_{k+1}=\gamma_k-m_k$.
+\pp{Công thức} (spline cấp 2, $m_k=S'(x_k)$): $m_0=S'(0)=0$, $m_{k+1}=\gamma_k-m_k$, $\gamma_k=\dfrac{2(y_{k+1}-y_k)}{h_k}$;
+\[ a_k=\frac{m_{k+1}-m_k}{2h_k},\qquad b_k=\frac{m_kx_{k+1}-m_{k+1}x_k}{h_k},\qquad c_k=\frac{m_{k+1}x_k^2-m_kx_{k+1}^2}{2h_k}+y_k+\frac{m_kh_k}{2}. \]
 <<c21a_m>>
-$m=<<c21a_mv>>$.
+\pp{Hệ số} $S_k(x)=a_kx^2+b_kx+c_k$:
 <<c21a_he>>
 \begin{ketluan}
 <<c21a_S>>
@@ -687,17 +691,36 @@ $m=<<c21a_mv>>$.
 \subsection{b) Spline cấp 3 với $S''(0)=-1$, $S''(3.1416)=1$}
 \pp{Đề.} Đề ghi ``$S''(0)=-1,\ S''(0)=1$'' (lặp mốc 0); hiểu là $S''(0)=-1$, $S''(3.1416)=1$.
 
-\pp{Phương pháp.} Thuật toán spline cấp 3 (Câu 20b): hệ ba đường chéo $\ell_i\sigma_{i-1}+d_i\sigma_i+u_i\sigma_{i+1}=r_i$ theo $\sigma_k=S''(x_k)$, hàng biên $\sigma_0=-1$, $\sigma_4=1$; giải bằng truy đuổi:
+\pp{Lập hệ} theo $\sigma_k=S''(x_k)$: $\ell_i\sigma_{i-1}+d_i\sigma_i+u_i\sigma_{i+1}=r_i$, $i=0,\dots,4$:
+\begin{itemize}
+\item hàng $i=1,2,3$ (trơn tại $x_i$): $\ell_i=\dfrac{h_{i-1}}{6}$, $d_i=\dfrac{h_{i-1}+h_i}{3}$, $u_i=\dfrac{h_i}{6}$, $r_i=s_i-s_{i-1}$;
+\item hàng biên: $\sigma_0=-1$ ($d_0=1$, $u_0=0$, $r_0=-1$); \ $\sigma_4=1$ ($\ell_4=0$, $d_4=1$, $r_4=1$).
+\end{itemize}
+\pp{Giải hệ bằng truy đuổi:}
+\begin{gather*}
+P_0=-\frac{u_0}{d_0},\quad Q_0=\frac{r_0}{d_0};\qquad P_i=\frac{-u_i}{d_i+\ell_iP_{i-1}},\quad Q_i=\frac{r_i-\ell_iQ_{i-1}}{d_i+\ell_iP_{i-1}}\ \ (i=1,\dots,4);\\
+\sigma_4=Q_4,\qquad \sigma_i=P_i\sigma_{i+1}+Q_i\ \ (i=3,\dots,0).
+\end{gather*}
 <<c21b_duoi>>
-Với $\sigma$ trên, hệ số chính tắc tính theo câu 20a:
+\pp{Hệ số chính tắc} $S_k(x)=a_kx^3+b_kx^2+c_kx+d_k$ trên $[x_k;x_{k+1}]$:
+\begin{gather*}
+a_k=\frac{\sigma_{k+1}-\sigma_k}{6h_k},\qquad b_k=\frac{\sigma_kx_{k+1}-\sigma_{k+1}x_k}{2h_k},\qquad c_k=\frac{\sigma_{k+1}x_k^2-\sigma_kx_{k+1}^2}{2h_k}+s_k-\frac{(\sigma_{k+1}-\sigma_k)h_k}{6},\\
+d_k=\frac{\sigma_kx_{k+1}^3-\sigma_{k+1}x_k^3}{6h_k}+\frac{y_kx_{k+1}-y_{k+1}x_k}{h_k}+\frac{(\sigma_{k+1}x_k-\sigma_kx_{k+1})h_k}{6}.
+\end{gather*}
+<<c21b_he>>
 \begin{ketluan}
 <<c21b_S>>
 \end{ketluan}
 
 \subsection{c) Spline cấp 3 với $S'(0)=S'(3.1416)=0$}
-\pp{Phương pháp.} Như câu b, hàng biên thay bằng
-$\frac{h_0}{3}\sigma_0+\frac{h_0}{6}\sigma_1=s_0-0$, \quad $\frac{h_3}{6}\sigma_3+\frac{h_3}{3}\sigma_4=0-s_3$:
+\pp{Lập hệ:} hàng $i=1,2,3$ giữ nguyên ($\ell_i$, $d_i$, $u_i$, $r_i$ ở câu b); hàng biên đổi theo $S'$:
+\begin{itemize}
+\item $S'(0)=0$: $\dfrac{h_0}{3}\sigma_0+\dfrac{h_0}{6}\sigma_1=s_0-0$ \ ($d_0=\frac{h_0}{3}$, $u_0=\frac{h_0}{6}$, $r_0=s_0$);
+\item $S'(3.1416)=0$: $\dfrac{h_3}{6}\sigma_3+\dfrac{h_3}{3}\sigma_4=0-s_3$ \ ($\ell_4=\frac{h_3}{6}$, $d_4=\frac{h_3}{3}$, $r_4=-s_3$).
+\end{itemize}
+Truy đuổi và hệ số chính tắc theo công thức ở câu b:
 <<c21c_duoi>>
+<<c21c_he>>
 \begin{ketluan}
 <<c21c_S>>
 \end{ketluan}
@@ -707,29 +730,29 @@ $\frac{h_0}{3}\sigma_0+\frac{h_0}{6}\sigma_1=s_0-0$, \quad $\frac{h_3}{6}\sigma_
 
 \subsection{a) Hàm thực nghiệm với tập cơ sở $\{\varphi_j\}_{j=1}^m$ và sai số trung bình phương}
 \begin{thuattoan}{Bình phương tối thiểu tuyến tính theo tham số}
-\item[Input:] vector $x$, $y$ ($n$ điểm $(x_i,y_i)$, $i=1..n$); cơ sở $\varphi_1,\dots,\varphi_m$.
+\item[Input:] vector $x$, $y$; cơ sở $\varphi_1,\dots,\varphi_m$.
 \item[Output:] vector hệ số $a=(a_1,\dots,a_m)$ của $g=\sum_ja_j\varphi_j$; sai số trung bình phương $\sigma$.
-\item[Bước 0:] Loại các điểm làm $\varphi_j(x_i)$ không xác định.\newline Nếu còn $n<m$ điểm thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Loại các điểm làm $\varphi_j(x_i)$ không xác định.\newline Đặt $n:=(\text{số điểm còn lại})$, đánh số lại $i=1,\dots,n$.\newline Nếu $n<m$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Khởi tạo ma trận $\Phi$ cỡ $n\times m$.\newline Lặp lồng $i=1,\dots,n$; $j=1,\dots,m$: tính $\Phi_{ij}:=\varphi_j(x_i)$.
-\item[Bước 2:] Khởi tạo ma trận $M$ cỡ $m\times m$ và vector $b$ có $m$ phần tử.\newline Lặp lồng $j=1,\dots,m$; $k=1,\dots,m$: tính $M_{jk}:=\sum_{i=1}^n\Phi_{ij}\Phi_{ik}$.\newline Lặp $j=1,\dots,m$: tính $b_j:=\sum_{i=1}^n\Phi_{ij}y_i$.
-\item[Bước 3:] Giải hệ chuẩn $Ma=b$ bằng phân tích Cholesky $M=LL^{T}$ ($M$ đối xứng, xác định dương; $L$ tam giác dưới): giải $Lu=b$ (thế xuôi) rồi $L^{T}a=u$ (thế ngược).\newline Nếu không phân tích được ($M$ không xác định dương) thì báo ``các hàm cơ sở phụ thuộc tuyến tính trên dữ liệu'', dừng thuật toán.
+\item[Bước 2:] Khởi tạo ma trận $M$ cỡ $m\times m$ và vector $d$ có $m$ phần tử.\newline Lặp lồng $j=1,\dots,m$; $k=1,\dots,m$: tính $M_{jk}:=\sum_{i=1}^n\Phi_{ij}\Phi_{ik}$.\newline Lặp $j=1,\dots,m$: tính $d_j:=\sum_{i=1}^n\Phi_{ij}y_i$.
+\item[Bước 3:] Giải hệ chuẩn $Ma=d$ bằng phân tích Cholesky $M=LL^{T}$ ($M$ đối xứng, xác định dương; $L$ tam giác dưới): giải $Lu=d$ (thế xuôi) rồi $L^{T}a=u$ (thế ngược).\newline Nếu không phân tích được ($M$ không xác định dương) thì báo ``các hàm cơ sở phụ thuộc tuyến tính trên dữ liệu'', dừng thuật toán.
 \item[Bước 4:] Tính $\sigma:=\sqrt{\frac1n\sum_{i=1}^n\big(\sum_ja_j\Phi_{ij}-y_i\big)^2}$.\newline Dừng thuật toán, trả về $a$ và $\sigma$.
 \end{thuattoan}
 
 \subsection{b) Dạng $y=a\,e^{b_1\varphi_1(x)+b_2\varphi_2(x)}$ và $y=a\,x^b$}
 \begin{thuattoan}{Dạng mũ $y=a\,e^{b_1\varphi_1(x)+b_2\varphi_2(x)}$}
-\item[Input:] vector $x$, $y$ ($n$ điểm); cơ sở $\varphi_1,\varphi_2$ (không phải hàm hằng).
+\item[Input:] vector $x$, $y$; cơ sở $\varphi_1,\varphi_2$ (không phải hàm hằng).
 \item[Output:] $a$, $b_1$, $b_2$ và sai số trung bình phương $\sigma$.
-\item[Bước 0:] Loại các điểm làm $\varphi_1(x_i)$, $\varphi_2(x_i)$ không xác định.\newline Đếm $n_+$ (số $y_i>0$) và $n_-$ (số $y_i<0$); đặt $s:=1$ nếu $n_+\ge n_-$, ngược lại $s:=-1$ ($s$ là dấu của $a$).\newline Lặp $i=1,\dots,n$:\thut nếu $s\,y_i\le0$ ($y_i=0$ hoặc trái dấu với $s$) thì loại điểm $i$, báo lý do.\newline Nếu còn ít hơn 3 điểm thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Loại các điểm làm $\varphi_1(x_i)$, $\varphi_2(x_i)$ không xác định.\newline Đặt $n:=(\text{số điểm})$.\newline Đếm $n_+$ (số $y_i>0$) và $n_-$ (số $y_i<0$); đặt $s:=1$ nếu $n_+\ge n_-$, ngược lại $s:=-1$ ($s$ là dấu của $a$).\newline Lặp $i=1,\dots,n$:\thut nếu $s\,y_i\le0$ ($y_i=0$ hoặc trái dấu với $s$) thì loại điểm $i$, báo lý do.\newline Đặt $n:=(\text{số điểm còn lại})$, đánh số lại $i=1,\dots,n$.\newline Nếu $n<3$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Lặp $i=1,\dots,n$: tính $z_i:=\ln(s\,y_i)$.
 \item[Bước 2:] Tìm $(c_0,c_1,c_2)$ theo câu a với dữ liệu $(x_i,z_i)$ và cơ sở $(1,\varphi_1,\varphi_2)$.
 \item[Bước 3:] Đặt $a:=s\,e^{c_0}$, $b_1:=c_1$, $b_2:=c_2$.\newline Tính $\sigma:=\sqrt{\frac1n\sum_i\big(a\,e^{b_1\varphi_1(x_i)+b_2\varphi_2(x_i)}-y_i\big)^2}$.\newline Dừng thuật toán, trả về $a$, $b_1$, $b_2$, $\sigma$.
 \end{thuattoan}
 
 \begin{thuattoan}{Dạng luỹ thừa $y=a\,x^b$}
-\item[Input:] vector $x$, $y$ ($n$ điểm).
+\item[Input:] vector $x$, $y$.
 \item[Output:] $a$, $b$ và sai số trung bình phương $\sigma$.
-\item[Bước 0:] Đếm $n_+$ (số $y_i>0$) và $n_-$ (số $y_i<0$); đặt $s:=1$ nếu $n_+\ge n_-$, ngược lại $s:=-1$.\newline Lặp $i=1,\dots,n$:\thut nếu $s\,y_i\le0$ hoặc $x_i\le0$ thì loại điểm $i$, báo lý do.\newline Nếu còn ít hơn 2 điểm thì báo lỗi, dừng thuật toán.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số điểm})$.\newline Đếm $n_+$ (số $y_i>0$) và $n_-$ (số $y_i<0$); đặt $s:=1$ nếu $n_+\ge n_-$, ngược lại $s:=-1$.\newline Lặp $i=1,\dots,n$:\thut nếu $s\,y_i\le0$ hoặc $x_i\le0$ thì loại điểm $i$, báo lý do.\newline Đặt $n:=(\text{số điểm còn lại})$, đánh số lại $i=1,\dots,n$.\newline Nếu $n<2$ thì báo lỗi, dừng thuật toán.
 \item[Bước 1:] Lặp $i=1,\dots,n$: tính $X_i:=\ln x_i$ và $z_i:=\ln(s\,y_i)$.
 \item[Bước 2:] Tìm $(c_0,c_1)$ theo câu a với dữ liệu $(X_i,z_i)$ và cơ sở $(1,X)$.
 \item[Bước 3:] Đặt $a:=s\,e^{c_0}$, $b:=c_1$.\newline Tính $\sigma:=\sqrt{\frac1n\sum_i(a\,x_i^b-y_i)^2}$.\newline Dừng thuật toán, trả về $a$, $b$, $\sigma$.
@@ -741,50 +764,51 @@ $\frac{h_0}{3}\sigma_0+\frac{h_0}{6}\sigma_1=s_0-0$, \quad $\frac{h_3}{6}\sigma_
 \pp{Dữ liệu.} \texttt{data Câu 23.xlsx} có 4 bộ dữ liệu đặt cạnh nhau (``Câu a'' … ``Câu d''), mỗi bộ 60 cặp $(x_i,y_i)$; bộ c có mốc $x=2.63$ lặp lại với hai giá trị $y$ — giữ cả hai.
 
 \subsection{a) $y=ax+\dfrac bx$}
-\pp{Phương pháp.} Cơ sở $\varphi_1=x$, $\varphi_2=\frac1x$; hệ chuẩn:
-\[ \begin{cases} a\sum x_i^2+b\sum1=\sum x_iy_i\\ a\sum1+b\sum\frac1{x_i^2}=\sum\frac{y_i}{x_i}\end{cases}\qquad(\textstyle\sum1=n=60). \]
+\pp{Phương pháp.} Chọn $a$, $b$ để $S=\sum_{i=1}^{60}\big(g(x_i)-y_i\big)^2$ nhỏ nhất: $\dfrac{\partial S}{\partial a}=\dfrac{\partial S}{\partial b}=0$ cho hệ chuẩn
+\[ \begin{cases} a\sum x_i^2+b\sum1=\sum x_iy_i\\ a\sum1+b\sum\frac1{x_i^2}=\sum\frac{y_i}{x_i}\end{cases}\qquad(\textstyle\sum1=60) \]
 <<c23a_bang>>
-Thay các tổng:
+Thay các tổng được hệ (ma trận hệ số $M$, vế phải $d$):
 <<c23a_he>>
-Giải hệ (khử Gauss): $a=<<c23a_a>>$, $b=<<c23a_b>>$; \ $\sigma=\sqrt{\frac1{60}\sum(g(x_i)-y_i)^2}=<<c23a_sigma>>$.
+<<c23a_chol>>
+<<c23a_sd>>
 \begin{ketluan}
-$y\approx<<c23a_a>>\,x+\dfrac{<<c23a_b>>}{x}$, \quad $\sigma=<<c23a_sigma>>$.
+$<<c23a_kl>>$, \quad $\sigma=<<c23a_sigma>>$.
 \end{ketluan}
 
 \subsection{b) $y=ax^2+b\cos x+c$}
-\pp{Phương pháp.} Cơ sở $\varphi_1=x^2$, $\varphi_2=\cos x$, $\varphi_3=1$; hệ chuẩn $M_{jk}=\sum\varphi_j\varphi_k$, $b_j=\sum\varphi_jy_i$:
+\pp{Phương pháp.} Chọn $a$, $b$, $c$ để $S=\sum_{i=1}^{60}\big(g(x_i)-y_i\big)^2$ nhỏ nhất: $\dfrac{\partial S}{\partial a}=\dfrac{\partial S}{\partial b}=\dfrac{\partial S}{\partial c}=0$ cho hệ chuẩn
+\[ \begin{cases} a\sum x_i^4+b\sum x_i^2\cos x_i+c\sum x_i^2=\sum x_i^2y_i\\ a\sum x_i^2\cos x_i+b\sum\cos^2x_i+c\sum\cos x_i=\sum y_i\cos x_i\\ a\sum x_i^2+b\sum\cos x_i+60c=\sum y_i\end{cases} \]
 <<c23b_bang>>
+Thay các tổng được hệ (ma trận hệ số $M$, vế phải $d$):
 <<c23b_he>>
-Giải hệ (khử Gauss chọn trụ): $a=<<c23b_a>>$, $b=<<c23b_b>>$, $c=<<c23b_c>>$; \ $\sigma=<<c23b_sigma>>$.
+<<c23b_chol>>
+<<c23b_sd>>
 \begin{ketluan}
-$y\approx<<c23b_a>>\,x^2+(<<c23b_b>>)\cos x+<<c23b_c>>$, \quad $\sigma=<<c23b_sigma>>$.
+$<<c23b_kl>>$, \quad $\sigma=<<c23b_sigma>>$.
 \end{ketluan}
 
 \subsection{c) $y=a\,e^{bx+cx^2}$}
-\pp{Phương pháp (theo slide).} $y_i>0$ nên $z_i=\ln y_i=\ln a+bx_i+cx_i^2$, cơ sở $(1,x,x^2)$; hệ chuẩn $M_{jk}=\sum\varphi_j\varphi_k$, $b_j=\sum\varphi_jz_i$:
+\pp{Phương pháp} (tuyến tính hoá, Câu 22b). Mọi $y_i>0$ nên $s=1$, không loại điểm. Đặt $z_i=\ln y_i$, chọn $\ln a$, $b$, $c$ để $S=\sum\big(\ln a+bx_i+cx_i^2-z_i\big)^2$ nhỏ nhất; đạo hàm riêng bằng 0 cho hệ chuẩn
+\[ \begin{cases} 60\ln a+b\sum x_i+c\sum x_i^2=\sum z_i\\ \ln a\sum x_i+b\sum x_i^2+c\sum x_i^3=\sum x_iz_i\\ \ln a\sum x_i^2+b\sum x_i^3+c\sum x_i^4=\sum x_i^2z_i\end{cases} \]
 <<c23c_bang>>
+Thay các tổng được hệ (ma trận hệ số $M$, vế phải $d$):
 <<c23c_he>>
-Giải hệ (khử Gauss chọn trụ): $(\ln a,b,c)=<<c23c_c>>$, $a=<<c23c_a>>$. Sai số trên $z$: $\sigma_z=<<c23c_sz>>$; trên $y$ gốc: $\sigma=<<c23c_sigma>>$ — \textbf{rất lớn} so với độ lớn của $y$ ($\le2.5$).
-
-\pp{Hiệu chỉnh.} Các điểm $x\gtrsim2.7$ có $y$ cỡ $10^{-3}$ (nhiễu) nhưng $\ln y$ sai tới vài đơn vị, chi phối hệ chuẩn. Dùng thuật toán hiệu chỉnh Gauss--Newton (Câu 22b) để cực tiểu đúng $\sum(y_i-g_i)^2$:
-<<c23c_gn>>
-Hội tụ sau $<<c23c_gn_lan>>$ lần: $a=<<c23c_a2>>$, $b=<<c23c_b2>>$, $c=<<c23c_cc2>>$, $\sigma=<<c23c_sigma2>>$.
+<<c23c_chol>>
+$a=e^{\ln a}=<<c23c_a>>$, $b=<<c23c_b>>$, $c=<<c23c_cc>>$; <<c23c_sd>> \ $\sigma$ lớn vì $<<c23c_nho>>$ điểm có $y<0.01$ ($x\ge<<c23c_xnho>>$): ở đó sai lệch nhỏ của $y$ làm $\ln y$ lệch vài đơn vị và chi phối hệ chuẩn.
 \begin{ketluan}
-Tuyến tính hoá (slide): $y\approx<<c23c_a>>\,e^{<<c23c_b>>x+<<c23c_cc>>x^2}$, $\sigma=<<c23c_sigma>>$ (không dùng được).\\
-Sau hiệu chỉnh: $y\approx<<c23c_a2>>\,e^{<<c23c_b2>>x<<c23c_cc2>>x^2}$, \quad $\sigma=<<c23c_sigma2>>$.
+$<<c23c_kl>>$, \quad $\sigma=<<c23c_sigma>>$.
 \end{ketluan}
 
 \subsection{d) $y=a\,x^b$}
-\pp{Phương pháp.} $y_i<0$ ($s=-1$), $x_i>0$ nên $z_i=\ln(-y_i)=\ln(-a)+b\ln x_i$, cơ sở $(1,\ln x)$; hệ chuẩn $M_{jk}=\sum\varphi_j\varphi_k$, $b_j=\sum\varphi_jz_i$:
+\pp{Phương pháp} (tuyến tính hoá, Câu 22b). Mọi $y_i<0$ nên $s=-1$; mọi $x_i>0$, không loại điểm. Đặt $z_i=\ln(-y_i)$, chọn $\ln(-a)$, $b$ để $S=\sum\big(\ln(-a)+b\ln x_i-z_i\big)^2$ nhỏ nhất; đạo hàm riêng bằng 0 cho hệ chuẩn
+\[ \begin{cases} 60\ln(-a)+b\sum\ln x_i=\sum z_i\\ \ln(-a)\sum\ln x_i+b\sum(\ln x_i)^2=\sum z_i\ln x_i\end{cases} \]
 <<c23d_bang>>
+Thay các tổng được hệ (ma trận hệ số $M$, vế phải $d$):
 <<c23d_he>>
-Giải hệ (khử Gauss): $(\ln(-a),b)=<<c23d_c>>$, $a=-e^{\ln(-a)}=<<c23d_a>>$, $b=<<c23d_b>>$; $\sigma=<<c23d_sigma>>$ ($\sigma_z=<<c23d_sz>>$).
-
-\pp{Hiệu chỉnh Gauss--Newton} (Câu 22b):
-<<c23d_gn>>
-$a=<<c23d_a2>>$, $b=<<c23d_b2>>$, $\sigma=<<c23d_sigma2>>$.
+<<c23d_chol>>
+$a=-e^{\ln(-a)}=<<c23d_a>>$, $b=<<c23d_b>>$; <<c23d_sd>>
 \begin{ketluan}
-Tuyến tính hoá: $y\approx<<c23d_a>>\,x^{<<c23d_b>>}$, $\sigma=<<c23d_sigma>>$; \quad hiệu chỉnh: $y\approx<<c23d_a2>>\,x^{<<c23d_b2>>}$, $\sigma=<<c23d_sigma2>>$.
+$<<c23d_kl>>$, \quad $\sigma=<<c23d_sigma>>$.
 \end{ketluan}
 
 \end{document}

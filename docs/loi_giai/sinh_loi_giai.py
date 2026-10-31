@@ -384,7 +384,7 @@ def cau7():
     rows = [[str(i), sl(x[i])] + [r"\text{--}" if j == i else so(x[i] - x[j]) for j in range(n + 1)]
             + [so(D[i]), sl(y[i]), so(y[i] / D[i])] for i in range(n + 1)]
     V["c7_bang_he_so"] = bang(["i", "x_i", "j=0"] + [str(j) for j in range(1, n + 1)] + ["D_i", "y_i", "y_i/D_i"], rows)
-    V["c7_YQ"] = vec_hien(a, r"Y\cdot Q")
+    V["c7_YQ"] = vec_hien(a, r"P_5=Y\cdot Q")
     V["c7_P"] = da_thuc(a, ten="P_5(x)", rong_max=RONG_KL)
     V["c7_kt"] = so(float(np.max(np.abs(np.polyval(a, x) - np.array(y)))))
     V["c7_kt2"] = so(float(np.max(np.abs(np.array(a) - np.linalg.solve(np.vander(x), y))) / np.max(np.abs(a))))
@@ -429,7 +429,7 @@ def newton_bat_ky(x, y, chieu, xbar, k, tien_to):
     nut = "x_{k-1}" if chieu == "tien" else f"x_{{{n + 1}-k}}"
     V[tien_to + "_bang_tich"] = bang(["k", nut] + cot_mu(n), rows,
                                      nhom=(3, n + 3, r"ma trận $A$ (hàng $k$: hệ số của $\omega_k(x)$)"))
-    V[tien_to + "_CA"] = vec_hien(R["b"], r"a=C\cdot A")
+    V[tien_to + "_CA"] = vec_hien(R["b"], rf"P_{{{n}}}=C\cdot A")
     V[tien_to + "_P"] = da_thuc(R["b"], ten=f"P_{{{n}}}(x)")
     r, v, _ = nw.horner_dao_ham(list(R["b"]), xbar, k)          # Horner chia lap (Cau 4c), khong in bang
     V[tien_to + "_f"] = so(v[0])
@@ -498,7 +498,7 @@ def cau11():
             for kk, w in enumerate(R["bang_tich"])]
     V["c11_bang_tich"] = bang(["k", "z_{k-1}"] + cot_mu(n, "t"), rows,
                               nhom=(3, n + 3, r"ma trận $A$ (hàng $k$: hệ số của $\omega_k(t)$)"))
-    V["c11_CA"] = vec_hien(R["b"], r"C\cdot A")
+    V["c11_CA"] = vec_hien(R["b"], r"P_8=C\cdot A")
     V["c11_Pt"] = da_thuc(R["b"], "t", ten=r"P_8(t)")
     tb = (xbar - xs[0]) / h
     V["c11_t"] = so(tb)
@@ -567,7 +567,7 @@ def trung_tam(x, y, ct, xbar, k, m, tien_to):
                 for kk in range(n + 1)]
         V[tien_to + "_bang_tich"] = bang(["k", "z_{k-1}"] + cot_mu(n, "t"), rows,
                                          nhom=(3, n + 3, r"ma trận $A$ (hàng $k$: hệ số của $\omega_k(t)$)"))
-        V[tien_to + "_CA"] = vec_hien(b, r"C\cdot A")
+        V[tien_to + "_CA"] = vec_hien(b, rf"P_{{{n}}}=C\cdot A")
     else:
         s = len(P["cl"])
         chan = list(range(2, 2 * s + 1, 2)) if ct == 3 else list(range(0, 2 * s - 1, 2))
@@ -626,40 +626,35 @@ def cau12_17(x11, y11):
 CHIEU = {1: "tăng", -1: "giảm", 0: "hằng"}
 
 
-def mo_ta_lap(huong, m, k=None, hoa=False):
-    """Mo ta lap Newton tien / lui (Cau 18d): moc xuat phat, cac moc dung, d_j. k = None: viet theo chi so k."""
-    def chi(d):
-        if k is not None:
-            return str(k + d)
-        return "k" if d == 0 else (f"k+{d}" if d > 0 else f"k{d}")
-    if huong == "tien":
-        s, a, b, ten = chi(0), chi(0), chi(m - 1), "\\Delta"
-        dau = "đủ mốc bên phải nên dùng lặp Newton tiến"
-    else:
-        s, a, b, ten = chi(1), chi(2 - m), chi(1), "\\nabla"
-        dau = "không đủ mốc bên phải nên dùng lặp Newton lùi"
-    if hoa:
-        dau = dau[0].upper() + dau[1:]
-    return (f"{dau} (Câu 18d) xuất phát từ $x_{{{s}}}$: $t=(x-x_{{{s}}})/h$, dùng các mốc "
-            f"$x_{{{a}}},\\dots,x_{{{b}}}$, $d_j={ten}^jy_{{{s}}}$ (các ô khung)")
-
-
 def cau19():
     x, y, bao = doc_excel("data Câu 19.xlsx")
     V["c19_N"] = str(len(x))
     h = nsn.cach_deu(x)
+    m = 6
     doan = nsn.khoang_don_dieu(y)
-    V["c19_dd"] = bang([r"\text{đoạn}", r"[x_a,x_b]", r"\text{chỉ số}", r"y_a", r"y_b", r"\text{chiều}"],
-                       [[str(r), f"[{sl(x[a])};\\ {sl(x[b])}]", f"{a}..{b}", sl(y[a]), sl(y[b]), f"\\text{{{CHIEU[s]}}}"]
-                        for r, (a, b, s) in enumerate(doan, 1)])
+    V["c19_doi"] = ",".join(str(b) for _, b, _ in doan[:-1])        # Delta y doi dau tai cuoi moi doan (tru doan cuoi)
+    V["c19_dd"] = bang([r"\text{đoạn}"] + [f"[{sl(x[a])};\\ {sl(x[b])}]" for a, b, _ in doan],
+                       [[r"\text{chỉ số}"] + [f"{a}..{b}" for a, b, _ in doan],
+                        ["y_a"] + [sl(y[a]) for a, _, _ in doan],
+                        ["y_b"] + [sl(y[b]) for _, b, _ in doan],
+                        [r"\text{chiều}"] + [f"\\text{{{CHIEU[s]}}}" for _, _, s in doan]])
+    # khoang cach ly cua ca hai y: chung mot bang
+    rows, kh_ = [], {}
+    for yb in (2.5, 3.15):
+        tai_moc, kh = nsn.khoang_cach_ly(y, yb)
+        assert not tai_moc                                           # mau ghi "khong co g_i = 0"
+        kh_[yb] = kh
+        for k in kh:
+            a_, b_, s_ = next(dd for dd in doan if dd[0] <= k < dd[1])
+            rows.append([sl(yb), str(k), f"({sl(x[k])};\\ {sl(x[k + 1])})", sd(y[k] - yb, 7), sd(y[k + 1] - yb, 7),
+                         f"[{sl(x[a_])};\\ {sl(x[b_])}]\\ \\text{{{CHIEU[s_]}}}"])
+    V["c19_cl"] = bang([r"\bar y", "k", r"(x_k;x_{k+1})", r"g_k=y_k-\bar y", "g_{k+1}", r"\text{nằm trong đoạn}"], rows)
     # a) ybar = 2.5: ham nguoc
-    yb, m = 2.5, 6
-    tai_moc, kh = nsn.khoang_cach_ly(y, yb)
-    V["c19a_cl"] = bang(["k", "x_k", "x_{k+1}", r"g_k=y_k-\bar y", r"g_{k+1}"],
-                        [[str(k), sl(x[k]), sl(x[k + 1]), sd(y[k] - yb, 7), sd(y[k + 1] - yb, 7)] for k in kh])
-    k = kh[0]
+    yb = 2.5
+    k = kh_[yb][0]
     a_, b_, s_ = next(dd for dd in doan if dd[0] <= k < dd[1])
-    V["c19a_k"], V["c19a_xk"], V["c19a_xk1"] = str(k), sl(x[k]), sl(x[k + 1])
+    assert len(kh_[yb]) == 1 and s_ == 1                             # mau ghi "mot nghiem", "doan tang"
+    V["c19a_k"], V["c19a_k1"], V["c19a_xk"], V["c19a_xk1"] = str(k), str(k + 1), sl(x[k]), sl(x[k + 1])
     V["c19a_doan"] = f"[{sl(x[a_])};\\ {sl(x[b_])}]"
     hn_ = nsn.ham_nguoc(x, y, yb, k, a_, b_, m)
     V["c19a_chon"] = bang([r"\text{lần}", "j", "x_j", "y_j", r"|y_j-\bar y|"],
@@ -685,60 +680,42 @@ def cau19():
     lp = nsn.lap(x, y, yb, k, h, m, 1e-6, 100)
     V["c19a_lap"] = so(lp["xbar"])
     V["c19a_ss"] = so(abs(lp["xbar"] - hn_["xbar"]))
-    # b) ybar = 3.15: lap
+    # b) ybar = 3.15: lap Newton tien (khoi cong thuc trong mau viet cho tien, 6 moc)
     yb = 3.15
-    tai_moc, kh = nsn.khoang_cach_ly(y, yb)
-    V["c19b_cl"] = bang(["k", "x_k", "x_{k+1}", r"g_k=y_k-\bar y", r"g_{k+1}", r"\text{thuộc đoạn đơn điệu}"],
-                        [[str(k), sl(x[k]), sl(x[k + 1]), sd(y[k] - yb, 7), sd(y[k + 1] - yb, 7),
-                          "[{};\\ {}]".format(*(sl(x[e]) for e in next(dd for dd in doan if dd[0] <= k < dd[1])[:2]))]
-                         for k in kh])
+    kh = kh_[yb]
     V["c19b_so"] = str(len(kh))
-    lps = [nsn.lap(x, y, yb, k, h, m, 1e-6, 100) for k in kh]
-    chung = len({(lp["huong"], lp["m"]) for lp in lps}) == 1      # cung chieu, cung so moc: mo ta 1 lan
-    lap_txt = (r"$t_0=A=\dfrac{\bar y-d_0}{d_1}$, $t_{l+1}=\varphi(t_l)$, "
-               r"dừng khi $h|t_{l+1}-t_l|<\varepsilon$.")
-    if chung:
-        V["c19b_chung"] = ("Cả $%d$ khoảng đều " % len(kh) if len(kh) > 1 else "Khoảng này ") + \
-            mo_ta_lap(lps[0]["huong"], lps[0]["m"]) + "; " + lap_txt
-    else:
-        V["c19b_chung"] = "Mỗi khoảng: " + lap_txt
-    khoi = []
-    nghiem = []
-    for r, (k, lp) in enumerate(zip(kh, lps), 1):
+    khoi, nghiem = [], []
+    for r, k in enumerate(kh, 1):
+        lp = nsn.lap(x, y, yb, k, h, m, 1e-6, 100)
+        assert lp["huong"] == "tien" and lp["m"] == m and lp["hoi_tu"]
         idx, D, d = lp["idx"], lp["D"], lp["d"]
-        mm = lp["m"]
         rows = []
-        for rr in range(mm):
+        for rr in range(m):
             hh = [str(idx[rr]), sl(x[idx[rr]])]
             for kk in range(rr + 1):
                 s_ = sd(D[rr][kk], 7)
-                la = (kk == rr) if lp["huong"] == "tien" else (rr == mm - 1)
-                hh.append(ob(s_) if la else s_)
-            rows.append(hh + [""] * (mm - 1 - rr))
-        b_sp = bang(["i", "x_i", "y_i"] + [dmu(kk) for kk in range(1, mm)], rows)
-        ten_d = "\\Delta" if lp["huong"] == "tien" else "\\nabla"
-        s = lp["s"]
-        rows = [[str(j), f"{ten_d}^{{{j}}}y_{{{s}}}", sd(d[j], 7), "" if j < 2 else so(lp["B"][j])] for j in range(mm)]
-        b_B = bang(["j", "", "d_j", r"B_j=\dfrac{d_j}{j!\,d_1}"], rows)
+                hh.append(ob(s_) if kk == rr else s_)                # o khung: Delta^j y_k (duong cheo)
+            rows.append(hh + [""] * (m - 1 - rr))
+        b_sp = bang(["i", "x_i", "y_i"] + [dmu(kk) for kk in range(1, m)], rows)
+        assert math.isclose(lp["A"], (yb - d[0]) / d[1])
+        phi = hien(r"\varphi(t)", [so(lp["A"])] + [
+            ("- " if lp["B"][j] >= 0 else "+ ") + so(abs(lp["B"][j])) + "".join(f"(t-{l})" if l else "t" for l in range(j))
+            for j in range(2, m)])
         t = lp["t"]
         rows = [[str(j), so(t[j]), so(h * abs(t[j] - t[j - 1]))] for j in range(1, len(t))]
         rows[-1][1] = ob(rows[-1][1])
         b_it = bang(["l", "t_l", r"h|t_l-t_{l-1}|"], rut_lap(rows))
-        phi = hien(r"\varphi(t)", [so(lp["A"])] + [
-            ("- " if lp["B"][j] >= 0 else "+ ") + so(abs(lp["B"][j])) +
-            "".join(f"(t{'-' if lp['huong'] == 'tien' else '+'}{l})" if l else "t" for l in range(j))
-            for j in range(2, mm)])
-        rieng = "" if chung else " " + mo_ta_lap(lp["huong"], mm, k, hoa=True) + ":"
+        la = len(t) - 1
         khoi.append(L(r"""
-\paragraph{Nghiệm @r@: khoảng cách ly $(x_{@k@};x_{@k1@})=(@xk@;\ @xk1@)$.}@rieng@
+\paragraph{Nghiệm @r@: $(x_{@k@};x_{@k1@})=(@xk@;\ @xk1@)$.} Bảng sai phân:
 @b_sp@
-@b_B@
+Thay các ô khung vào $\varphi$:
 @phi@
 $t_0=@t0@$:
 @b_it@
-Hội tụ sau $@lan@$ lần lặp; $\bar x_{@r@}=x_{@s@}+t^*h=@x@$.
-""", r=r, k=k, k1=k + 1, xk=sl(x[k]), xk1=sl(x[k + 1]), s=s, rieng=rieng,
-            b_sp=b_sp, b_B=b_B, phi=phi, t0=so(t[0]), b_it=b_it, lan=len(t) - 1, x=so(lp["xbar"])))
+Dừng sau $@la@$ lần: $\bar x_{@r@}=x_{@k@}+t_{@la@}h=@xk@+@tl@\cdot@h@=@x@$.
+""", r=r, k=k, k1=k + 1, xk=sl(x[k]), xk1=sl(x[k + 1]), b_sp=b_sp, phi=phi, t0=so(t[0]), b_it=b_it, la=la,
+            tl=so(t[-1]), h=sl(h), x=so(lp["xbar"])))
         nghiem.append(lp["xbar"])
         V[f"c19b_kt{r}"] = so(abs(nsn.y_tai(x, y, lp["xbar"], m) - yb))
         hn_ = nsn.ham_nguoc(x, y, yb, k, *next(dd for dd in doan if dd[0] <= k < dd[1])[:2], m)
@@ -778,7 +755,6 @@ def cau21():
     g, m_, he = sp.spline2(x, y, [(1, 0, 0.0)])
     V["c21a_m"] = bang(["k", r"\gamma_k=\frac{2(y_{k+1}-y_k)}{h_k}", r"m_{k+1}=\gamma_k-m_k"],
                        [[str(k), so(g[k]), so(m_[k + 1])] for k in range(n)])
-    V["c21a_mv"] = vecl(m_)
     V["c21a_he"] = bang_he(he, 2)
     V["c21a_S"] = ham(he)
     V["c21a_kt"] = kiem_spline(x, y, he, 2, [(1, 0, 0.0)])
@@ -788,6 +764,7 @@ def cau21():
         V[f"c21{ten}_duoi"] = bang(["i", r"\ell_i", "d_i", "u_i", "r_i", "P_i", "Q_i", r"\sigma_i"],
                                    [[str(i), so(Lr[i]), so(Dg[i]), so(U[i]), so(R[i]), so(P[i]),
                                      so(Q[i]), ob(so(sg[i]))] for i in range(n + 1)])
+        V[f"c21{ten}_he"] = bang_he(he, 3)
         V[f"c21{ten}_S"] = ham(he)
         V[f"c21{ten}_kt"] = kiem_spline(x, y, he, 3, dk)
         from scipy.interpolate import CubicSpline
@@ -843,12 +820,38 @@ def bang_bptt(du_lieu, cs, Phi, w, ten_w):
     return bang([""] + [c[0] for c in cot], [[r"\sum"] + [so(float(np.sum(c[1]))) for c in cot]])
 
 
-def he_chuan_tex(M, b, an):
-    m = len(b)
+def he_chuan_tex(M, d, an):
+    m = len(d)
     A = r"\begin{pmatrix}" + r"\\".join("&".join(so(M[i][j]) for j in range(m)) for i in range(m)) + r"\end{pmatrix}"
     X = r"\begin{pmatrix}" + r"\\".join(an) + r"\end{pmatrix}"
-    B = r"\begin{pmatrix}" + r"\\".join(so(v) for v in b) + r"\end{pmatrix}"
+    B = r"\begin{pmatrix}" + r"\\".join(so(v) for v in d) + r"\end{pmatrix}"
     return r"\[" + A + X + "=" + B + r"\]"
+
+
+def cholesky_tex(M, d, an):
+    """Cau 22a Buoc 3: M = L L^T, Lu = d (the xuoi), L^T c = u (the nguoc). Tra ve (c, khoi LaTeX ghi L, u, c)."""
+    Lm = np.linalg.cholesky(M)
+    u = np.linalg.solve(Lm, d)
+    c = np.linalg.solve(Lm.T, u)
+    k = len(d)
+    L_tex = r"\begin{pmatrix}" + r"\\".join("&".join("" if j > i else so(Lm[i][j]) for j in range(k))
+                                            for i in range(k)) + r"\end{pmatrix}"
+    cot = lambda v: r"\begin{pmatrix}" + r"\\".join(so(t) for t in v) + r"\end{pmatrix}"
+    an_ = r"\begin{pmatrix}" + r"\\".join(an) + r"\end{pmatrix}"
+    return c, (r"\pp{Giải hệ bằng Cholesky} $M=LL^T$:" + "\n" + r"\begin{gather*} L=" + L_tex
+               + r",\qquad Lu=d\Rightarrow u=" + cot(u) + r",\\ L^T" + an_ + r"=u\Rightarrow " + an_ + "=" + cot(c)
+               + r". \end{gather*}")
+
+
+def sigma_tex(g, y):
+    S = float(np.sum((np.asarray(g) - y) ** 2))
+    n = len(y)
+    return (rf"$\sigma=\sqrt{{\dfrac1{{{n}}}\sum(g(x_i)-y_i)^2}}=\sqrt{{\dfrac{{{so(S)}}}{{{n}}}}}"
+            rf"={so(math.sqrt(S / n))}$."), math.sqrt(S / n)
+
+
+def dau(v):
+    return "+" if v >= 0 else "-"
 
 
 def cau23():
@@ -859,50 +862,50 @@ def cau23():
         x, y = bp.lam_sach(ox, oy, vt, bao)
         du[ten] = (np.array(x), np.array(y), bao)
     # a, b: tuyen tinh theo tham so
+    kl = {"a": lambda c: rf"y\approx{so(c[0])}\,x{dau(c[1])}\dfrac{{{so(abs(c[1]))}}}{{x}}",
+          "b": lambda c: rf"y\approx{so(c[0])}\,x^2{dau(c[1])}{so(abs(c[1]))}\cos x{dau(c[2])}{so(abs(c[2]))}"}
     for ten, cs, an in (("a", [("x", lambda t: t), ("1/x", lambda t: 1 / t)], ["a", "b"]),
                         ("b", [("x^2", lambda t: t ** 2), (r"\cos x", np.cos), ("1", np.ones_like)], ["a", "b", "c"])):
         x, y, _ = du[ten]
         Phi = np.column_stack([f(x) for _, f in cs])
-        a, M, b, A, g, sigma = bp.bptt(Phi, y)
+        a, M, d, A, g, sigma = bp.bptt(Phi, y)
+        c, V[f"c23{ten}_chol"] = cholesky_tex(M, d, an)
+        assert np.allclose(c, a)
         V[f"c23{ten}_bang"] = bang_bptt([("x_i", x), ("y_i", y)], cs, Phi, y, "y")
-        V[f"c23{ten}_he"] = he_chuan_tex(M, b, an)
-        for j, t in enumerate(an):
-            V[f"c23{ten}_{t}"] = so(a[j])
+        V[f"c23{ten}_he"] = he_chuan_tex(M, d, an)
+        V[f"c23{ten}_sd"], sg = sigma_tex(g, y)
+        assert math.isclose(sg, sigma)
         V[f"c23{ten}_sigma"] = so(sigma)
+        V[f"c23{ten}_kl"] = kl[ten](c)
         a_np = np.linalg.lstsq(Phi, y, rcond=None)[0]
         V[f"c23{ten}_kt"] = so(float(np.max(np.abs(a - a_np))))
-    # c: y = a e^(bx + cx^2); d: y = a x^b
+    # c: y = a e^(bx + cx^2); d: y = a x^b (tuyen tinh hoa, Cau 22b)
     for ten, cs, an in (("c", [("1", np.ones_like), ("x", lambda t: t), ("x^2", lambda t: t ** 2)], [r"\ln a", "b", "c"]),
                         ("d", [("1", np.ones_like), (r"\ln x", np.log)], [r"\ln(-a)", "b"])):
         x, y, _ = du[ten]
-        s = 1.0 if y[0] > 0 else -1.0
+        s = 1.0 if np.sum(y > 0) >= np.sum(y < 0) else -1.0          # Cau 22b Buoc 0: dau cua a
+        assert np.all(s * y > 0) and (ten == "c" or np.all(x > 0))   # mau ghi "khong loai diem"
         Phi1 = np.column_stack([f(x) for _, f in cs])
-        c, M, b, A, z, gY, sigma, sz = bp.tuyen_tinh_hoa(Phi1, y, s)
-        m = len(cs)
+        c0, M, d, A, z, gY, sigma, sz = bp.tuyen_tinh_hoa(Phi1, y, s)
+        c, V[f"c23{ten}_chol"] = cholesky_tex(M, d, an)
+        assert np.allclose(c, c0)
         V[f"c23{ten}_bang"] = bang_bptt([("x_i", x), ("y_i", y), ("z_i", z)], cs, Phi1, z, "z")
-        V[f"c23{ten}_he"] = he_chuan_tex(M, b, an)
-        V[f"c23{ten}_c"] = vecl(c)
-        V[f"c23{ten}_a"] = so(s * math.exp(c[0]))
+        V[f"c23{ten}_he"] = he_chuan_tex(M, d, an)
+        av = s * math.exp(c[0])
+        V[f"c23{ten}_a"] = so(av)
         V[f"c23{ten}_b"] = so(c[1])
-        if m > 2:
-            V[f"c23{ten}_cc"] = so(c[2])
+        V[f"c23{ten}_sd"], sg = sigma_tex(gY, y)
+        assert math.isclose(sg, sigma)
         V[f"c23{ten}_sigma"] = so(sigma)
-        V[f"c23{ten}_sz"] = so(sz)
-        c2, lan, ok = bp.gauss_newton(Phi1, y, s)
-        rows = [[str(j)] + [so(v) for v in cc] + [so(sg)] for j, cc, sg in lan]
-        rows[-1] = rows[-1][:1] + [ob(v) for v in rows[-1][1:]]
-        V[f"c23{ten}_gn"] = bang(["l"] + an + [r"\sigma"], rut_lap(rows))
-        V[f"c23{ten}_gn_lan"] = str(len(lan) - 1)
-        V[f"c23{ten}_a2"] = so(s * math.exp(c2[0]))
-        V[f"c23{ten}_b2"] = so(c2[1])
-        if m > 2:
-            V[f"c23{ten}_cc2"] = so(c2[2])
-        V[f"c23{ten}_sigma2"] = so(lan[-1][2])
+        if ten == "c":
+            V["c23c_cc"] = so(c[2])
+            V["c23c_kl"] = rf"y\approx{so(av)}\,e^{{{so(c[1])}x{dau(c[2])}{so(abs(c[2]))}x^2}}"
+            nho = y < 0.01
+            V["c23c_nho"] = str(int(np.sum(nho)))
+            V["c23c_xnho"] = sl(float(np.min(x[nho])))
+        else:
+            V["c23d_kl"] = rf"y\approx{so(av)}\,x^{{{so(c[1])}}}"
         V[f"c23{ten}_kt"] = so(float(np.max(np.abs(c - np.linalg.lstsq(Phi1, z, rcond=None)[0]))))
-        from scipy.optimize import curve_fit
-        f = lambda xx, *cc: s * np.exp(np.column_stack([fn(np.asarray(xx, dtype=float)) for _, fn in cs]) @ np.array(cc))
-        c_sp = curve_fit(f, x, y, p0=lan[0][1])[0]
-        V[f"c23{ten}_kt2"] = so(float(np.max(np.abs(c2 - c_sp))))
 
 
 # ===== GHEP =====
