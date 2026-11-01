@@ -43,7 +43,7 @@ Bảng sai phân (mục 2) lập **một lần** dùng chung cho mọi công th�
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
 * Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$, file `.csv`/`.xlsx`); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.`; bỏ ký tự lạ không phải chữ.
 * Hàng $x$ và hàng $y$ khác số ô → dừng, báo lỗi. Ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp; báo vị trí và lý do.
-* Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại dừng, báo lỗi.
+* Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn.
 * Sắp tăng theo $x$ (báo nếu đổi thứ tự). Cần ít nhất 2 mốc.
 * **Bắt buộc cách đều:** $h:=\dfrac{x_N-x_0}{N}$ ($N+1$ mốc), $|x_{i+1}-x_i-h|\le\delta h$, $\delta=10^{-6}$; không thoả → dừng, báo lỗi (dùng `newton.md` mục bất kỳ).
 * Điểm $\bar x$: ngoài $[x_{\min},x_{\max}]$ → cảnh báo ngoại suy. Cấp $k$: số nguyên $\ge0$.

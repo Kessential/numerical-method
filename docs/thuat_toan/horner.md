@@ -20,7 +20,7 @@ Nếu cần nhiều mục đích tại cùng $c$: lần chia đầu tiên của 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
 * Đọc dãy số: tách theo khoảng trắng hoặc `;`, dấu trừ Unicode `−` `–` (copy từ PDF) → `-`, dấu `,` giữa hai chữ số → `.`; token không phải số → loại và báo.
 * Có NaN hoặc $\pm\infty$ → dừng, báo lỗi.
-* Vector hệ số $a$: bỏ các số 0 ở đầu (bậc cao) cho tới khi $a_n\ne0$; mọi hệ số bằng 0 → $P\equiv0$, dừng. Bậc $n:=$ số phần tử còn lại $-1$.
+* Vector hệ số $a$: bỏ các số 0 ở đầu (bậc cao) cho tới khi $a_n\ne0$; mọi hệ số bằng 0 → $P\equiv0$: đặt $a:=(0)$, $n:=0$, mọi kết quả bằng 0 (không dừng). Bậc $n:=$ số phần tử còn lại $-1$.
 * Cấp $k$ (mục 2, 5): phải là số nguyên $\ge0$, ngược lại dừng, báo lỗi.
 * Vector mốc $x$ (mục 4): phải có ít nhất 1 mốc, ngược lại dừng, báo lỗi.
 

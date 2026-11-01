@@ -29,7 +29,7 @@ Mốc cách đều → dùng sai phân (TH2): bảng chỉ có phép trừ, khô
 * Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.`; bỏ ký tự lạ không phải chữ (vd `*`, khoảng trắng đặc biệt).
 * Hàng $x$ và hàng $y$ khác số ô → dừng, báo lỗi.
 * Ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp $(x_i,y_i)$; báo vị trí và lý do.
-* Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng $\max y-\min y\le\varepsilon_y=10^{-3}\max(1,\max_i|y_i|)$ → thay bằng trung bình; ngược lại dừng, báo lỗi.
+* Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng $\max y-\min y\le\varepsilon_y=10^{-3}\max(1,\max_i|y_i|)$ → thay bằng trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn.
 * Sắp tăng theo $x$ (báo nếu đổi thứ tự); sau bước này các mốc phân biệt. Còn ít nhất 1 mốc ($n\ge0$), ngược lại dừng.
 * Kiểm tra cách đều (khi $n\ge1$): $h:=\dfrac{x_n-x_0}{n}$; nếu $|x_{i+1}-x_i-h|\le\delta h$ với mọi $i$ ($\delta=10^{-6}$) → mốc cách đều (TH2), ngược lại mốc bất kỳ (TH1).
 * Điểm $\bar x$ (mục 6): đọc như trên; $\bar x\notin[x_0,x_n]$ → cảnh báo ngoại suy. Cấp $k$: số nguyên $\ge0$, ngược lại dừng, báo lỗi.

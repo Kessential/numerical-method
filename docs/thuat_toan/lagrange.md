@@ -24,7 +24,7 @@ $D_i$ tính một lần, dùng chung cho mục 1 và mục 2. Giá trị $P_n(\b
 * Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.`; bỏ ký tự lạ không phải chữ (vd `*`, khoảng trắng đặc biệt).
 * Hàng $x$ và hàng $y$ khác số ô → dừng, báo lỗi.
 * Ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp $(x_i,y_i)$; báo vị trí và lý do.
-* Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng $\max y-\min y\le\varepsilon_y=10^{-3}\max(1,\max_i|y_i|)$ → thay bằng trung bình; ngược lại dừng, báo lỗi (không có đa thức nào đi qua cả hai điểm).
+* Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng $\max y-\min y\le\varepsilon_y=10^{-3}\max(1,\max_i|y_i|)$ → thay bằng trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn.
 * Sắp tăng theo $x$ (báo nếu đổi thứ tự); sau bước này các mốc phân biệt. Còn ít nhất 1 mốc ($n\ge0$), ngược lại dừng.
 * Điểm $\bar x$ (mục 2, 3): đọc như trên; $\bar x\notin[x_0,x_n]$ → cảnh báo ngoại suy. Cấp $k$ (mục 3): số nguyên $\ge0$, ngược lại dừng, báo lỗi.
 

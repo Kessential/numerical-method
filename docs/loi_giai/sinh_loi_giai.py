@@ -9,7 +9,9 @@ Chay : python docs/loi_giai/sinh_loi_giai.py      -> docs/loi_giai/loi_giai_bai_
 Dich : xelatex loi_giai_bai_tap.tex (2 lan, trong thu muc docs/loi_giai)
 """
 
+import contextlib
 import importlib.util
+import io
 import math
 import os
 import re
@@ -454,8 +456,9 @@ def cau9():
 
 def doc_excel(ten):
     bao = []
-    ox, oy, vt = nw.doc_bang_file(os.path.join(GOC, "slide_example", ten))
-    x, y = nw.lam_sach(ox, oy, vt, bao)
+    with contextlib.redirect_stdout(io.StringIO()):     # bo doc file in khoi DOC FILE; lay mac dinh
+        B = nw.doc_bang_file(os.path.join(GOC, "slide_example", ten), lambda prompt, mac_dinh: mac_dinh, bao)
+    x, y = nw.lam_sach(B["x"], B["y"], B["vi_tri"], bao, B["so"])
     return [round(v, 10) for v in x], y, bao
 
 

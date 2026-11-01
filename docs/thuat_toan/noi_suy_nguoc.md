@@ -25,7 +25,7 @@ Sai số hàm ngược: $|x^*-\bar x|\le\dfrac{\max|(f^{-1})^{(m)}|}{m!}\prod_j|
 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
 * Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột, file `.csv`/`.xlsx`); dấu trừ Unicode → `-`; `,` giữa hai chữ số → `.`; bỏ ký tự lạ; ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp, báo vị trí và lý do.
-* Mốc trùng: cùng $y$ → giữ 1; chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại dừng, báo lỗi. Sắp tăng theo $x$ (báo). Cần ít nhất 2 mốc.
+* Mốc trùng: cùng $y$ → giữ 1; chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn. Sắp tăng theo $x$ (báo). Cần ít nhất 2 mốc.
 * $\bar y$: đọc như trên; $\bar y\notin[\min y_i,\max y_i]$ → báo "không có nghiệm trong bảng" cho $\bar y$ đó.
 * Số mốc dùng $m\ge2$ (nguyên); $\varepsilon>0$; $N\ge1$ (nguyên); sai → dừng, báo lỗi.
 * Mục 4 cần mốc cách đều ($|x_{i+1}-x_i-h|\le\delta h$, $\delta=10^{-6}$); không thoả → bỏ mục 4, báo, dùng mục 3.

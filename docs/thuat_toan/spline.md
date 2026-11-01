@@ -32,7 +32,7 @@ $$S'(x_0)=A:\ \frac{h_0}{3}\sigma_0+\frac{h_0}{6}\sigma_1=\frac{y_1-y_0}{h_0}-A;
 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
 * Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột); dấu trừ Unicode → `-`; `,` giữa hai chữ số → `.`; bỏ ký tự lạ; ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp, báo vị trí và lý do.
-* Mốc trùng: cùng $y$ → giữ 1; chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại dừng, báo lỗi (spline phải đi qua mọi điểm). **Sắp tăng theo $x$** (báo); cần ít nhất 2 mốc ($n\ge1$).
+* Mốc trùng: cùng $y$ → giữ 1; chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn. **Sắp tăng theo $x$** (báo); cần ít nhất 2 mốc ($n\ge1$).
 * Bậc $p$: số nguyên $1\le p\le4$, ngược lại dừng, báo lỗi.
 * Điều kiện biên: dạng `S'(0) = 0`, `S''(3.1416) = 1` (dấu `"` hiểu là `''`, dấu nháy Unicode `’ ′` → `'`) hoặc bộ ba `r x v` ($S^{(r)}(x)=v$), cách nhau bởi `;`. Điểm phải là $x_0$ hoặc $x_n$ (lệch $\le10^{-6}(x_n-x_0)$ → coi là trùng); cấp $1\le r\le p-1$; không lặp cùng $(r,\text{điểm})$; **đúng $p-1$ điều kiện**. Sai → dừng, báo lỗi (điểm lặp như $S''(0)$ hai lần → báo rõ).
 

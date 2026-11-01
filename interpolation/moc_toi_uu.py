@@ -23,11 +23,19 @@ W_COT = 18  # do rong cot bang
 
 # ===== CAC HAM CONG CU =====
 
-def fmt(v, spec=".10f"):
-    """Dinh dang so, |v| < 1e-12 in thanh 0."""
-    if abs(v) < 1e-12:
-        v = 0.0
-    return format(v, spec)
+def fmt(v, spec=None, nho=1e-12):
+    """So tinh ra: toi da 6 chu so thap phan, bo so 0 thua; |v| < 1e-4 -> dang e (9.14e-04); |v| < nho -> 0
+    (danh gia sai so: nho = 0 de khong mat so rat nho).
+    spec (vd '.10g') -> in theo spec (so lieu de cho giu nguyen)."""
+    if v == 0 or abs(v) < nho:
+        return "0"
+    if spec:
+        return format(v, spec)
+    if abs(v) < 1e-4:
+        m, e = format(v, ".6e").split("e")
+        return m.rstrip("0").rstrip(".") + "e" + e
+    s = format(v, ".6f").rstrip("0").rstrip(".")
+    return "0" if s == "-0" else s
 
 
 def doc_day_so(text, ten):
@@ -56,8 +64,8 @@ def doc_day_so(text, ten):
     return so, canh_bao
 
 
-def vec(v, spec=".10g"):
-    """In vector dang [v0, v1, ...]."""
+def vec(v, spec=None):
+    """In vector dang [v0, v1, ...] (so theo fmt; so lieu de cho: spec = '.10g')."""
     return "[" + ", ".join(fmt(x, spec) for x in v) + "]"
 
 
@@ -86,8 +94,8 @@ def moc_toi_uu(n, a, b, verbose=True):
     if verbose:
         print(f"  p = (a+b)/2 = {p:.10g},  q = (b-a)/2 = {q:.10g}")
         print()
-        print(f"  {'i':>3}{'(2i+1)pi/(2n)':>{W_COT}}{'t_i':>{W_COT}}{'x_i = p + q*t_i':>{W_COT}}")
-        print("  " + "-" * (3 + 3 * W_COT))
+        print(f"  {'i':>3}{'x_i':>{W_COT}}")
+        print("  " + "-" * (3 + W_COT))
     t = [0.0] * n
     x = [0.0] * n
     for i in range(n):                             # Buoc 2
@@ -95,7 +103,7 @@ def moc_toi_uu(n, a, b, verbose=True):
         t[i] = -math.cos(goc)                      # Buoc 2.1 - Nghiem cua T_n
         x[i] = p + q * t[i]                        # Buoc 2.2 - Moc tren [a, b]
         if verbose:
-            print(f"  {i:>3}{goc:>{W_COT}.10f}{fmt(t[i]):>{W_COT}}{fmt(x[i]):>{W_COT}}")
+            print(f"  {i:>3}{fmt(x[i]):>{W_COT}}")
     log_W = math.log(2) + n * math.log((b - a) / 4)   # Buoc 3 - W = (b-a)^n / 2^(2n-1), tinh qua log de khong tran so
     W = math.exp(log_W) if log_W < 709 else math.inf
     return t, x, W                                 # Buoc 4 - Ket thuc
@@ -103,12 +111,17 @@ def moc_toi_uu(n, a, b, verbose=True):
 
 # ===== GIAI =====
 
-def giai(n, a, b):
-    print(f"\nn = {n},  [a, b] = [{a:g}, {b:g}]")
+CONG_THUC = "CONG THUC: x_i = (a+b)/2 - (b-a)/2 cos((2i+1)pi/(2n)),  i = 0..n-1  (moc xep tang dan)"
 
-    print("\nCONG THUC:")
-    print("  p = (a+b)/2,  q = (b-a)/2;  t_i = -cos((2i+1)pi/(2n)),  x_i = p + q*t_i  (i = 0..n-1)")
-    print("  W = max|w_n(x)| = (b-a)^n / 2^(2n-1)")
+
+def cong_thuc_so(n, a, b):
+    """Cong thuc moc da thay so, vd '4.5 - 1.5 cos((2i+1)pi/24)'."""
+    p, q = (a + b) / 2, (b - a) / 2
+    return (f"{p:.10g} - " if p else "-") + ("" if q == 1 else f"{q:.10g} ") + f"cos((2i+1)pi/{2 * n})"
+
+
+def giai(n, a, b):
+    print(f"\nn = {n},  [a, b] = [{a:g}, {b:g}]:  x_i = {cong_thuc_so(n, a, b)},  i = 0..{n - 1}")
 
     print("\nTINH TOAN:")
     t, x, W = moc_toi_uu(n, a, b)
@@ -116,10 +129,10 @@ def giai(n, a, b):
     print("\nKET QUA (moc xep tang dan):")
     ten = "(x_0)" if n == 1 else f"(x_0, ..., x_{n - 1})"
     print(f"  x = {ten} = {vec(x)}")
-    print(f"  W = ({b - a:g})^{n} / 2^{2 * n - 1} = {W:.10e}")
+    print(f"  W = ({b - a:g})^{n} / 2^{2 * n - 1} = {fmt(W)}")
     log_hs = math.log(2) + n * math.log((b - a) / 4) - math.lgamma(n + 1)   # log(W / n!)
     he_so = math.exp(log_hs) if log_hs < 709 else math.inf
-    print(f"  => |f(x) - P(x)| <= M_{n} / {n}! * W = M_{n} * {he_so:.6e}")
+    print(f"  => |f(x) - P(x)| <= M_{n} / {n}! * W = M_{n} * {fmt(he_so, nho=0)}")
 
     print("\nKIEM TRA (numpy):")
     nghiem = np.sort(np.real(np.polynomial.chebyshev.chebroots([0] * n + [1])))
@@ -161,6 +174,7 @@ def main():
         print("Loi: khong co du lieu.")
         return
 
+    print(CONG_THUC)
     for bo in cac_bo:
         bao_cao = []      # Buoc 0: chi in khi du lieu ban / loi
         loi = False

@@ -47,7 +47,7 @@ Mẫu chuẩn: `docs/thuat_toan/horner.md`, `docs/thuat_toan/moc_toi_uu.md`.
 - **Bước 0 — Xử lý dữ liệu là bắt buộc** (dữ liệu đề cho không sạch). Chọn các mục phù hợp với thuật toán:
   - Chuẩn hoá: dấu trừ Unicode `−` `–` (copy từ PDF) → `-`; dấu phẩy thập phân → dấu chấm; bỏ khoảng trắng / ký tự lạ; ô rỗng, ô chữ → loại.
   - Loại NaN, ±∞; báo số dòng bị loại và lý do.
-  - Mốc trùng: cùng y → giữ 1; khác y → lấy trung bình nếu chênh nhỏ, ngược lại dừng và báo.
+  - Mốc trùng: cùng y → giữ 1; khác y chênh $\le10^{-3}\max(1,\max|y|)$ → lấy trung bình; chênh lớn hơn → hỏi giữ giá trị đầu / sau / trung bình / dừng (Enter hoặc file trả lời = giữ đầu), báo số dòng và lựa chọn. Bình phương tối thiểu giữ mọi điểm.
   - Sắp tăng theo x; kiểm tra các mốc phân biệt.
   - Kiểm tra cách đều: $|x_{i+1}-x_i-h|\le\delta h$ → chọn công thức mốc cách đều hay mốc bất kỳ.
   - Điều kiện riêng của phương pháp: đủ số mốc; n chẵn (Simpson); $\bar y\in[\min y,\max y]$ và khoảng đơn điệu (nội suy ngược); $\bar x$ ngoài $[x_0,x_n]$ → cảnh báo ngoại suy; ma trận suy biến (BPTT); $h>0$; tham số nguyên dương…
@@ -59,8 +59,8 @@ Người dùng chép output vào vở, nên **output của script phải là l�
 
 ```
 XU LY DU LIEU   -> CHI IN KHI DU LIEU BAN / LOI: du lieu goc, cai gi bi loai/gop/sua va vi sao, du lieu sach
-CONG THUC       -> chi cong thuc, ngan gon va du y (khong giai thich phuong phap)
-TINH TOAN       -> cac buoc/bang/lan lap (thay so)
+CONG THUC       -> chi cong thuc chung chua gan voi bang nao (bo khoi nay khi moi cong thuc da ghi tren bang)
+TINH TOAN       -> cac buoc/bang/lan lap (thay so); cong thuc ghi ngay tren bang dung no
 KET QUA         -> ket qua cuoi (+ danh gia sai so neu co cong thuc sai so)
 KIEM TRA        -> tu kiem tra (P(x_i) vs y_i, phan du, so voi numpy...)
 ```
@@ -70,6 +70,12 @@ KIEM TRA        -> tu kiem tra (P(x_i) vs y_i, phan du, so voi numpy...)
 - Kết quả là đa thức hoặc nhiều giá trị → in **dạng vector** `[v0, v1, ...]`, hàm trả về `numpy` array.
 - **Quy ước đa thức:** $P_n(x)=a_nx^n+\dots+a_1x+a_0$ — **chỉ số = số mũ** ($a_i$ là hệ số của $x^i$). Vector hệ số nhập và in **từ bậc cao xuống thấp** $(a_n,\dots,a_0)$, vd $3x^3-2x-1$ → `3 0 -2 -1`. Trong code, đảo vector thành `A[i] = a_i` để viết công thức đúng chỉ số như file `.md`.
 
+- **Bố cục theo lời giải PDF** (`docs/loi_giai/loi_giai_bai_tap.pdf`):
+  - Công thức (công thức lặp của bảng) ghi ngay trên bảng dùng nó.
+  - Ô (tỷ) sai phân được chọn in trong `[ ]`.
+  - Bảng tích khoanh ma trận A (cột `|`); hệ số in `C = (tên từng thành phần) = (số)`, đa thức in `P_n = C.A = [...]`.
+  - Trích xuất mốc: bảng quá trình rồi bảng ngang các mốc đã đánh số lại (`i`, `x_i`, `y_i`).
+  - Không in bảng đổi biến $t\to x$ (vẫn in $P(x)$ ở KET QUA).
 - **Lặp:** in lần lặp **1, 2, áp chót và cuối**, giữa in `...`; tổng số lần ≤ 4 thì in hết.
 - **Bảng** (Horner, sai phân, tỷ sai phân, RK, spline, mốc…): **in toàn bộ**, không cắt.
 - Trong chat chỉ tóm tắt kết quả + lệnh chạy; không tính tay số liệu.
@@ -85,7 +91,9 @@ Mẫu chuẩn: `interpolation/horner.py`, `interpolation/moc_toi_uu.py`. Phong c
   4. `# ===== CHUONG TRINH CHINH =====`: `main()` + `if __name__ == "__main__":`.
 - Hàm thuật toán là bản **tổng quát** (không gắn số liệu của một câu); tham số `verbose=True` để in quá trình; trả về kết quả (tuple/dict) để kiểm tra.
 - **Nhập liệu:** đọc file (csv/txt; xlsx qua pandas nếu có) từ đối số dòng lệnh, nếu không có thì `input()` với giá trị mặc định ghi dạng `(VD [...])` (Enter hoặc EOF → dùng VD). Menu nhiều lựa chọn in mỗi lựa chọn 1 dòng (chỉ khi nhập từ bàn phím). Dấu phân tách là khoảng trắng hoặc `;`; dấu `,` giữa hai chữ số hiểu là dấu thập phân. Bọc `try/except` khi mở file, file rỗng, sai kích thước, sai kiểu.
-- **In:** chữ **không dấu** (tránh lỗi mã hoá console), theo khối ở mục 3. Số mặc định `:.6f` (bảng) / `:.10g` (kết quả), giá trị $|v|<10^{-12}$ in thành 0. Đầu `main()` gọi `sys.stdout.reconfigure(errors="backslashreplace")` để in dữ liệu gốc có ký tự lạ không bị crash. Công thức có luỹ thừa / giai thừa lớn tính qua `log`/`math.lgamma` để không tràn số; kiểm tra trên lưới thì nhân dần từng thừa số, không tạo mảng 2 chiều lớn.
+- **In:** chữ **không dấu** (tránh lỗi mã hoá console), theo khối ở mục 3. Số tính ra in qua `fmt`: tối đa 6 chữ số thập phân, bỏ số 0 thừa, $|v|<10^{-4}$ in dạng e (`9.14e-04`), $|v|<10^{-12}$ in thành 0 (riêng đánh giá sai số dùng `fmt(E, nho=0)` để không mất số rất nhỏ). Số liệu đề cho giữ nguyên (`.10g`); sai phân của số liệu cách đều giữ đúng số chữ số thập phân của dữ liệu (`0.0008739`).
+- **Đọc file bảng** (6 script đọc bảng): tự nhận `.csv` / `.xlsx` / `.txt` dạng bảng; in khối `DOC FILE` (cột x, y, dòng, ô bị bỏ) để xác nhận; $\bar x$, $\bar y$ có trong file làm giá trị mặc định (Enter = đồng ý); nhiều sheet có số liệu → menu chọn sheet; số dòng báo lỗi là số dòng gốc trong file; file chỉ có y → hỏi cách sinh x (cách đều, Chebyshev giảm dần theo công thức cos, hoặc tăng dần).
+- **BPTT:** giải hệ chuẩn $Ma=d$ bằng Cholesky; hiệu chỉnh Gauss–Newton ẩn, chỉ chạy khi có cờ `--gn`. Đầu `main()` gọi `sys.stdout.reconfigure(errors="backslashreplace")` để in dữ liệu gốc có ký tự lạ không bị crash. Công thức có luỹ thừa / giai thừa lớn tính qua `log`/`math.lgamma` để không tràn số; kiểm tra trên lưới thì nhân dần từng thừa số, không tạo mảng 2 chiều lớn.
 - Chọn lần lặp cần in khi biết trước tổng số N: `k <= 2 or k >= N - 1`; khi chưa biết N (lặp tới hội tụ): lưu 2 lần đầu + `deque(maxlen=2)` cho 2 lần cuối rồi in sau vòng lặp.
 - Chạy: `python interpolation/<ten>.py [data/<file>]`.
 

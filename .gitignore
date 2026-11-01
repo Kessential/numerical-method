@@ -20,6 +20,7 @@ docs/loi_giai/loi_giai_bai_tap.tex
 
 # Tai lieu mon hoc (slide, de cuong, bai tap) — chi de doc
 slide_example/
+giua_ky/
 
 # Cau hinh may ca nhan
 .claude/settings.local.json

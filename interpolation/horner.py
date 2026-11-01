@@ -28,11 +28,19 @@ W = 14  # do rong cot bang
 
 # ===== CAC HAM CONG CU =====
 
-def fmt(v, spec=".6f"):
-    """Dinh dang so, |v| < 1e-12 in thanh 0."""
-    if abs(v) < 1e-12:
-        v = 0.0
-    return format(v, spec)
+def fmt(v, spec=None, nho=1e-12):
+    """So tinh ra: toi da 6 chu so thap phan, bo so 0 thua; |v| < 1e-4 -> dang e (9.14e-04); |v| < nho -> 0
+    (danh gia sai so: nho = 0 de khong mat so rat nho).
+    spec (vd '.10g') -> in theo spec (so lieu de cho giu nguyen)."""
+    if v == 0 or abs(v) < nho:
+        return "0"
+    if spec:
+        return format(v, spec)
+    if abs(v) < 1e-4:
+        m, e = format(v, ".6e").split("e")
+        return m.rstrip("0").rstrip(".") + "e" + e
+    s = format(v, ".6f").rstrip("0").rstrip(".")
+    return "0" if s == "-0" else s
 
 
 def doc_day_so(text, ten):
@@ -61,26 +69,25 @@ def doc_day_so(text, ten):
     return so, canh_bao
 
 
-def vec(v, spec=".10g"):
-    """In vector dang [v0, v1, ...]."""
+def vec(v, spec=None):
+    """In vector dang [v0, v1, ...] (so theo fmt; so lieu de cho: spec = '.10g')."""
     return "[" + ", ".join(fmt(x, spec) for x in v) + "]"
 
 
-def da_thuc_str(he_so):
-    """Chuoi da thuc tu he so bac cao -> thap."""
+def da_thuc_str(he_so, bien="x"):
+    """Chuoi da thuc tu he so bac cao -> thap (he so theo fmt; he so dang e -> them '*')."""
     n = len(he_so) - 1
     parts = []
     for i, a in enumerate(he_so):
         if abs(a) < 1e-12:
             continue
         k = n - i
-        mag = f"{abs(a):.10g}"
+        mag = fmt(abs(a))
         if k == 0:
             term = mag
-        elif k == 1:
-            term = "x" if mag == "1" else f"{mag}x"
         else:
-            term = f"x^{k}" if mag == "1" else f"{mag}x^{k}"
+            mu = bien if k == 1 else f"{bien}^{k}"
+            term = mu if mag == "1" else (f"{mag}*{mu}" if "e" in mag else f"{mag}{mu}")
         parts.append(("-" if a < 0 else "+", term))
     if not parts:
         return "0"
@@ -110,14 +117,39 @@ def in_bang_nhan(a, c, d):
     in_hang("", d)
 
 
+def in_bang(cot, hang, le="  "):
+    """In bang; o la so / chuoi / None (trong). Do rong tung cot tu dong."""
+    S = [["" if v is None else v if isinstance(v, str) else fmt(v) for v in h] for h in hang]
+    so_cot = max([len(cot)] + [len(h) for h in S])
+    rong = [len(cot[j]) if j < len(cot) else 0 for j in range(so_cot)]
+    for h in S:
+        for j, o in enumerate(h):
+            rong[j] = max(rong[j], len(o))
+    rong = [r + 2 for r in rong]
+    print(le + "".join(f"{c:>{r}}" for c, r in zip(cot, rong)))
+    print(le + "-" * sum(rong))
+    for h in S:
+        print(le + "".join(f"{o:>{r}}" for o, r in zip(list(h) + [""] * (so_cot - len(h)), rong)))
+
+
+def cot_mu(bac):
+    """Ten cot bac cao -> thap: x^bac, ..., x, 1."""
+    return [f"x^{e}" if e > 1 else ("x" if e == 1 else "1") for e in range(bac, -1, -1)]
+
+
+def ten_dh(j):
+    """Ten dao ham cap j: P, P', P'' (toi da 3 dau phay), roi P^(4), P^(5), ..."""
+    return "P" + "'" * j if j <= 3 else f"P^({j})"
+
+
 # ===== THUAT TOAN =====
 
 def chuan_hoa_he_so(a):
-    """Buoc 0 (he so): bo cac he so 0 o dau. Tra ve (he so, canh bao)."""
+    """Buoc 0 (he so): bo cac he so 0 o dau; moi he so bang 0 -> P = 0, tra ve (0). Tra ve (he so, canh bao)."""
     if not a:
         raise ValueError("Khong co he so nao hop le.")
     if all(v == 0 for v in a):
-        raise ValueError("Moi he so bang 0: P(x) = 0 -> dung.")
+        return [0.0], ["he so: moi he so bang 0 -> P(x) = 0, moi ket qua bang 0"]
     k = 0
     while k < len(a) - 1 and a[k] == 0:
         k += 1
@@ -142,22 +174,25 @@ def horner_chia(a, c):
 
 
 def horner_dao_ham(a, c, k, verbose=True):
-    """Muc 2: Horner lap tren 1 vector b; r_j = b_j, P^(j)(c) = j! * r_j. Tra ve (r, v), v_j = P^(j)(c)."""
+    """Muc 2: Horner lap tren 1 vector b; r_j = b_j, P^(j)(c) = j! * r_j. Tra ve (r, v), v_j = P^(j)(c).
+    verbose: 1 bang chung (hang He so; moi lan chia j: hang c*b_(i+1) va hang j, o cuoi [r_j])."""
     n = len(a) - 1
     K = min(k, n)                                  # Buoc 1 - xu ly k
     b = a[::-1]                                    # Buoc 2 - Khoi tao: b_i = a_i, i = 0..n
     r, dh = [], []
+    hang = [["He so"] + list(a)]
     for j in range(K + 1):                         # Buoc 3
-        truoc = [b[i] for i in range(n, j - 1, -1)]          # (b_n, ..., b_j) truoc khi chia
+        tich = [None] * (n - j + 1)                # c*b_(i+1) dat duoi cot x^i
         for i in range(n - 1, j - 1, -1):          # Buoc 3.1 - chia cho (x - c)
+            tich[n - i] = c * b[i + 1]
             b[i] = b[i] + c * b[i + 1]
         r.append(b[j])                             # Buoc 3.2 - r_j = b_j, v_j = j! * r_j
         dh.append(math.factorial(j) * b[j])
-        if verbose:
-            sau = [b[i] for i in range(n, j - 1, -1)]        # (b_n, ..., b_j) sau khi chia
-            print(f"\n  j = {j}: chia (b_{n}, ..., b_{j}) = {vec(truoc)} cho (x - {fmt(c, '.6g')})")
-            in_bang_chia(truoc, c, sau[:-1], sau[-1])
-            print(f"  => r_{j} = b_{j} = {fmt(b[j], '.10g')},  P^({j})(c) = {j}! * r_{j} = {fmt(dh[-1], '.10g')}")
+        sau = [b[i] for i in range(n, j - 1, -1)]  # (b_n, ..., b_j) sau khi chia
+        hang.append([f"c = {c:.10g}"] + tich)
+        hang.append([f"j = {j}"] + sau[:-1] + [f"[{fmt(sau[-1])}]"])
+    if verbose:
+        in_bang([""] + cot_mu(n), hang)
     dh += [0.0] * (k - K)                          # Buoc 4 - v_j = 0 voi j > n
     return r, dh                                   # Buoc 5 - Ket thuc
 
@@ -220,39 +255,37 @@ def giai_tai_c(a, c, muc, k):
     n = len(a) - 1
     print(f"\na = (a_{n}, ..., a_0) = {vec(a)}  (P(x) = {da_thuc_str(a)}),   c = {fmt(c, '.10g')}")
 
-    print("\nCONG THUC:")
-    if muc & {1, 2, 3}:
-        print("  Horner chia: b_(n-1) = a_n,  b_(i-1) = a_i + c*b_i (i = n-1..1),  r = P(c) = a_0 + c*b_0")
-        print("               P(x) = (x - c)(b_(n-1) x^(n-1) + ... + b_1 x + b_0) + r")
-    if 3 in muc:
-        print("  Dao ham    : b_i = a_i;  voi j = 0..min(k,n): b_i = b_i + c*b_(i+1) (i = n-1..j),"
-              "  r_j = b_j,  P^(j)(c) = j! * r_j")
-    if 4 in muc:
-        print("  Horner nhan: d_(n+1) = a_n,  d_i = a_(i-1) - c*a_i (i = n..1),  d_0 = -c*a_0")
-
     print("\nTINH TOAN:")
     ket_qua = {}
     if 3 in muc:
-        print(f"Horner chia lap {min(k, n) + 1} lan (lan chia 1 cho luon P(c) va thuong):")
+        K = min(k, n)
+        print(f"Horner chia lap {K + 1} lan (lan chia 1 cho luon P(c) va thuong):")
+        print("  b_i = a_i;  voi j = 0..min(k,n): b_i = b_i + c*b_(i+1) (i = n-1..j),  r_j = b_j,  P^(j)(c) = j! * r_j")
         r, dh = horner_dao_ham(a, c, k)
         Q, du = horner_chia(a, c)
         ket_qua.update(r=r, dh=dh)
+        print(f"  P({c:.10g}) = r_0 = {fmt(du)}; thuong {da_thuc_str(Q) if n >= 1 else '0'}, du {fmt(du)}")
+        print(f"  ({', '.join(ten_dh(j) for j in range(k + 1))})({c:.10g})"
+              f" = ({'; '.join(f'{j}! r_{j}' if j <= K else '0' for j in range(k + 1))}) = ({'; '.join(fmt(v) for v in dh)})")
     elif muc & {1, 2}:
         print(f"Horner chia P(x) cho (x - {fmt(c, '.6g')}):")
+        print("  b_(n-1) = a_n,  b_(i-1) = a_i + c*b_i (i = n-1..1),  r = P(c) = a_0 + c*b_0")
+        print("  P(x) = (x - c)(b_(n-1) x^(n-1) + ... + b_1 x + b_0) + r")
         Q, du = horner_chia(a, c)
         in_bang_chia(a, c, Q, du)
     if 4 in muc:
         print(("\n" if muc & {1, 2, 3} else "") + f"Horner nhan P(x) voi (x - {fmt(c, '.6g')}):")
+        print("  d_(n+1) = a_n,  d_i = a_(i-1) - c*a_i (i = n..1),  d_0 = -c*a_0")
         d = horner_nhan(a, c)
         in_bang_nhan(a, c, d)
 
     print("\nKET QUA (vector he so bac cao -> thap):")
     if 1 in muc:
-        print(f"  P({fmt(c, '.10g')}) = {fmt(du, '.10g')}")
+        print(f"  P({fmt(c, '.10g')}) = {fmt(du)}")
         ket_qua["P(c)"] = du
     if 2 in muc:
         ten_b = f"(b_{n - 1}, ..., b_0) = {vec(Q)}" if n >= 1 else "[] (Q = 0 vi P la hang so)"
-        print(f"  Thuong b = {ten_b},   du r = {fmt(du, '.10g')}")
+        print(f"  Thuong b = {ten_b},   du r = {fmt(du)}")
         ket_qua.update(Q=np.array(Q), du=du)
     if 3 in muc:
         ten_r = "(r_0)" if len(r) == 1 else f"(r_0, ..., r_{len(r) - 1})"
@@ -260,7 +293,7 @@ def giai_tai_c(a, c, muc, k):
         print(f"  r = {ten_r} = {vec(r)}   (r_j = P^(j)(c)/j!)")
         print(f"  v = {ten_v} = {vec(dh)}")
         if k <= n:
-            print(f"  => P^({k})({fmt(c, '.6g')}) = {k}! * r_{k} = {k}! * ({fmt(r[k], '.10g')}) = {fmt(dh[k], '.10g')}")
+            print(f"  => P^({k})({fmt(c, '.6g')}) = {k}! * r_{k} = {k}! * ({fmt(r[k])}) = {fmt(dh[k])}")
         else:
             print(f"  => P^({k})({fmt(c, '.6g')}) = 0   (k = {k} > bac n = {n})")
         ket_qua["dh"] = np.array(dh)
@@ -286,9 +319,8 @@ def giai_tai_c(a, c, muc, k):
 def giai_tich(xs):
     m = len(xs)
     print(f"\nw_{m}(x) = (x - x_0)(x - x_1)...(x - x_{m - 1})")
-    print("\nCONG THUC:")
-    print("  p_0 = 1;  voi i = 0..m-1: p_(i+1) = p_i,  p_l = p_(l-1) - x_i*p_l (l = i..1),  p_0 = -x_i*p_0")
     print("\nTINH TOAN (hang x_i la vector he so sau khi nhan them (x - x_i)):")
+    print("  p_0 = 1;  voi i = 0..m-1: p_(i+1) = p_i,  p_l = p_(l-1) - x_i*p_l (l = i..1),  p_0 = -x_i*p_0")
     w = tich_moc(xs)
     print("\nKET QUA (vector he so bac cao -> thap):")
     print(f"  p = (1, p_{m - 1}, ..., p_0) = {vec(w)}")
@@ -300,9 +332,8 @@ def giai_tich(xs):
 def giai_da_thuc_dao_ham(a, k):
     n = len(a) - 1
     print(f"\na = (a_{n}, ..., a_0) = {vec(a)}  (P(x) = {da_thuc_str(a)}),   da thuc dao ham cap k = {k}")
-    print("\nCONG THUC:")
-    print("  e_i = a_i;  voi j = 1..k: e_i = (i+1)*e_(i+1) (i = 0..n-j), bo e_(n-j+1)   (k > n => P^(k) = 0)")
     print("\nTINH TOAN (hang P^(j) la vector he so (e_(n-j), ..., e_0) sau lan dao ham thu j):")
+    print("  e_i = a_i;  voi j = 1..k: e_i = (i+1)*e_(i+1) (i = 0..n-j), bo e_(n-j+1)   (k > n => P^(k) = 0)")
     D = da_thuc_dao_ham(a, k)
     print("\nKET QUA (vector he so bac cao -> thap):")
     ten_e = "" if k > n else ("(e_0) = " if k == n else f"(e_{n - k}, ..., e_0) = ")
