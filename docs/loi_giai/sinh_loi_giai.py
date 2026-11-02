@@ -799,8 +799,8 @@ def ten_tich(u, v):
 
 
 def bang_bptt(du_lieu, cs, Phi, w, ten_w):
-    """Bang tinh he chuan: chi in dong tong cua cac cot can cho he (phi_j*phi_k, phi_j*w; bo cot trung,
-    cot hang 1 vi tong = n). du_lieu: [(ten, gia)] cac cot du lieu, chi in neu tong cua no nam trong he."""
+    """Bang tinh he chuan: 2 hang dau, 2 hang cuoi (giua \\vdots) va hang tong cua cac cot can cho he (phi_j*phi_k,
+    phi_j*w; bo cot trung, cot hang 1 vi tong = n). du_lieu: [(ten, gia)] cac cot du lieu, chi in neu tong cua no nam trong he."""
     cot = [[ten, np.asarray(v, dtype=float), False] for ten, v in du_lieu]
 
     def them(ten_c, v):
@@ -820,7 +820,8 @@ def bang_bptt(du_lieu, cs, Phi, w, ten_w):
     for j in range(m):
         them(ten_w if ten[j] == "1" else ten_tich(ten[j], ten_w), Phi[:, j] * w)
     cot = [c for c in cot if c[2]]
-    return bang([""] + [c[0] for c in cot], [[r"\sum"] + [so(float(np.sum(c[1]))) for c in cot]])
+    hang = rut_lap([[str(i + 1)] + [so(c[1][i]) for c in cot] for i in range(len(w))])
+    return bang(["i"] + [c[0] for c in cot], hang + [None, [r"\sum"] + [so(float(np.sum(c[1]))) for c in cot]])
 
 
 def he_chuan_tex(M, d, an):
@@ -887,7 +888,7 @@ def cau23():
                         ("d", [("1", np.ones_like), (r"\ln x", np.log)], [r"\ln(-a)", "b"])):
         x, y, _ = du[ten]
         s = 1.0 if np.sum(y > 0) >= np.sum(y < 0) else -1.0          # Cau 22b Buoc 0: dau cua a
-        assert np.all(s * y > 0) and (ten == "c" or np.all(x > 0))   # mau ghi "khong loai diem"
+        assert np.all(s * y > 0) and (ten == "c" or np.all(x > 0))   # mau ghi S_y = 0 (va S_x = 0)
         Phi1 = np.column_stack([f(x) for _, f in cs])
         c0, M, d, A, z, gY, sigma, sz = bp.tuyen_tinh_hoa(Phi1, y, s)
         c, V[f"c23{ten}_chol"] = cholesky_tex(M, d, an)

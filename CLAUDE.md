@@ -77,7 +77,7 @@ KIEM TRA        -> tu kiem tra (P(x_i) vs y_i, phan du, so voi numpy...)
   - Trích xuất mốc: bảng quá trình rồi bảng ngang các mốc đã đánh số lại (`i`, `x_i`, `y_i`).
   - Không in bảng đổi biến $t\to x$ (vẫn in $P(x)$ ở KET QUA).
 - **Lặp:** in lần lặp **1, 2, áp chót và cuối**, giữa in `...`; tổng số lần ≤ 4 thì in hết.
-- **Bảng** (Horner, sai phân, tỷ sai phân, RK, spline, mốc…): **in toàn bộ**, không cắt.
+- **Bảng** (Horner, sai phân, tỷ sai phân, RK, spline, mốc…): **in toàn bộ**, không cắt. Riêng bảng tổng BPTT: 2 hàng đầu, 2 hàng cuối, giữa in `...`, rồi hàng `sum`; tổng số hàng ≤ 4 thì in hết.
 - Trong chat chỉ tóm tắt kết quả + lệnh chạy; không tính tay số liệu.
 
 ## 4. Code Python
@@ -93,7 +93,7 @@ Mẫu chuẩn: `interpolation/horner.py`, `interpolation/moc_toi_uu.py`. Phong c
 - **Nhập liệu:** đọc file (csv/txt; xlsx qua pandas nếu có) từ đối số dòng lệnh, nếu không có thì `input()` với giá trị mặc định ghi dạng `(VD [...])` (Enter hoặc EOF → dùng VD). Menu nhiều lựa chọn in mỗi lựa chọn 1 dòng (chỉ khi nhập từ bàn phím). Dấu phân tách là khoảng trắng hoặc `;`; dấu `,` giữa hai chữ số hiểu là dấu thập phân. Bọc `try/except` khi mở file, file rỗng, sai kích thước, sai kiểu.
 - **In:** chữ **không dấu** (tránh lỗi mã hoá console), theo khối ở mục 3. Số tính ra in qua `fmt`: tối đa 6 chữ số thập phân, bỏ số 0 thừa, $|v|<10^{-4}$ in dạng e (`9.14e-04`), $|v|<10^{-12}$ in thành 0 (riêng đánh giá sai số dùng `fmt(E, nho=0)` để không mất số rất nhỏ). Số liệu đề cho giữ nguyên (`.10g`); sai phân của số liệu cách đều giữ đúng số chữ số thập phân của dữ liệu (`0.0008739`).
 - **Đọc file bảng** (6 script đọc bảng): tự nhận `.csv` / `.xlsx` / `.txt` dạng bảng; in khối `DOC FILE` (cột x, y, dòng, ô bị bỏ) để xác nhận; $\bar x$, $\bar y$ có trong file làm giá trị mặc định (Enter = đồng ý); nhiều sheet có số liệu → menu chọn sheet; số dòng báo lỗi là số dòng gốc trong file; file chỉ có y → hỏi cách sinh x (cách đều, Chebyshev giảm dần theo công thức cos, hoặc tăng dần).
-- **BPTT:** giải hệ chuẩn $Ma=d$ bằng Cholesky; hiệu chỉnh Gauss–Newton ẩn, chỉ chạy khi có cờ `--gn`. Đầu `main()` gọi `sys.stdout.reconfigure(errors="backslashreplace")` để in dữ liệu gốc có ký tự lạ không bị crash. Công thức có luỹ thừa / giai thừa lớn tính qua `log`/`math.lgamma` để không tràn số; kiểm tra trên lưới thì nhân dần từng thừa số, không tạo mảng 2 chiều lớn.
+- **BPTT:** giải hệ chuẩn $Ma=d$ bằng Cholesky; hiệu chỉnh Gauss–Newton ẩn, chỉ chạy khi có cờ `--gn`. Dạng mũ, luỹ thừa không loại điểm vì $y$, $x$: $y$ lẫn dấu hoặc có 0 tự tịnh tiến $S_y$, $\min x\le0$ (luỹ thừa) tự tịnh tiến $S_x$. Đầu `main()` gọi `sys.stdout.reconfigure(errors="backslashreplace")` để in dữ liệu gốc có ký tự lạ không bị crash. Công thức có luỹ thừa / giai thừa lớn tính qua `log`/`math.lgamma` để không tràn số; kiểm tra trên lưới thì nhân dần từng thừa số, không tạo mảng 2 chiều lớn.
 - Chọn lần lặp cần in khi biết trước tổng số N: `k <= 2 or k >= N - 1`; khi chưa biết N (lặp tới hội tụ): lưu 2 lần đầu + `deque(maxlen=2)` cho 2 lần cuối rồi in sau vòng lặp.
 - Chạy: `python interpolation/<ten>.py [data/<file>]`.
 

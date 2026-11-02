@@ -742,20 +742,20 @@ Truy đuổi và hệ số chính tắc theo công thức ở câu b:
 \subsection{b) Dạng $y=a\,e^{b_1\varphi_1(x)+b_2\varphi_2(x)}$ và $y=a\,x^b$}
 \begin{thuattoan}{Dạng mũ $y=a\,e^{b_1\varphi_1(x)+b_2\varphi_2(x)}$}
 \item[Input:] vector $x$, $y$; cơ sở $\varphi_1,\varphi_2$ (không phải hàm hằng).
-\item[Output:] $a$, $b_1$, $b_2$ và sai số trung bình phương $\sigma$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Loại các điểm làm $\varphi_1(x_i)$, $\varphi_2(x_i)$ không xác định.\newline Đặt $n:=(\text{số điểm})$.\newline Đếm $n_+$ (số $y_i>0$) và $n_-$ (số $y_i<0$); đặt $s:=1$ nếu $n_+\ge n_-$, ngược lại $s:=-1$ ($s$ là dấu của $a$).\newline Lặp $i=1,\dots,n$:\thut nếu $s\,y_i\le0$ ($y_i=0$ hoặc trái dấu với $s$) thì loại điểm $i$, báo lý do.\newline Đặt $n:=(\text{số điểm còn lại})$, đánh số lại $i=1,\dots,n$.\newline Nếu $n<3$ thì báo lỗi, dừng thuật toán.
-\item[Bước 1:] Lặp $i=1,\dots,n$: tính $z_i:=\ln(s\,y_i)$.
+\item[Output:] $a$, $b_1$, $b_2$, lượng tịnh tiến $S_y$ và sai số trung bình phương $\sigma$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Loại các điểm làm $\varphi_1(x_i)$, $\varphi_2(x_i)$ không xác định.\newline Đặt $n:=(\text{số điểm còn lại})$, đánh số lại $i=1,\dots,n$.\newline Nếu $n<3$ thì báo lỗi, dừng thuật toán.\newline Đặt $S_y:=0$.\newline Nếu $y$ có cả số dương và số âm, hoặc có $y_i=0$ thì:\thut nếu $|\min y|\le|\max y|$ thì đặt $S_y:=|\min y|+1$, còn không đặt $S_y:=-(|\max y|+1)$.\newline Đặt $s:=1$ nếu $y_1+S_y>0$, ngược lại $s:=-1$ ($s$ là dấu của $a$).
+\item[Bước 1:] Lặp $i=1,\dots,n$: tính $z_i:=\ln\big(s(y_i+S_y)\big)$.
 \item[Bước 2:] Tìm $(c_0,c_1,c_2)$ theo câu a với dữ liệu $(x_i,z_i)$ và cơ sở $(1,\varphi_1,\varphi_2)$.
-\item[Bước 3:] Đặt $a:=s\,e^{c_0}$, $b_1:=c_1$, $b_2:=c_2$.\newline Tính $\sigma:=\sqrt{\frac1n\sum_i\big(a\,e^{b_1\varphi_1(x_i)+b_2\varphi_2(x_i)}-y_i\big)^2}$.\newline Dừng thuật toán, trả về $a$, $b_1$, $b_2$, $\sigma$.
+\item[Bước 3:] Đặt $a:=s\,e^{c_0}$, $b_1:=c_1$, $b_2:=c_2$.\newline Tính $\sigma:=\sqrt{\frac1n\sum_i\big(a\,e^{b_1\varphi_1(x_i)+b_2\varphi_2(x_i)}-S_y-y_i\big)^2}$.\newline Dừng thuật toán, trả về $a$, $b_1$, $b_2$, $S_y$, $\sigma$.
 \end{thuattoan}
 
 \begin{thuattoan}{Dạng luỹ thừa $y=a\,x^b$}
 \item[Input:] vector $x$, $y$.
-\item[Output:] $a$, $b$ và sai số trung bình phương $\sigma$.
-\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số điểm})$.\newline Đếm $n_+$ (số $y_i>0$) và $n_-$ (số $y_i<0$); đặt $s:=1$ nếu $n_+\ge n_-$, ngược lại $s:=-1$.\newline Lặp $i=1,\dots,n$:\thut nếu $s\,y_i\le0$ hoặc $x_i\le0$ thì loại điểm $i$, báo lý do.\newline Đặt $n:=(\text{số điểm còn lại})$, đánh số lại $i=1,\dots,n$.\newline Nếu $n<2$ thì báo lỗi, dừng thuật toán.
-\item[Bước 1:] Lặp $i=1,\dots,n$: tính $X_i:=\ln x_i$ và $z_i:=\ln(s\,y_i)$.
+\item[Output:] $a$, $b$, lượng tịnh tiến $S_x$, $S_y$ và sai số trung bình phương $\sigma$.
+\item[Bước 0:] Nếu $x$, $y$ khác số phần tử thì báo lỗi, dừng thuật toán.\newline Đặt $n:=(\text{số điểm})$.\newline Nếu $n<2$ thì báo lỗi, dừng thuật toán.\newline Đặt $S_x:=0$.\newline Nếu $\min x\le0$ thì đặt $S_x:=|\min x|+1$.\newline Đặt $S_y:=0$.\newline Nếu $y$ có cả số dương và số âm, hoặc có $y_i=0$ thì:\thut nếu $|\min y|\le|\max y|$ thì đặt $S_y:=|\min y|+1$, còn không đặt $S_y:=-(|\max y|+1)$.\newline Đặt $s:=1$ nếu $y_1+S_y>0$, ngược lại $s:=-1$.
+\item[Bước 1:] Lặp $i=1,\dots,n$: tính $X_i:=\ln(x_i+S_x)$ và $z_i:=\ln\big(s(y_i+S_y)\big)$.
 \item[Bước 2:] Tìm $(c_0,c_1)$ theo câu a với dữ liệu $(X_i,z_i)$ và cơ sở $(1,X)$.
-\item[Bước 3:] Đặt $a:=s\,e^{c_0}$, $b:=c_1$.\newline Tính $\sigma:=\sqrt{\frac1n\sum_i(a\,x_i^b-y_i)^2}$.\newline Dừng thuật toán, trả về $a$, $b$, $\sigma$.
+\item[Bước 3:] Đặt $a:=s\,e^{c_0}$, $b:=c_1$.\newline Tính $\sigma:=\sqrt{\frac1n\sum_i\big(a(x_i+S_x)^b-S_y-y_i\big)^2}$.\newline Dừng thuật toán, trả về $a$, $b$, $S_x$, $S_y$, $\sigma$.
 \end{thuattoan}
 
 %=====================================================================
@@ -788,7 +788,7 @@ $<<c23b_kl>>$, \quad $\sigma=<<c23b_sigma>>$.
 \end{ketluan}
 
 \subsection{c) $y=a\,e^{bx+cx^2}$}
-\pp{Phương pháp} (tuyến tính hoá, Câu 22b). Mọi $y_i>0$ nên $s=1$, không loại điểm. Đặt $z_i=\ln y_i$, chọn $\ln a$, $b$, $c$ để $S=\sum\big(\ln a+bx_i+cx_i^2-z_i\big)^2$ nhỏ nhất; đạo hàm riêng bằng 0 cho hệ chuẩn
+\pp{Phương pháp} (tuyến tính hoá, Câu 22b). Mọi $y_i>0$ nên $S_y=0$, $s=1$. Đặt $z_i=\ln y_i$, chọn $\ln a$, $b$, $c$ để $S=\sum\big(\ln a+bx_i+cx_i^2-z_i\big)^2$ nhỏ nhất; đạo hàm riêng bằng 0 cho hệ chuẩn
 \[ \begin{cases} 60\ln a+b\sum x_i+c\sum x_i^2=\sum z_i\\ \ln a\sum x_i+b\sum x_i^2+c\sum x_i^3=\sum x_iz_i\\ \ln a\sum x_i^2+b\sum x_i^3+c\sum x_i^4=\sum x_i^2z_i\end{cases} \]
 <<c23c_bang>>
 Thay các tổng được hệ (ma trận hệ số $M$, vế phải $d$):
@@ -800,7 +800,7 @@ $<<c23c_kl>>$, \quad $\sigma=<<c23c_sigma>>$.
 \end{ketluan}
 
 \subsection{d) $y=a\,x^b$}
-\pp{Phương pháp} (tuyến tính hoá, Câu 22b). Mọi $y_i<0$ nên $s=-1$; mọi $x_i>0$, không loại điểm. Đặt $z_i=\ln(-y_i)$, chọn $\ln(-a)$, $b$ để $S=\sum\big(\ln(-a)+b\ln x_i-z_i\big)^2$ nhỏ nhất; đạo hàm riêng bằng 0 cho hệ chuẩn
+\pp{Phương pháp} (tuyến tính hoá, Câu 22b). Mọi $y_i<0$ nên $S_y=0$, $s=-1$; mọi $x_i>0$ nên $S_x=0$. Đặt $z_i=\ln(-y_i)$, chọn $\ln(-a)$, $b$ để $S=\sum\big(\ln(-a)+b\ln x_i-z_i\big)^2$ nhỏ nhất; đạo hàm riêng bằng 0 cho hệ chuẩn
 \[ \begin{cases} 60\ln(-a)+b\sum\ln x_i=\sum z_i\\ \ln(-a)\sum\ln x_i+b\sum(\ln x_i)^2=\sum z_i\ln x_i\end{cases} \]
 <<c23d_bang>>
 Thay các tổng được hệ (ma trận hệ số $M$, vế phải $d$):

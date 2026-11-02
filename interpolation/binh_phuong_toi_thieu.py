@@ -7,8 +7,9 @@ Du lieu (x_i, y_i), i = 1..n; co so phi_1..phi_m nhap bang bieu thuc theo x, cac
 Dang ham (chon 1):
   1. y = a_1 phi_1(x) + ... + a_m phi_m(x)          -> he chuan M a = d = Phi^t y, giai bang Cholesky (muc 1, 2)
   2. y = a e^(b_1 phi_1(x) + ... + b_m phi_m(x)) + d -> tuyen tinh hoa ln(s(y - d)) (muc 3); hieu chinh Gauss-Newton (muc 4) an, bat bang --gn
-  3. y = a x^b + d                                  -> nhu 2 voi phi_1 = ln x
+  3. y = a x^b + d                                  -> nhu 2 voi phi_1 = ln(x + S_x)
 (d la hang so biet truoc, mac dinh 0, vd y = a e^(bx) - 2 thi d = -2.)
+Buoc 0 dang 2, 3: y - d lan dau hoac co so 0 -> tu tinh tien y + S_y; dang 3 co x <= 0 -> tu tinh tien x + S_x.
 Sai so trung binh phuong sigma = sqrt(1/n sum (g(x_i) - y_i)^2) luon tinh tren y goc.
 
 Cach chay:
@@ -94,6 +95,11 @@ def so_ngoac(v):
     """So theo fmt; so am dat trong ngoac."""
     s = fmt(v)
     return f"({s})" if s.startswith("-") else s
+
+
+def cong(v):
+    """So hang cong them: 1.641 -> ' + 1.641', -2 -> ' - 2', 0 -> ''."""
+    return "" if not v else f" + {fmt(v)}" if v > 0 else f" - {fmt(-v)}"
 
 
 def kiem(nhan, sai):
@@ -309,17 +315,27 @@ def gia_tri_co_so(co_so, x, bao):
     return Phi[tot], np.where(tot)[0]
 
 
+def tinh_tien_y(Y):
+    """Buoc 0: Y lan dau hoac co so 0 -> S_y de moi Y_i + S_y cung dau, khac 0; nguoc lai 0."""
+    Y = np.asarray(Y, dtype=float)
+    if not (np.any(Y == 0) or (np.any(Y > 0) and np.any(Y < 0))):
+        return 0.0
+    return abs(Y.min()) + 1 if abs(Y.min()) <= abs(Y.max()) else -(abs(Y.max()) + 1)
+
+
 # ===== THUAT TOAN =====
 
-def cholesky(M, d):
-    """Muc 2: giai M a = d bang Cholesky M = L L^T. Tra ve (a, L, u)."""
+def cholesky(M, d, ten=None):
+    """Muc 2: giai M a = d bang Cholesky M = L L^T; ten = ten cac ham co so de bao loi. Tra ve (a, L, u)."""
     m = len(d)
     L = [[0.0] * m for _ in range(m)]
     tl = max(abs(M[j][j]) for j in range(m))
     for j in range(m):                                            # Buoc 1 - Phan tich
         p = M[j][j] - sum(L[j][k] ** 2 for k in range(j))
         if p <= 1e-12 * tl:
-            raise ValueError("M khong xac dinh duong: cac ham co so phu thuoc tuyen tinh tren du lieu.")
+            ham = f"co so {ten[j]!r}" if ten else f"ham co so thu {j + 1}"
+            raise ValueError(f"M khong xac dinh duong: {ham} "
+                             + ("bang 0 tren du lieu." if j == 0 else "phu thuoc tuyen tinh vao cac ham truoc tren du lieu."))
         L[j][j] = math.sqrt(p)
         for i in range(j + 1, m):
             L[i][j] = (M[i][j] - sum(L[i][k] * L[j][k] for k in range(j))) / L[j][j]
@@ -332,22 +348,22 @@ def cholesky(M, d):
     return a, L, u                                                # Buoc 4
 
 
-def bptt(Phi, y, w=None):
+def bptt(Phi, y, w=None, ten=None):
     """Muc 1: (a, M, d, (L, u), g, sigma)."""
     Phi = np.asarray(Phi, dtype=float)
     y = np.asarray(y, dtype=float)
     w = np.ones(len(y)) if w is None else np.asarray(w, dtype=float)
     M = (Phi * w[:, None]).T @ Phi                                # Buoc 2 - He chuan
     d = (Phi * w[:, None]).T @ y
-    a, L, u = cholesky(M.tolist(), d.tolist())                    # Buoc 3 - Giai (muc 2)
+    a, L, u = cholesky(M.tolist(), d.tolist(), ten)               # Buoc 3 - Giai (muc 2)
     g = Phi @ np.array(a)                                         # Buoc 4 - Sai so
     return np.array(a), M, d, (L, u), g, float(np.sqrt(np.mean((g - y) ** 2)))
 
 
-def tuyen_tinh_hoa(Phi1, Y, s):
+def tuyen_tinh_hoa(Phi1, Y, s, ten=None):
     """Muc 3: Phi1 = [1, phi_1..phi_m]; Y = y - d (cung dau s). Tra ve (c, M, d, (L, u), z, g_Y, sigma, sigma_z)."""
     z = np.log(s * np.asarray(Y))                                 # Buoc 2 - Doi bien
-    c, M, d, Lu, gz, sz = bptt(Phi1, z)                           # Buoc 3
+    c, M, d, Lu, gz, sz = bptt(Phi1, z, ten=ten)                  # Buoc 3
     gY = s * np.exp(Phi1 @ c)                                     # Buoc 5 - Sai so tren y goc
     return c, M, d, Lu, z, gY, float(np.sqrt(np.mean((gY - Y) ** 2))), sz
 
@@ -431,7 +447,7 @@ def to_hop_so(he, ten):
 
 
 def to_hop_chu(an, ten):
-    """sum an_j * phi_j dang chu: a_1 x + a_2 (1/x), ln(sa) + b_1 x + b_2 x^2."""
+    """sum an_j * phi_j dang chu: a_1 x + a_2 (1/x), ln a + b_1 x + b_2 x^2."""
     return " + ".join(a if t == "1" else f"{a} {boc(t)}" for a, t in zip(an, ten))
 
 
@@ -452,8 +468,8 @@ def in_ngang(hang, le="  ", rong_max=110):
         dau = cuoi
 
 
-def in_he_chuan(Phi, w, ten, an, ten_w):
-    """In he chuan dang phuong trinh (dS/d an_j = 0), hang tong cua cac cot can dung, M | d."""
+def in_he_chuan(Phi, w, ten, an, ten_w, du_lieu=()):
+    """In he chuan dang phuong trinh (dS/d an_j = 0), bang cac cot can dung (2 hang dau, 2 hang cuoi, hang tong), M | d."""
     n, m = Phi.shape
     cot = []                                       # (nhan, vector) cac cot khac nhau, khong ke cot hang 1
 
@@ -477,8 +493,15 @@ def in_he_chuan(Phi, w, ten, an, ten_w):
     for j, dong in enumerate(pt):
         print(("  { " if j == 0 else "    ") + dong)
     if cot:
+        cap = sorted(((j, k) for j in range(m) for k in range(j, m)), key=lambda p: "1" not in (ten[p[0]], ten[p[1]]))
+        thu_tu = list(du_lieu) + [Phi[:, j] * Phi[:, k] for j, k in cap] + [Phi[:, j] * w for j in range(m)]   # nhu PDF
+        cot.sort(key=lambda c: next(i for i, v in enumerate(thu_tu)
+                                    if np.allclose(c[1], v, rtol=1e-12, atol=1e-12 * max(1.0, np.max(np.abs(v))))))
         print(f"Cac tong can dung (i = 1..{n}):")
-        in_ngang([("", [nh for nh, _ in cot]), ("sum", [float(np.sum(v)) for _, v in cot])])
+        chon = range(n) if n <= 4 else [0, 1, None, n - 2, n - 1]
+        in_ngang([("i", [nh for nh, _ in cot])]
+                 + [("..." if i is None else str(i + 1), ["..." if i is None else v[i] for _, v in cot]) for i in chon]
+                 + [("sum", [float(np.sum(v)) for _, v in cot])])
     M, d = Phi.T @ Phi, Phi.T @ w
     print("Thay cac tong duoc he M a = d (ma tran he so M, ve phai d):")
     in_bang([""] + an + ["| d"], [[f"pt {j + 1}"] + list(M[j]) + [d[j]] for j in range(m)])
@@ -494,8 +517,10 @@ def in_cholesky(L, u, a, an):
     print(f"  L^T ({', '.join(an)}) = u (the nguoc) => ({', '.join(an)}) = {vec(a)}")
 
 
-def giai(x, y, dang, co_so, d, hieu_chinh):
+def giai(x, y, dang, co_so, d, hieu_chinh, Sx=0.0, Sy=0.0):
     n = len(x)
+    x_tt = "x" if not Sx else f"(x{cong(Sx)})"            # x sau tinh tien (dang 3)
+    ln_x = f"ln{x_tt}" if Sx else "ln(x)"
     xv, yv = np.array(x), np.array(y)
     ten = [t for t, _ in co_so]
     print(f"\nBinh phuong toi thieu: n = {n} diem, ", end="")
@@ -503,9 +528,9 @@ def giai(x, y, dang, co_so, d, hieu_chinh):
         print("g(x) = " + " + ".join(f"a_{j + 1}*({t})" for j, t in enumerate(ten)))
     elif dang == 2:
         print(f"g(x) = a e^(" + " + ".join(f"b_{j + 1}*({t})" for j, t in enumerate(ten)) + ")"
-              + (f" + ({d:.10g})" if d else ""))
+              + cong(d))
     else:
-        print("g(x) = a x^b" + (f" + ({d:.10g})" if d else ""))
+        print(f"g(x) = a {x_tt}^b" + cong(d))
 
     print("\nTINH TOAN:")
     kq = {}
@@ -515,42 +540,41 @@ def giai(x, y, dang, co_so, d, hieu_chinh):
         print(f"S = sum_(i=1..{n}) (g(x_i) - y_i)^2 -> min;  "
               + (" = ".join(f"dS/d{t}" for t in an) if len(an) <= 3 else f"dS/d{an[0]} = ... = dS/d{an[-1]}")
               + " = 0 cho he chuan:")
-        in_he_chuan(Phi, yv, ten, an, "y")
-        a, M, b, (L, u), g, sigma = bptt(Phi, yv)
+        in_he_chuan(Phi, yv, ten, an, "y", [xv, yv])
+        a, M, b, (L, u), g, sigma = bptt(Phi, yv, ten=ten)
         in_cholesky(L, u, a, an)
         S = float(np.sum((g - yv) ** 2))
-        print(f"sigma = sqrt(1/{n} * sum (g(x_i) - y_i)^2) = sqrt(S/n) = sqrt({fmt(S)}/{n}) = {fmt(sigma)}")
+        print(f"sigma = sqrt(1/{n} * sum (g(x_i) - y_i)^2) = sqrt({fmt(S)}/{n}) = {fmt(sigma)}")
         kq.update(a=a, sigma=sigma, g=g, M=M, b=b, L=L)
         ket = [f"  a = {vec(a)}", f"  Ket luan: y ~ {to_hop_so(a, ten)},  sigma = {fmt(sigma)}"]
     else:
         Y = yv - d
         s = 1.0 if Y[0] > 0 else -1.0
-        cs = [("1", lambda t: np.ones_like(t))] + (co_so if dang == 2 else [("ln x", np.log)])
+        cs = [("1", lambda t: np.ones_like(t))] + (co_so if dang == 2 else [(ln_x, lambda t: np.log(t + Sx))])
         Phi1 = np.column_stack([f(xv) for _, f in cs])
         ten1 = [t for t, _ in cs]
-        an = ["ln(sa)"] + [f"b_{j}" for j in range(1, len(ten1))]
-        print(f"Tuyen tinh hoa (muc 3): s = {s:+.0f}, z_i = ln({'' if s > 0 else '-'}(y_i"
-              + (f" - ({d:.10g})" if d else "") + "))")
-        print(f"  Y = y - d, s = sign(Y), z = ln(s Y) = ln(s a) + "
-              + (" + ".join(f"b_{j + 1} phi_{j + 1}" for j in range(len(ten))) if dang == 2 else "b ln x")
-              + ";  co so (1, " + (", ".join(ten) if dang == 2 else "ln x") + ")")
+        ln_a = "ln a" if s > 0 else "ln(-a)"
+        an = [ln_a] + ([f"b_{j}" for j in range(1, len(ten1))] if dang == 2 else ["b"])
+        y_tt = f"y_i{cong(-d)}"
+        z_tt = y_tt if s > 0 else f"-({y_tt})" if d else "-y_i"
+        print(f"Tuyen tinh hoa (muc 3): moi {y_tt} {'>' if s > 0 else '<'} 0 nen s = {s:.0f}. Dat z_i = ln({z_tt}):")
         ten_i = [re.sub(r"\bx\b", "x_i", t) for t in ten1]
         print(f"S = sum_(i=1..{n}) ({to_hop_chu(an, ten_i)} - z_i)^2 -> min;  dao ham rieng = 0 cho he chuan:")
         z = np.log(s * Y)
-        in_he_chuan(Phi1, z, ten1, an, "z")
-        c, M, b, (L, u), z, gY, sigma, sz = tuyen_tinh_hoa(Phi1, Y, s)
+        in_he_chuan(Phi1, z, ten1, an, "z", [xv, yv, z])
+        c, M, b, (L, u), z, gY, sigma, sz = tuyen_tinh_hoa(Phi1, Y, s, ten1)
         in_cholesky(L, u, c, an)
         a = s * math.exp(c[0])
         S = float(np.sum((gY - Y) ** 2))
-        print(f"a = s e^(ln(sa)) = {fmt(a)}")
-        print(f"sigma (tren y goc) = sqrt(1/{n} * sum (g(x_i) - y_i)^2) = sqrt(S/n) = sqrt({fmt(S)}/{n}) = {fmt(sigma)};"
+        print(f"a = {'' if s > 0 else '-'}e^({ln_a}) = {fmt(a)}")
+        print(f"sigma (tren y goc) = sqrt(1/{n} * sum (g(x_i) - y_i)^2) = sqrt({fmt(S)}/{n}) = {fmt(sigma)};"
               f"  sigma_z (tren z = ln) = {fmt(sz)}")
-        kq.update(c=c, a=a, sigma=sigma, M=M, b=b, L=L)
+        kq.update(c=c, a=a, sigma=sigma, M=M, b=b, L=L, Sy=Sy, Sx=Sx)
         tot = (c, a, sigma)
         if hieu_chinh:
             c2, lan, ok = gauss_newton(Phi1, Y, s)
             print("\nHieu chinh Gauss-Newton (muc 4), dung khi max|c^(j+1) - c^(j)| < 1e-10 (1 + max|c|):")
-            print("  g_i = s e^(Phi c), z_i = ln(s g_i) + (Y_i - g_i)/g_i, w_i = g_i^2,"
+            print(f"  Y_i = {y_tt}, g_i = s e^(Phi c), z_i = ln(s g_i) + (Y_i - g_i)/g_i, w_i = g_i^2,"
                   "  M = Phi^t W Phi, d = Phi^t W z;  c^(0): w_i = Y_i^2")
             Ln = len(lan) - 1
             chon = [j for j in range(Ln + 1) if j <= 2 or j >= Ln - 1]
@@ -559,7 +583,7 @@ def giai(x, y, dang, co_so, d, hieu_chinh):
                 if j == Ln - 1 and Ln > 4:
                     hang.append(["..."] + [""] * (len(ten1) + 1))
                 hang.append([str(lan[j][0])] + list(lan[j][1]) + [lan[j][2]])
-            in_bang(["j", "ln(sa)"] + [f"b_{j}" for j in range(1, len(ten1))] + ["sigma"], hang)
+            in_bang(["j"] + an + ["sigma"], hang)
             if ok:
                 a2 = s * math.exp(c2[0])
                 s2 = lan[-1][2]
@@ -570,11 +594,12 @@ def giai(x, y, dang, co_so, d, hieu_chinh):
             else:
                 print(f"  => KHONG HOI TU sau {Ln} lan lap -> giu ket qua tuyen tinh hoa")
         cb, ab, sb = tot
-        dd = "" if not d else (f" + {fmt(d)}" if d > 0 else f" - {fmt(-d)}")
-        g_str = (f"{fmt(ab)} e^({to_hop_so(cb[1:], ten1[1:])})" if dang == 2 else f"{fmt(ab)} x^{fmt(cb[1])}") + dd
-        ket = [f"  Tuyen tinh hoa: a = {fmt(a)}, b = {vec(c[1:])}, sigma = {fmt(sigma)}"]
+        b_str = lambda v: vec(v[1:]) if dang == 2 else fmt(v[1])
+        g_str = (f"{fmt(ab)} e^({to_hop_so(cb[1:], ten1[1:])})" if dang == 2 else f"{fmt(ab)} {x_tt}^{fmt(cb[1])}") + cong(d)
+        tt = [f"S_{t} = {fmt(v)}" for t, v in (("y", Sy), ("x", Sx)) if v]
+        ket = ([f"  Tinh tien: {', '.join(tt)}"] if tt else []) + [f"  Tuyen tinh hoa: a = {fmt(a)}, b = {b_str(c)}, sigma = {fmt(sigma)}"]
         if "c_gn" in kq:
-            ket.append(f"  Gauss-Newton  : a = {fmt(kq['a_gn'])}, b = {vec(kq['c_gn'][1:])}, sigma = {fmt(kq['sigma_gn'])}")
+            ket.append(f"  Gauss-Newton  : a = {fmt(kq['a_gn'])}, b = {b_str(kq['c_gn'])}, sigma = {fmt(kq['sigma_gn'])}")
         ket.append(f"  Ket luan{' (sigma nho hon)' if 'c_gn' in kq else ''}: y ~ {g_str},  sigma = {fmt(sb)}")
 
     print("\nKET QUA:")
@@ -679,7 +704,7 @@ def main():
         if dang in (1, 2):
             goc["co so"] = nhap("Cac ham co so phi_j (cach nhau ';')", "x; 1" if dang == 1 else "x")
             co_so = doc_co_so(goc["co so"])
-        d, hieu_chinh = 0.0, False
+        d, hieu_chinh, Sx, Sy = 0.0, False, 0.0, 0.0
         if dang in (2, 3):
             goc["d"] = nhap("Hang so cong them d", "0" if khoi is not None or tra_loi is not None else "-2")
             ds = doc_day_so(goc["d"], "d", bao)
@@ -687,23 +712,22 @@ def main():
                 raise ValueError("d phai la 1 so.")
             d = ds[0]
             hieu_chinh = gn
-        # loai diem lam co so khong xac dinh
-        cs_kt = co_so if dang != 3 else [("ln x", np.log)]
-        _, giu = gia_tri_co_so(cs_kt, x, bao)
-        x, y = [x[i] for i in giu], [y[i] for i in giu]
-        if dang in (2, 3):
+        # loai diem lam co so khong xac dinh (dang 3 khong loai: x <= 0 tinh tien)
+        if dang == 3 and x and min(x) <= 0:
+            Sx = abs(min(x)) + 1
+            bao.append(f"min x = {min(x):.10g} <= 0 -> tinh tien x + S_x: S_x = |min x| + 1 = {fmt(Sx)}")
+        if dang != 3:
+            _, giu = gia_tri_co_so(co_so, x, bao)
+            x, y = [x[i] for i in giu], [y[i] for i in giu]
+        if dang in (2, 3) and x:
             Y = [v - d for v in y]
-            duong = sum(v > 0 for v in Y)
-            am = sum(v < 0 for v in Y)
-            s = 1 if duong >= am else -1
-            bo = [i for i, v in enumerate(Y) if v * s <= 0]
-            for i in bo:
-                bao.append(f"loai diem x = {x[i]:.10g}, y = {y[i]:.10g}: y - d = {Y[i]:.10g}"
-                           + (" bang 0" if Y[i] == 0 else " trai dau") + " -> khong lay ln duoc")
-            if len(bo) * 2 > len(x):
-                raise ValueError("qua nua so diem khong lay ln duoc -> dang ham khong phu hop.")
-            x = [v for i, v in enumerate(x) if i not in bo]
-            y = [v for i, v in enumerate(y) if i not in bo]
+            Sy = tinh_tien_y(Y)
+            if Sy:
+                ten_y = "(y - d)" if d else "y"
+                ly_do = ", ".join(t for t, co in (("lan dau", min(Y) < 0 < max(Y)), ("co so 0", 0 in Y)) if co)
+                cach = f"|min {ten_y}| + 1" if Sy > 0 else f"-(|max {ten_y}| + 1)"
+                bao.append(f"{ten_y} {ly_do} -> tinh tien {ten_y} + S_y: S_y = {cach} = {fmt(Sy)}")
+                d -= Sy
             if dang == 2:
                 for t, f in co_so:
                     v = f(np.array(x, dtype=float))
@@ -731,7 +755,7 @@ def main():
         print(f"    y = {ngan(vec(y, '.10g'))}")
 
     try:
-        giai(x, y, dang, co_so, d, hieu_chinh)
+        giai(x, y, dang, co_so, d, hieu_chinh, Sx, Sy)
     except ValueError as e:
         print(f"\nLoi: {e}")
 
