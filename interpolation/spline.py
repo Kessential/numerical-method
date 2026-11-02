@@ -15,10 +15,10 @@ Cach chay:
   python interpolation/spline.py                 -> nhap tu ban phim (Enter = mac dinh)
   python interpolation/spline.py data/<file>.txt -> moi dong la 1 cau tra loi, theo dung thu tu cau hoi:
                                                     p / x / y / dieu kien bien
-  python interpolation/spline.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (.xlsx: sheet dau);
+  python interpolation/spline.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (.xlsx: nhieu sheet co so lieu -> chon sheet);
                                                     cac cau con lai nhap tu ban phim
 Dieu kien bien: "S'(0) = 0", "S''(0) = -1; S''(3.1416) = 1" (dau " = '', nhay Unicode -> ') hoac bo ba "r x v".
-O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
+O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan (file .csv, dong dang 1.0,2.5: ',' la dau tach o).
 """
 
 import csv
@@ -213,19 +213,23 @@ def ten_cot(j):
     return s
 
 
-def tach_o_giu(dong):
-    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang."""
+def tach_o_giu(dong, la_csv=False):
+    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang.
+    ',' la dau tach o khi khong nam giua 2 chu so, khi dong co dang 1.0,2.5 hoac 1,2,3, hoac trong file .csv."""
     if "\t" in dong:
         return [o.strip() for o in dong.split("\t")]
     if ";" in dong:
         return [o.strip() for o in dong.split(";")]
-    if re.search(r",(?!\d)|(?<!\d),", dong):
+    if (re.search(r",(?!\d)|(?<!\d),|\.\d*,|,\d*\.|,\d+,", dong)
+            or (la_csv and "," in dong and len(dong.split()) == 1)):
         return [o.strip() for o in next(csv.reader([dong]))]
     return dong.split()
 
 
 def la_file_bang(duong_dan):
     """File la bang so lieu (.csv/.xlsx/.xls, hoac .txt co >= 5 dong bat dau bang 2 o so)? Nguoc lai: file tra loi."""
+    with open(duong_dan, "rb"):                    # khong mo duoc (khong ton tai, dang bi khoa) -> OSError, bao o main
+        pass
     if duong_dan.lower().endswith((".csv", ".xlsx", ".xls")):
         return True
     with open(duong_dan, encoding="utf-8-sig") as f:
@@ -248,7 +252,7 @@ def doc_luoi_file(duong_dan):
         return [(ten, [["" if not isinstance(v, str) else v for v in h] for h in df.values.tolist()])
                 for ten, df in sheets.items()]
     with open(duong_dan, encoding="utf-8-sig") as f:
-        return [(None, [tach_o_giu(d) for d in f.read().splitlines()])]
+        return [(None, [tach_o_giu(d, duong_dan.lower().endswith(".csv")) for d in f.read().splitlines()])]
 
 
 TEN_TS = {"x": "xbar", "xbar": "xbar", "y": "ybar", "ybar": "ybar"}

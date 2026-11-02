@@ -859,11 +859,11 @@ def dau(v):
 
 
 def cau23():
-    khoi = bp.tim_khoi(bp.doc_luoi(os.path.join(GOC, "slide_example", "data Câu 23.xlsx")))
+    khoi = bp.tim_khoi(bp.doc_luoi_file(os.path.join(GOC, "slide_example", "data Câu 23.xlsx"))[0][1])
     du = {}
-    for ten, (nhan, ox, oy, vt) in zip("abcd", khoi):
+    for ten, K in zip("abcd", khoi):
         bao = []
-        x, y = bp.lam_sach(ox, oy, vt, bao)
+        x, y = bp.lam_sach(K["x"], K["y"], K["vi_tri"], bao, K["so"])
         du[ten] = (np.array(x), np.array(y), bao)
     # a, b: tuyen tinh theo tham so
     kl = {"a": lambda c: rf"y\approx{so(c[0])}\,x{dau(c[1])}\dfrac{{{so(abs(c[1]))}}}{{x}}",

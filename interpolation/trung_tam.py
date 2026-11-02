@@ -10,7 +10,7 @@ Cong thuc (chon 1 hoac nhieu, cach nhau boi khoang trang):
   3. Stirling  -> so moc le, x_0 chinh giua                     (hop |t| <= 1/4)
   4. Bessel    -> so moc chan, x_0 va x_1 chinh giua            (hop 1/4 <= t <= 3/4)
 Bang dai hon m moc -> trich xuat m moc gan xbar nhat (muc 1); Stirling can m le, Bessel can m chan
-(sai -> m - 1, co bao). Moi cong thuc: bang sai phan (o duoc chon dat trong [ ]), bang tich, P,
+(sai -> m - 1, co bao); Stirling m < 3 -> bao loi. Moi cong thuc: bang sai phan (o duoc chon dat trong [ ]), bang tich, P,
 Horner chia lap tai xbar -> f(xbar), f^(j)(xbar) = P^(j)/h^j.
 Gauss I/II: bang tich theo t. Stirling/Bessel: tach he so le / chan nhu file Excel mau
 (slide_example/VD noi suy moc cach deu.xlsx): bang tich theo u = t^2 (Bessel: u = v^2, v = t - 1/2),
@@ -20,10 +20,10 @@ Cach chay:
   python interpolation/trung_tam.py                 -> nhap tu ban phim (Enter = mac dinh)
   python interpolation/trung_tam.py data/<file>.txt -> moi dong la 1 cau tra loi, theo dung thu tu cau hoi:
                                                        cong thuc / x / y / xbar / k / m
-  python interpolation/trung_tam.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau,
-                                                       .xlsx: sheet dau, can pandas + openpyxl); cau con lai nhap tay
-  VD cau 16: python interpolation/trung_tam.py "slide_example/data Câu 11.xlsx"  roi nhap: 3 / 7.83 / 1 / 9
-O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
+  python interpolation/trung_tam.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau, .xlsx can
+                                                       pandas + openpyxl, nhieu sheet co so lieu -> chon sheet); cau con lai nhap tay
+  VD cau 16: python interpolation/trung_tam.py "slide_example/data Câu 11.xlsx"  roi nhap: 3 / 1 / 7.83 / 1 / 9
+O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan (file .csv, dong dang 1.0,2.5: ',' la dau tach o).
 """
 
 import csv
@@ -218,19 +218,23 @@ def ten_cot(j):
     return s
 
 
-def tach_o_giu(dong):
-    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang."""
+def tach_o_giu(dong, la_csv=False):
+    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang.
+    ',' la dau tach o khi khong nam giua 2 chu so, khi dong co dang 1.0,2.5 hoac 1,2,3, hoac trong file .csv."""
     if "\t" in dong:
         return [o.strip() for o in dong.split("\t")]
     if ";" in dong:
         return [o.strip() for o in dong.split(";")]
-    if re.search(r",(?!\d)|(?<!\d),", dong):
+    if (re.search(r",(?!\d)|(?<!\d),|\.\d*,|,\d*\.|,\d+,", dong)
+            or (la_csv and "," in dong and len(dong.split()) == 1)):
         return [o.strip() for o in next(csv.reader([dong]))]
     return dong.split()
 
 
 def la_file_bang(duong_dan):
     """File la bang so lieu (.csv/.xlsx/.xls, hoac .txt co >= 5 dong bat dau bang 2 o so)? Nguoc lai: file tra loi."""
+    with open(duong_dan, "rb"):                    # khong mo duoc (khong ton tai, dang bi khoa) -> OSError, bao o main
+        pass
     if duong_dan.lower().endswith((".csv", ".xlsx", ".xls")):
         return True
     with open(duong_dan, encoding="utf-8-sig") as f:
@@ -253,7 +257,7 @@ def doc_luoi_file(duong_dan):
         return [(ten, [["" if not isinstance(v, str) else v for v in h] for h in df.values.tolist()])
                 for ten, df in sheets.items()]
     with open(duong_dan, encoding="utf-8-sig") as f:
-        return [(None, [tach_o_giu(d) for d in f.read().splitlines()])]
+        return [(None, [tach_o_giu(d, duong_dan.lower().endswith(".csv")) for d in f.read().splitlines()])]
 
 
 TEN_TS = {"x": "xbar", "xbar": "xbar", "y": "ybar", "ybar": "ybar"}
@@ -977,8 +981,10 @@ def main():
         if m > len(x):
             bao.append(f"m = {m} > so moc {len(x)} -> dung ca {len(x)} moc")
             m = len(x)
-        for ct in cts:                             # dieu kien rieng: Stirling m le, Bessel m chan
+        for ct in cts:                             # dieu kien rieng: Stirling m le >= 3, Bessel m chan
             mc = m
+            if ct == 3 and mc < 3:                 # giam con 1 moc: P = y_0, dao ham = 0 -> vo nghia
+                raise ValueError(f"Stirling can it nhat 3 moc (m le >= 3), hien m = {m}.")
             if ct == 3 and mc % 2 == 0:
                 mc -= 1
                 bao.append(f"Stirling can so moc le: m = {m} -> {mc} (bo moc bien xa xbar nhat)")

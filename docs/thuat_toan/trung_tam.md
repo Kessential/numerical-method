@@ -13,13 +13,14 @@ $$P(x_0+th)=\sum_{k=0}^{n}c_k\,\pi_k(t),\qquad f^{(j)}(\bar x)\approx\frac{P^{(j
 
 Gauss I kết nạp mốc theo thứ tự $x_0,x_1,x_{-1},x_2,\dots$ (phải trước); Gauss II: $x_0,x_{-1},x_1,x_{-2},\dots$ (trái trước); Stirling $=\frac12$(Gauss I + Gauss II) với số mốc lẻ; Bessel $=\frac12$(Gauss I tại $x_0$ + Gauss II tại $x_1$) với số mốc chẵn. Cùng một bộ mốc thì mọi công thức cho **cùng một đa thức** (tính duy nhất), chỉ khác cách viết.
 
-**Stirling, Bessel — tách số hạng lẻ / chẵn** (như file Excel mẫu `slide_example/VD nội suy mốc cách đều.xlsx`, sheet *Stirlin, Bessel*). Slide viết $\pi_{2j+1}=\pi_{2j-1}(t^2-j^2)$, $\pi_{2j}=t\,\pi_{2j-1}$ (Stirling) và $\pi_{2j}=\pi_{2j-2}(t+j-1)(t-j)$, $\pi_{2j+1}=(t-\frac12)\pi_{2j}$ (Bessel); vì $(t+j-1)(t-j)=v^2-(j-\frac12)^2$ nên mọi $\pi_k$ chỉ là $\Pi_j(u)$ nhân $1$, $t$, $t^2$ hoặc $v$:
+**Stirling, Bessel — tách số hạng lẻ / chẵn** (như file Excel mẫu `slide_example/VD nội suy mốc cách đều.xlsx`, sheet *Stirlin, Bessel*). Viết theo $\pi_k$, các tích trong công thức slide (tr.16, tr.20) thoả $\pi_{2j+1}=\pi_{2j-1}(t^2-j^2)$, $\pi_{2j}=t\,\pi_{2j-1}$ (Stirling) và $\pi_{2j}=\pi_{2j-2}(t+j-1)(t-j)$, $\pi_{2j+1}=(t-\frac12)\pi_{2j}$ (Bessel); vì $(t+j-1)(t-j)=v^2-(j-\frac12)^2$ nên mọi $\pi_k$ chỉ là $\Pi_j(u)$ nhân $1$, $t$, $t^2$ hoặc $v$:
 $$\text{Stirling: }P(t)=y_0+t\,P_{\text{lẻ}}(t^2)+t^2P_{\text{chẵn}}(t^2),\qquad P_{\text{lẻ}}(u)=\sum_{j=0}^{s-1}c_{2j+1}\Pi_j(u),\quad P_{\text{chẵn}}(u)=\sum_{j=0}^{s-1}c_{2j+2}\Pi_j(u);$$
 $$\text{Bessel: }P(v)=P_{\text{chẵn}}(v^2)+v\,P_{\text{lẻ}}(v^2),\qquad P_{\text{chẵn}}(u)=\sum_{j=0}^{s-1}c_{2j}\Pi_j(u),\quad P_{\text{lẻ}}(u)=\sum_{j=0}^{s-1}c_{2j+1}\Pi_j(u).$$
 Bảng tích chỉ đến bậc $s-1\approx n/2$ (thay vì $n$). Bessel cho $P$ theo biến $v=t-\frac12$: giá trị, đạo hàm tính tại $\bar v=\bar t-\frac12$ ($f^{(j)}(\bar x)\approx P^{(j)}(\bar v)/h^j$), đổi về $x$ với $v=\big(x-(x_0+\frac h2)\big)/h$.
 
 > Ghi chú: slide `16_NoisuyTrungtam_20261.pdf`:
 > * tr.3 và tr.8 ghi dạng $P(x)$ của Gauss I/II với cùng hệ số $a_2$ cho các số hạng bậc 2, 3, 4 — đúng là $a_2,a_3,a_4$.
+> * tr.4 ghi $P(x_{-1})=y_0+\frac{\Delta y_0}{h}(-h)+a_2(-h)(2h)$; đúng là $a_2(-h)(-2h)$ vì $x_{-1}-x_1=-2h$. Kết quả $a_2=\frac{\Delta^2y_{-1}}{2h^2}$ trên slide vẫn đúng.
 > * tr.12 có tiêu đề "Công thức Gauss I" nhưng nội dung là bảng tích của Gauss II ($t(t+1)$, …).
 > * tr.19–20 ghi số hạng cuối của $P_{GII}(x_0+th)$ (Gauss II tại $x_1$, mốc $x_{-n}..x_{n+1}$) là $\frac{\Delta^{2n+1}y_{-n}}{(2n+1)!}t(t^2-1)\cdots(t^2-(n-1)^2)(t-n)$ (tr.19) và $\cdots(t^2-(n-2)^2)(t-n+1)(t-n)$ (tr.20); đúng là $\frac{\Delta^{2n+1}y_{-n}}{(2n+1)!}\,t\prod_{i=1}^{n-1}(t^2-i^2)\,(t-n)(t-n-1)$ vì $2n+1$ mốc đầu theo thứ tự Gauss II tại $x_1$ là $x_{-n+1},\dots,x_{n+1}$.
 > * tr.20, công thức Bessel cuối ghi $\frac{\Delta y_0}{2}\left(t-\frac12\right)$ và $\frac{\Delta^3y_{-1}}{2\times3!}t(t-1)\left(t-\frac12\right)$; đúng là $\Delta y_0\left(t-\frac12\right)$ và $\frac{\Delta^3y_{-1}}{3!}t(t-1)\left(t-\frac12\right)$ (trung bình của $t\Delta y_0$ và $(t-1)\Delta y_0$ là $\left(t-\frac12\right)\Delta y_0$; thử với 2 mốc: $P(0)$ phải bằng $y_0$). Hệ số $\frac{\Delta^2y_0+\Delta^2y_{-1}}{2\times2!}$ đúng.
@@ -41,13 +42,13 @@ Bảng tích chỉ đến bậc $s-1\approx n/2$ (thay vì $n$). Bessel cho $P$ 
 Bảng sai phân (mục 2) lập **một lần** dùng chung cho mọi công thức; mỗi công thức chỉ chọn các ô khác nhau.
 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
-* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$, file `.csv`/`.xlsx`); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.`; bỏ ký tự lạ không phải chữ.
+* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$, file `.csv`/`.xlsx`); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.` (riêng file `.csv` và dòng dạng `1.0,2.5`: `,` là dấu tách ô); bỏ ký tự lạ không phải chữ.
 * Hàng $x$ và hàng $y$ khác số ô → dừng, báo lỗi. Ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp; báo vị trí và lý do.
 * Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn.
 * Sắp tăng theo $x$ (báo nếu đổi thứ tự). Cần ít nhất 2 mốc.
 * **Bắt buộc cách đều:** $h:=\dfrac{x_N-x_0}{N}$ ($N+1$ mốc), $|x_{i+1}-x_i-h|\le\delta h$, $\delta=10^{-6}$; không thoả → dừng, báo lỗi (dùng `newton.md` mục bất kỳ).
 * Điểm $\bar x$: ngoài $[x_{\min},x_{\max}]$ → cảnh báo ngoại suy. Cấp $k$: số nguyên $\ge0$.
-* Số mốc dùng $m$ (mặc định: cả bảng): số nguyên $\ge2$; $m>$ số mốc → dùng cả bảng, báo. **Điều kiện riêng:** Stirling cần $m$ lẻ, Bessel cần $m$ chẵn — sai thì $m:=m-1$ và báo (mục 1 sẽ bỏ mốc biên xa $\bar x$ nhất).
+* Số mốc dùng $m$ (mặc định: cả bảng): số nguyên $\ge2$; $m>$ số mốc → dùng cả bảng, báo. **Điều kiện riêng:** Stirling cần $m$ lẻ, Bessel cần $m$ chẵn — sai thì $m:=m-1$ và báo (mục 1 sẽ bỏ mốc biên xa $\bar x$ nhất). Stirling với $m<3$ → dừng, báo lỗi (còn 1 mốc thì $P\equiv y_0$, đạo hàm bằng 0).
 
 ---
 

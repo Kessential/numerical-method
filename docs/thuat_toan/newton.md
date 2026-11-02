@@ -26,7 +26,7 @@ Sai số: $|f(x)-P_n(x)|\le\dfrac{M_{n+1}}{(n+1)!}|w_{n+1}(x)|$, $w_{n+1}(x)=\pr
 Mốc cách đều → dùng sai phân (TH2): bảng chỉ có phép trừ, không có phép chia. Bảng (mục 1) lập **một lần** dùng chung cho tiến và lùi: hệ số tiến là đường chéo, hệ số lùi là hàng cuối. Cùng bộ mốc thì tiến và lùi cho cùng một đa thức, chỉ khác thứ tự cộng (sai số làm tròn). Mốc bất kỳ mà $|x_i|$ lớn so với khoảng cách mốc thì hệ số chính tắc rất lớn, triệt tiêu nhau, Horner ở mục 6 mất vài chữ số; mốc cách đều tính theo $t$ (cỡ $0..n$) nên không bị.
 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
-* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.`; bỏ ký tự lạ không phải chữ (vd `*`, khoảng trắng đặc biệt).
+* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.` (riêng file `.csv` và dòng dạng `1.0,2.5`: `,` là dấu tách ô); bỏ ký tự lạ không phải chữ (vd `*`, khoảng trắng đặc biệt).
 * Hàng $x$ và hàng $y$ khác số ô → dừng, báo lỗi.
 * Ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp $(x_i,y_i)$; báo vị trí và lý do.
 * Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng $\max y-\min y\le\varepsilon_y=10^{-3}\max(1,\max_i|y_i|)$ → thay bằng trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn.

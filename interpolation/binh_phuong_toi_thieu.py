@@ -16,11 +16,11 @@ Cach chay:
   python interpolation/binh_phuong_toi_thieu.py                 -> nhap tu ban phim (Enter = mac dinh)
   python interpolation/binh_phuong_toi_thieu.py data/<file>.txt -> moi dong la 1 cau tra loi, theo thu tu cau hoi:
                                          dang ham / x / y / co so (dang 1, 2) / d (dang 2, 3)
-  python interpolation/binh_phuong_toi_thieu.py <file>.xlsx|.csv|.txt bang -> bang du lieu; file co nhieu bo du lieu canh nhau
-                                         (vd data cau 23) -> chon bo; cac cau con lai nhap tu ban phim
+  python interpolation/binh_phuong_toi_thieu.py <file>.xlsx|.csv|.txt -> bang du lieu; nhieu sheet co so lieu -> chon sheet; nhieu bo du lieu
+                                         canh nhau (vd data cau 23) -> chon bo; cac cau con lai nhap tu ban phim
   VD cau 23a: python interpolation/binh_phuong_toi_thieu.py "slide_example/data Câu 23.xlsx"  roi nhap: 1 / 1 / x; 1/x
   Them --gn (vd python interpolation/binh_phuong_toi_thieu.py --gn <file>) -> dang 2, 3 chay them hieu chinh Gauss-Newton.
-O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
+O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan (file .csv, dong dang 1.0,2.5: ',' la dau tach o).
 """
 
 import csv
@@ -151,19 +151,23 @@ def tach_o(dong):
     return o
 
 
-def tach_o_giu(dong):
-    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang."""
+def tach_o_giu(dong, la_csv=False):
+    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang.
+    ',' la dau tach o khi khong nam giua 2 chu so, khi dong co dang 1.0,2.5 hoac 1,2,3, hoac trong file .csv."""
     if "\t" in dong:
         return [o.strip() for o in dong.split("\t")]
     if ";" in dong:
         return [o.strip() for o in dong.split(";")]
-    if re.search(r",(?!\d)|(?<!\d),", dong):
+    if (re.search(r",(?!\d)|(?<!\d),|\.\d*,|,\d*\.|,\d+,", dong)
+            or (la_csv and "," in dong and len(dong.split()) == 1)):
         return [o.strip() for o in next(csv.reader([dong]))]
     return dong.split()
 
 
 def la_file_bang(duong_dan):
     """File la bang so lieu (.csv/.xlsx/.xls, hoac .txt co >= 5 dong bat dau bang 2 o so)? Nguoc lai: file tra loi."""
+    with open(duong_dan, "rb"):                    # khong mo duoc (khong ton tai, dang bi khoa) -> OSError, bao o main
+        pass
     if duong_dan.lower().endswith((".csv", ".xlsx", ".xls")):
         return True
     with open(duong_dan, encoding="utf-8-sig") as f:
@@ -206,57 +210,115 @@ def khong_dau(s):
     return "".join(ch for ch in s if not unicodedata.combining(ch))
 
 
-def doc_luoi(duong_dan):
-    """File -> luoi o (list hang, moi hang list chuoi)."""
+def ten_cot(j):
+    """Chi so cot 0, 1, ... -> ten cot Excel A, B, ..., Z, AA, ..."""
+    s, j = "", j + 1
+    while j:
+        j, r = divmod(j - 1, 26)
+        s = chr(65 + r) + s
+    return s
+
+
+def doc_luoi_file(duong_dan):
+    """Doc file thanh luoi o (chuoi), giu nguyen dong / cot. Tra ve [(ten sheet | None, luoi)]."""
     if duong_dan.lower().endswith((".xlsx", ".xls")):
         try:
             import pandas as pd
-            df = pd.read_excel(duong_dan, header=None, dtype=str)
+            sheets = pd.read_excel(duong_dan, header=None, dtype=str, sheet_name=None)
         except ImportError as e:
             raise ValueError(f"doc file Excel can pandas + openpyxl ({e}); hay luu bang thanh .csv.")
-        return [["" if not isinstance(v, str) else v for v in h] for h in df.values.tolist()]
+        return [(ten, [["" if not isinstance(v, str) else v for v in h] for h in df.values.tolist()])
+                for ten, df in sheets.items()]
     with open(duong_dan, encoding="utf-8-sig") as f:
-        dong = f.read().splitlines()
-    return [tach_o_giu(d) for d in dong]                 # giu dung vi tri cot
+        return [(None, [tach_o_giu(d, duong_dan.lower().endswith(".csv")) for d in f.read().splitlines()])]
 
 
 def tim_khoi(luoi):
-    """Cac bo du lieu: 2 hang (x, y) hoac cac cap cot lien ke cung co >= 3 o so tren cung dong.
-    Tra ve [(nhan, o_x, o_y, vi_tri)]."""
-    luoi = [h for h in luoi if any(c.strip() for c in h)]
-    if not luoi:
-        raise ValueError("file khong co du lieu.")
+    """Cac bo du lieu: 2 hang (x, y) hoac cac cap cot lien ke cung co >= 3 o so tren cung dong. Tra ve danh sach dict:
+    ten, x, y (o goc), so (so dong / ten cot goc tung cap), vi_tri, mo_ta, trong (dong trong), ngoai (o so bi bo)."""
+    goc = [i for i, h in enumerate(luoi) if any(c.strip() for c in h)]   # chi so dong goc, bo dong trong
+    if not goc:
+        return []
     C = max(len(h) for h in luoi)
     luoi = [h + [""] * (C - len(h)) for h in luoi]
     giu = [j for j in range(C) if any(h[j].strip() for h in luoi)]
-    if len(luoi) == 2 and len(giu) > 2:                           # 2 hang: x / y
-        return [("2 hang x, y", bo_nhan([luoi[0][j] for j in giu]), bo_nhan([luoi[1][j] for j in giu]), "o thu")]
-    so = [[doc_o(c)[0] is not None for c in h] for h in luoi]
+    if len(goc) == 2 and len(giu) > 2:                            # 2 hang: x / y
+        ox = bo_nhan([luoi[goc[0]][j] for j in giu])
+        oy = bo_nhan([luoi[goc[1]][j] for j in giu])
+        so = [ten_cot(j) for j in giu[-len(ox):]]
+        return [dict(ten="", x=ox, y=oy, so=so, vi_tri="cot", trong=[], ngoai=[],
+                     mo_ta=f"hang x = {goc[0] + 1}, hang y = {goc[1] + 1}, cot {so[0]}..{so[-1]}")]
+    la_so = [[doc_o(c)[0] is not None for c in h] for h in luoi]
+    tieu_de = lambda c, i0: next((khong_dau(luoi[i][c].strip()) for i in reversed(goc)
+                                  if i < i0 and luoi[i][c].strip() and not la_so[i][c]), "")
     khoi, j = [], 0
     while j < C - 1:
-        dong = [i for i in range(len(luoi)) if so[i][j] and so[i][j + 1]]
+        dong = [i for i in goc if la_so[i][j] and la_so[i][j + 1]]
         if len(dong) >= 3:
             i0, i1 = dong[0], dong[-1]
-            chu = [luoi[i][c].strip() for i in range(i0) for c in (j - 1, j, j + 1)
-                   if 0 <= c < C and luoi[i][c].strip() and doc_o(luoi[i][c])[0] is None]
-            ten = khong_dau(" ".join(chu)) or f"cot {j + 1}-{j + 2}"
-            khoi.append((f"{ten} (cot {j + 1}-{j + 2}, dong {i0 + 1}-{i1 + 1})",
-                         [luoi[i][j] for i in range(i0, i1 + 1)], [luoi[i][j + 1] for i in range(i0, i1 + 1)],
-                         f"dong (tu {i0 + 1}) thu"))
+            td = [tieu_de(c, i0) for c in (j, j + 1)]
+            cot_chu = [c for c in (j - 1, j, j + 1) if 0 <= c < C and (c != j - 1 or not any(la_so[i][c] for i in dong))]
+            chu = [khong_dau(luoi[i][c].strip()) for i in goc if i < i0 for c in cot_chu
+                   if luoi[i][c].strip() and not la_so[i][c]]    # ten bo du lieu (vd "Cau a"), bo cac tieu de cot da in
+            hang = [i for i in goc if i0 <= i <= i1 and (luoi[i][j].strip() or luoi[i][j + 1].strip())]
+            ten_c = [f"cot {t} = {ten_cot(c)}" + (f" ('{d}')" if d else "") for t, c, d in (("x", j, td[0]), ("y", j + 1, td[1]))]
+            khoi.append(dict(ten=" ".join(v for v in chu if v not in td), x=[luoi[i][j] for i in hang], y=[luoi[i][j + 1] for i in hang],
+                             so=[i + 1 for i in hang], vi_tri="dong", mo_ta=f"{', '.join(ten_c)}, dong {i0 + 1}..{i1 + 1}",
+                             trong=[i + 1 for i in range(i0, i1 + 1) if i not in hang],
+                             ngoai=[f"{ten_cot(c)}{i + 1}" for i in goc if not i0 <= i <= i1 for c in (j, j + 1) if la_so[i][c]]))
             j += 2
         else:
             j += 1
-    if not khoi:
-        raise ValueError("khong tim thay cap cot (x, y) nao co it nhat 3 dong so.")
     return khoi
 
 
-def lam_sach(ox, oy, vi_tri, bao):
-    """Buoc 0: cap o (x, y) -> x, y sach (khong gop moc trung, khong sap xep)."""
+def doc_bang_file(duong_dan, nhap, bao):
+    """Doc bang so lieu tu file va in khoi DOC FILE de nguoi dung xac nhan; nhieu sheet -> chon sheet,
+    nhieu bo du lieu -> chon bo. Tra ve dict cua bo da chon (xem tim_khoi)."""
+    bang = []
+    for ten, luoi in doc_luoi_file(duong_dan):
+        khoi = tim_khoi(luoi)
+        if khoi:
+            bang.append((ten, khoi))
+    if not bang:
+        raise ValueError(f"file '{duong_dan}' khong co bang so lieu (can 2 hang x, y hoac cap cot x, y co it nhat 3 dong so).")
+    print(f"\nDOC FILE: {duong_dan}")
+
+    def chon_1(ten_chon, so_luong):
+        chon = doc_day_so(nhap(f"  Chon {ten_chon}", "1"), ten_chon, bao)
+        if len(chon) != 1 or chon[0] != int(chon[0]) or not 1 <= chon[0] <= so_luong:
+            raise ValueError(f"{ten_chon} phai la 1 so nguyen trong 1..{so_luong}.")
+        return int(chon[0]) - 1
+
+    ten, khoi = bang[0]
+    if len(bang) > 1:
+        print(f"  File co {len(bang)} sheet co so lieu:")
+        for s, (t, ds) in enumerate(bang, 1):
+            print(f"    {s}. sheet '{t}': {len(ds)} bo du lieu, {sum(len(k['y']) for k in ds)} cap so")
+        ten, khoi = bang[chon_1("sheet", len(bang))]
+    if ten is not None:
+        print(f"  sheet '{ten}'")
+    nhan = lambda k: (f"{k['ten']}: " if k["ten"] else "") + f"{k['mo_ta']}: {len(k['y'])} cap so"
+    k = khoi[0]
+    if len(khoi) > 1:
+        print(f"  Sheet co {len(khoi)} bo du lieu canh nhau:" if ten is not None else f"  File co {len(khoi)} bo du lieu canh nhau:")
+        for r, ds in enumerate(khoi, 1):
+            print(f"    {r}. {nhan(ds)}")
+        k = khoi[chon_1("bo du lieu", len(khoi))]
+    print(f"  {nhan(k)}")
+    if k["trong"]:
+        print(f"  bo qua dong trong: {', '.join(map(str, k['trong']))}")
+    if k["ngoai"]:
+        print(f"  bo qua o so ngoai cap (x, y): {', '.join(k['ngoai'])}")
+    return k
+
+
+def lam_sach(ox, oy, vi_tri, bao, so=None):
+    """Buoc 0: cap o (x, y) -> x, y sach (khong gop moc trung, khong sap xep). so: so dong / cot goc trong file."""
     if len(ox) != len(oy):
         raise ValueError(f"hang x co {len(ox)} o, hang y co {len(oy)} o -> khong ghep cap duoc.")
     sua, x, y = {}, [], []
-    for j, (a, b) in enumerate(zip(ox, oy), 1):
+    for j, a, b in zip(so or range(1, len(ox) + 1), ox, oy):
         vx, sx, lx = doc_o(a)
         vy, sy, ly = doc_o(b)
         for ten, ds in (("x", sx), ("y", sy)):
@@ -635,14 +697,14 @@ def giai(x, y, dang, co_so, d, hieu_chinh, Sx=0.0, Sy=0.0):
 
 def main():
     sys.stdout.reconfigure(errors="backslashreplace")   # in du lieu goc co ky tu la khong bi crash
-    tra_loi, khoi = None, None
+    tra_loi, bang = None, None
     gn = "--gn" in sys.argv[1:]                       # hieu chinh Gauss-Newton (muc 4): an, chi bat bang --gn
     doi_so = [a for a in sys.argv[1:] if a != "--gn"]
     if doi_so:
         p = doi_so[0]
         try:
             if la_file_bang(p):
-                khoi = tim_khoi(doc_luoi(p))
+                bang = p                                   # bang so lieu: doc (va xac nhan) truoc khi hoi dang ham
             else:
                 with open(p, encoding="utf-8-sig") as f:
                     tra_loi = [d for d in f.read().splitlines() if d.strip()]
@@ -673,15 +735,7 @@ def main():
     goc = {}
     loi = False
     try:
-        if khoi is not None and len(khoi) > 1:
-            print("Cac bo du lieu trong file:")
-            for r, (ten, ox, _, _) in enumerate(khoi, 1):
-                print(f"  {r}. {ten}: {len(ox)} dong")
-            goc["bo du lieu"] = nhap("Chon bo du lieu", "1")
-            r = doc_day_so(goc["bo du lieu"], "bo du lieu", bao)
-            if len(r) != 1 or r[0] != int(r[0]) or not 1 <= r[0] <= len(khoi):
-                raise ValueError(f"bo du lieu phai la 1 so nguyen trong 1..{len(khoi)}.")
-            khoi = [khoi[int(r[0]) - 1]]
+        K = doc_bang_file(bang, nhap, bao) if bang is not None else None
         if tra_loi is None:
             print("Dang ham:")
             print("  1. y = a_1 phi_1(x) + ... + a_m phi_m(x)")
@@ -692,21 +746,22 @@ def main():
         if len(dg) != 1 or dg[0] not in (1, 2, 3):
             raise ValueError("dang ham phai la 1, 2 hoac 3.")
         dang = int(dg[0])
-        if khoi is None:
+        so_dong = None
+        if K is None:
             goc["x"] = nhap("Cac x_i", "1 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2")
             goc["y"] = nhap("Cac y_i", "-0.641 -0.498 -0.34 -0.165 0.028 0.241 0.477 0.737 1.025 1.343 1.695")
             ox, oy, vi_tri = bo_nhan(tach_o(goc["x"])), bo_nhan(tach_o(goc["y"])), "o thu"
         else:
-            ten_k, ox, oy, vi_tri = khoi[0]
-            goc[f"x (file, {ten_k})"], goc["y (file)"] = "; ".join(ox), "; ".join(oy)
-        x, y = lam_sach(ox, oy, vi_tri, bao)
+            ox, oy, vi_tri, so_dong = K["x"], K["y"], K["vi_tri"], K["so"]
+            goc["x (file)"], goc["y (file)"] = "; ".join(ox), "; ".join(oy)
+        x, y = lam_sach(ox, oy, vi_tri, bao, so_dong)
         co_so = []
         if dang in (1, 2):
             goc["co so"] = nhap("Cac ham co so phi_j (cach nhau ';')", "x; 1" if dang == 1 else "x")
             co_so = doc_co_so(goc["co so"])
         d, hieu_chinh, Sx, Sy = 0.0, False, 0.0, 0.0
         if dang in (2, 3):
-            goc["d"] = nhap("Hang so cong them d", "0" if khoi is not None or tra_loi is not None else "-2")
+            goc["d"] = nhap("Hang so cong them d", "0" if bang is not None or tra_loi is not None else "-2")
             ds = doc_day_so(goc["d"], "d", bao)
             if len(ds) != 1:
                 raise ValueError("d phai la 1 so.")

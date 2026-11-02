@@ -14,10 +14,10 @@ Cach chay:
   python interpolation/noi_suy_nguoc.py                 -> nhap tu ban phim (Enter = mac dinh)
   python interpolation/noi_suy_nguoc.py data/<file>.txt -> moi dong la 1 cau tra loi, theo dung thu tu cau hoi:
                                                            phuong phap / x / y / ybar / m / eps / N
-  python interpolation/noi_suy_nguoc.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau,
-                                                           .xlsx: sheet dau, can pandas + openpyxl); cau con lai nhap tay
-  VD cau 19a: python interpolation/noi_suy_nguoc.py "slide_example/data Câu 19.xlsx"  roi nhap: 1 / 2.5 / 6 / 1e-6 / 100
-O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
+  python interpolation/noi_suy_nguoc.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau, .xlsx can
+                                                           pandas + openpyxl, nhieu sheet co so lieu -> chon sheet); cau con lai nhap tay
+  VD cau 19a: python interpolation/noi_suy_nguoc.py "slide_example/data Câu 19.xlsx"  roi nhap: 1 / 2.5 / 6
+O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan (file .csv, dong dang 1.0,2.5: ',' la dau tach o).
 """
 
 import csv
@@ -177,19 +177,23 @@ def ten_cot(j):
     return s
 
 
-def tach_o_giu(dong):
-    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang."""
+def tach_o_giu(dong, la_csv=False):
+    """Tach 1 dong file bang thanh o, giu dung vi tri cot: tab / ';' / ',' (csv) / khoang trang.
+    ',' la dau tach o khi khong nam giua 2 chu so, khi dong co dang 1.0,2.5 hoac 1,2,3, hoac trong file .csv."""
     if "\t" in dong:
         return [o.strip() for o in dong.split("\t")]
     if ";" in dong:
         return [o.strip() for o in dong.split(";")]
-    if re.search(r",(?!\d)|(?<!\d),", dong):
+    if (re.search(r",(?!\d)|(?<!\d),|\.\d*,|,\d*\.|,\d+,", dong)
+            or (la_csv and "," in dong and len(dong.split()) == 1)):
         return [o.strip() for o in next(csv.reader([dong]))]
     return dong.split()
 
 
 def la_file_bang(duong_dan):
     """File la bang so lieu (.csv/.xlsx/.xls, hoac .txt co >= 5 dong bat dau bang 2 o so)? Nguoc lai: file tra loi."""
+    with open(duong_dan, "rb"):                    # khong mo duoc (khong ton tai, dang bi khoa) -> OSError, bao o main
+        pass
     if duong_dan.lower().endswith((".csv", ".xlsx", ".xls")):
         return True
     with open(duong_dan, encoding="utf-8-sig") as f:
@@ -212,7 +216,7 @@ def doc_luoi_file(duong_dan):
         return [(ten, [["" if not isinstance(v, str) else v for v in h] for h in df.values.tolist()])
                 for ten, df in sheets.items()]
     with open(duong_dan, encoding="utf-8-sig") as f:
-        return [(None, [tach_o_giu(d) for d in f.read().splitlines()])]
+        return [(None, [tach_o_giu(d, duong_dan.lower().endswith(".csv")) for d in f.read().splitlines()])]
 
 
 TEN_TS = {"x": "xbar", "xbar": "xbar", "y": "ybar", "ybar": "ybar"}
@@ -556,8 +560,10 @@ def ham_nguoc(x, y, yb, k, a, b, m):
         omega.append(omega[-1] * (yb - u[j - 1]))
         so_hang.append(c[j] * omega[-1])
         S += so_hang[-1]
+    lech = 1e-6 * (x[k + 1] - x[k])                # Buoc 5 - Kiem tra: xbar phai nam trong khoang cach ly
+    ngoai = not x[k] - lech <= S <= x[k + 1] + lech
     return dict(thu_tu=thu_tu, L=L, R=R, idx=idx, u=u, v=v, T=T, c=c, omega=omega, so_hang=so_hang,
-                xbar=S, thieu=thieu)               # Buoc 5 - Ket thuc
+                xbar=S, thieu=thieu, ngoai=ngoai)  # Buoc 6 - Ket thuc
 
 
 def da_thuc_w(m, sigma):
@@ -568,8 +574,11 @@ def da_thuc_w(m, sigma):
     return w
 
 
+T_PHAN_KY = 1e6                                    # |t| vuot nguong -> lap phan ky (t hop le chi co |t| <= 1)
+
+
 def lap(x, y, yb, k, h, m, eps, N):
-    """Muc 4: tra ve dict (huong, s, idx, d, A, B, t, xbar, hoi_tu, q, bao)."""
+    """Muc 4: tra ve dict (k, huong, s, idx, d, A, B, t, xbar, hoi_tu, phan_ky, ngoai, q, bao)."""
     n = len(x) - 1
     bao = []
     m = min(m, n + 1)                              # Buoc 1 - Chon huong
@@ -599,19 +608,27 @@ def lap(x, y, yb, k, h, m, eps, N):
             Q[m - 1 - l] += B[j] * val
 
     def phi(t):
-        return A - float(np.polyval(Q, t))
+        with np.errstate(all="ignore"):            # lap phan ky co the tran so, bat o 5.3
+            return A - float(np.polyval(Q, t))
 
     t = [A]                                        # Buoc 4 - Khoi tao t_0
-    hoi_tu = False
+    hoi_tu = phan_ky = False
     for _ in range(N):                             # Buoc 5 - Lap
         t.append(phi(t[-1]))                       # 5.1
         if h * abs(t[-1] - t[-2]) < eps:           # 5.2 - Dung
             hoi_tu = True
             break
+        if not abs(t[-1]) <= T_PHAN_KY:            # 5.3 - Phan ky (ca inf, nan)
+            phan_ky = True
+            if not math.isfinite(t[-1]):
+                t.pop()
+            break
     xbar = x[s] + t[-1] * h                        # Buoc 5.2 / Buoc 6 (khong hoi tu -> tham khao)
-    q = abs(horner_dao_ham(Q, t[-1], 1)[1][1]) if m > 2 else 0.0   # |phi'(t*)|
-    return dict(huong=huong, s=s, sigma=sigma, idx=idx, D=D, d=d, A=A, B=B, w=w, Q=Q, t=t, xbar=xbar,
-                hoi_tu=hoi_tu, q=q, bao=bao, m=m)
+    lech = 1e-6 * (x[k + 1] - x[k])                # 5.2 - Kiem tra: xbar phai nam trong khoang cach ly
+    ngoai = hoi_tu and not x[k] - lech <= xbar <= x[k + 1] + lech
+    q = abs(horner_dao_ham(Q, t[-1], 1)[1][1]) if m > 2 and not phan_ky else 0.0   # |phi'(t*)|
+    return dict(k=k, huong=huong, s=s, sigma=sigma, idx=idx, D=D, d=d, A=A, B=B, w=w, Q=Q, t=t, xbar=xbar,
+                hoi_tu=hoi_tu, phan_ky=phan_ky, ngoai=ngoai, q=q, bao=bao, m=m)
 
 
 # ===== GIAI =====
@@ -771,16 +788,22 @@ def in_lap(x, y, yb, h, eps, kq, r):
     ngat_dong(muc, "phi(t) = ", le="    ")
     t = kq["t"]
     L = len(t) - 1
+    so_lon = lambda v: f"{v:.6e}" if abs(v) >= T_PHAN_KY else v    # t phan ky: dang e, khong in hang chuc chu so
     hang = []
     for l in chon_in(L):
         if l > 3 and l == L - 1 and L > 4:
             hang.append(["...", "...", "..."])
-        hang.append([str(l), t[l], h * abs(t[l] - t[l - 1])])
+        hang.append([str(l), so_lon(t[l]), so_lon(h * abs(t[l] - t[l - 1]))])
     print(f"    t_0 = {fmt(t[0])}:")
     in_bang(["l", "t_l", "h|t_l - t_(l-1)|"], hang, le="    ")
     if kq["hoi_tu"]:
         print(f"    Dung sau {L} lan: xbar_{r} = x_{s} + t_{L} h = {x[s]:.10g} + {so_ngoac(t[L])} * {h:.10g}"
               f" = {fmt(kq['xbar'])}")
+        if kq["ngoai"]:
+            print(f"    CANH BAO: xbar = {fmt(kq['xbar'])} nam ngoai khoang cach ly"
+                  f" ({x[kq['k']]:.10g}; {x[kq['k'] + 1]:.10g}) -> khong nhan nghiem nay (thu giam m)")
+    elif kq["phan_ky"]:
+        print(f"    => KHONG HOI TU: lap phan ky, dung som sau {L} lan (|t_{L}| > {T_PHAN_KY:g})")
     else:
         print(f"    => KHONG HOI TU sau {L} lan lap (t_N = {t[-1]:.10g}, x = {kq['xbar']:.10g} chi de tham khao)")
 
@@ -852,6 +875,10 @@ def giai(x, y, yb, pp, m, eps, N, h, doan):
             print(("\n" if r > 1 or "lap" in mot else "") + f"Nghiem{so} trong (x_{k}; x_{k + 1}) = ({x[k]:.10g}; {x[k + 1]:.10g}) thuoc"
                   f" [{x[a]:.10g}; {x[b]:.10g}], doan {CHIEU[s]} nen co ham nguoc.")
             in_ham_nguoc(x, y, yb, mot["hn"])
+            if mot["hn"]["ngoai"]:
+                print(f"    CANH BAO: xbar = {fmt(mot['hn']['xbar'])} nam ngoai khoang cach ly"
+                      f" ({x[k]:.10g}; {x[k + 1]:.10g}) -> khong nhan nghiem nay"
+                      f" (thu giam m{' hoac dung phuong phap lap' if h else ''})")
         else:
             print(f"\nNghiem {r}: khoang cach ly (x_{k}, x_{k + 1}) = ({x[k]:.10g}, {x[k + 1]:.10g}),"
                   f" thuoc doan don dieu [{x[a]:.10g}, {x[b]:.10g}] ({CHIEU[s]})")
@@ -869,11 +896,13 @@ def giai(x, y, yb, pp, m, eps, N, h, doan):
     co = [(kk, ten) for kk, ten in nghiem if any(kk in mot for mot in kq)]
     so_nghiem = len(khoang) + len(tai_moc)
     for kk, ten in co:
-        duoc = [mot for mot in kq if kk in mot and (kk != "lap" or mot[kk]["hoi_tu"])]
+        duoc = [mot for mot in kq if kk in mot and not mot[kk]["ngoai"] and (kk != "lap" or mot[kk]["hoi_tu"])]
         for r, mot in enumerate(kq, 1):
             if mot not in duoc:
-                print(f"  Nghiem {r} trong ({x[mot['k']]:.10g}; {x[mot['k'] + 1]:.10g}):"
-                      f" lap KHONG HOI TU sau {N} lan")
+                ly_do = (f"{ten} ra {fmt(mot[kk]['xbar'])} NGOAI khoang cach ly -> khong nhan" if mot[kk]["ngoai"] else
+                         f"lap PHAN KY, dung som sau {len(mot['lap']['t']) - 1} lan" if mot["lap"]["phan_ky"] else
+                         f"lap KHONG HOI TU sau {N} lan")
+                print(f"  Nghiem {r} trong ({x[mot['k']]:.10g}; {x[mot['k'] + 1]:.10g}): {ly_do}")
         gia_tri = sorted([x[i] for i in tai_moc] + [mot[kk]["xbar"] for mot in duoc])
         if not duoc:
             continue
@@ -886,17 +915,24 @@ def giai(x, y, yb, pp, m, eps, N, h, doan):
                      f" (so hang cuoi [{', '.join(fmt(v, nho=0) for v in cuoi)}] - uoc luong sai so)")
         print(dong)
 
-    print("\nKIEM TRA (thay nghiem vao da thuc noi suy truc tiep y(x) qua m moc gan x nhat):")
+    print("\nKIEM TRA (thay nghiem vao da thuc noi suy truc tiep y(x) qua chinh cac moc da dung):")
     for r, mot in enumerate(kq, 1):
+        phan_ky = "lap" in mot and mot["lap"]["phan_ky"]
         for kk, ten in nghiem:
-            if kk in mot:
-                xb = mot[kk]["xbar"]
-                kiem(f"nghiem {r} ({ten}): |y(xbar) - ybar|, xbar = {xb:.10g}", abs(y_tai(x, y, xb, m) - yb))
-        if "lap" in mot:
+            if kk in mot and not (kk == "lap" and phan_ky):
+                xb, dung = mot[kk]["xbar"], sorted(mot[kk]["idx"])
+                kiem(f"nghiem {r} ({ten}): |y(xbar) - ybar|, xbar = {xb:.10g}",
+                     abs(lagrange_tai([x[i] for i in dung], [y[i] for i in dung], xb) - yb))
+                a, b, _ = trich_xuat(x, xb, min(m, len(x)))
+                if dung != list(range(a, b + 1)):          # bo moc gan xbar khac bo da dung -> do nhay theo bo moc
+                    kiem(f"nghiem {r} ({ten}): qua m moc gan xbar nhat (do nhay)", abs(y_tai(x, y, xb, m) - yb))
+        if phan_ky:
+            print(f"  nghiem {r} (lap): phan ky -> khong kiem tra")
+        elif "lap" in mot:
             q = mot["lap"]["q"]
             nhan = f"nghiem {r}: dieu kien hoi tu |phi'(t*)| < 1"
             print(f"  {nhan:<62} = {q:.4g}" + ("  -> dung" if q < 1 else "  -> SAI"))
-        if "hn" in mot and "lap" in mot:
+        if "hn" in mot and "lap" in mot and not phan_ky:
             kiem(f"nghiem {r}: |ham nguoc - lap|", abs(mot["hn"]["xbar"] - mot["lap"]["xbar"]))
     return kq
 

@@ -24,7 +24,7 @@ Sai số hàm ngược: $|x^*-\bar x|\le\dfrac{\max|(f^{-1})^{(m)}|}{m!}\prod_j|
 | Nghiệm, mốc cách đều / gần cực trị | mục 4 (lặp): TH1 tiến nếu đủ $m$ mốc bên phải, TH2 lùi nếu không | bảng sai phân $\sim m^2/2$ + mỗi lần lặp $\sim m$ nhân |
 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
-* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột, file `.csv`/`.xlsx`); dấu trừ Unicode → `-`; `,` giữa hai chữ số → `.`; bỏ ký tự lạ; ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp, báo vị trí và lý do.
+* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột, file `.csv`/`.xlsx`); dấu trừ Unicode → `-`; `,` giữa hai chữ số → `.` (riêng file `.csv` và dòng dạng `1.0,2.5`: `,` là dấu tách ô); bỏ ký tự lạ; ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp, báo vị trí và lý do.
 * Mốc trùng: cùng $y$ → giữ 1; chênh $\le\varepsilon_y=10^{-3}\max(1,\max|y_i|)$ → lấy trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn. Sắp tăng theo $x$ (báo). Cần ít nhất 2 mốc.
 * $\bar y$: đọc như trên; $\bar y\notin[\min y_i,\max y_i]$ → báo "không có nghiệm trong bảng" cho $\bar y$ đó.
 * Số mốc dùng $m\ge2$ (nguyên); $\varepsilon>0$; $N\ge1$ (nguyên); sai → dừng, báo lỗi.
@@ -84,7 +84,9 @@ Giả thiết lưới đủ mịn: mỗi khoảng $(x_i,x_{i+1})$ chứa không 
 
 **Bước 4 — Giá trị tại $\bar y$ (Newton tiến):** $\omega_0:=1$, $S:=c_0$; với $j=1..R-L$: $\omega_j:=\omega_{j-1}(\bar y-u_{j-1})$, $S:=S+c_j\omega_j$.
 
-**Bước 5 — Kết thúc:** $\bar x:=S$; số hạng cuối $|c_{R-L}\,\omega_{R-L}|$ là ước lượng sai số; trả về $\bar x$.
+**Bước 5 — Kiểm tra:** $\bar x:=S$; nếu $\bar x\notin[x_k,x_{k+1}]$ (lệch $\le10^{-6}(x_{k+1}-x_k)$ không tính) → báo "nghiệm ngoài khoảng cách ly", không nhận nghiệm này.
+
+**Bước 6 — Kết thúc:** số hạng cuối $|c_{R-L}\,\omega_{R-L}|$ là ước lượng sai số; trả về $\bar x$.
 
 ---
 
@@ -108,7 +110,8 @@ $$\varphi(t)=\frac{\bar y-d_0}{d_1}-\frac{1}{d_1}\sum_{j=2}^{m-1}\frac{d_j}{j!}\
 
 **Bước 5 — Lặp, với $j=0,1,\dots,N-1$:**
 * **5.1:** $t_{j+1}:=\varphi(t_j)$.
-* **5.2 — Dừng:** nếu $h\,|t_{j+1}-t_j|<\varepsilon$: $\bar x:=x_s+t_{j+1}h$, trả về $\bar x$, $j+1$; dừng thuật toán.
+* **5.2 — Dừng:** nếu $h\,|t_{j+1}-t_j|<\varepsilon$: $\bar x:=x_s+t_{j+1}h$; nếu $\bar x\notin[x_k,x_{k+1}]$ (lệch $\le10^{-6}(x_{k+1}-x_k)$ không tính) → báo "nghiệm ngoài khoảng cách ly", không nhận nghiệm này; ngược lại trả về $\bar x$, $j+1$; dừng thuật toán.
+* **5.3 — Phân kỳ:** nếu $|t_{j+1}|>10^6$ hoặc $t_{j+1}$ không xác định (nghiệm hợp lệ có $|t|\le1$): báo "Không hội tụ: lặp phân kỳ", dừng sớm.
 
 **Bước 6 — Không hội tụ:** hết $N$ lần lặp → báo "Không hội tụ sau $N$ lần lặp", trả về $t_N$ để tham khảo.
 

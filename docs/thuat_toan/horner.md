@@ -1,4 +1,4 @@
- # Sơ đồ Horner
+# Sơ đồ Horner
 
 Quy ước: $P_n(x)=a_nx^n+a_{n-1}x^{n-1}+\dots+a_1x+a_0$ — **$a_i$ là hệ số của $x^i$**, $a_n\ne0$. Mọi đa thức được nhập và in dạng vector hệ số **từ bậc cao xuống bậc thấp**: $a=(a_n,a_{n-1},\dots,a_0)$. Ví dụ $3x^3-2x-1$ ↔ $a=(3,0,-2,-1)$, tức $a_3=3,a_2=0,a_1=-2,a_0=-1$.
 

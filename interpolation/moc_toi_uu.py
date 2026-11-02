@@ -129,7 +129,7 @@ def giai(n, a, b):
     print("\nKET QUA (moc xep tang dan):")
     ten = "(x_0)" if n == 1 else f"(x_0, ..., x_{n - 1})"
     print(f"  x = {ten} = {vec(x)}")
-    print(f"  W = ({b - a:g})^{n} / 2^{2 * n - 1} = {fmt(W)}")
+    print(f"  W = ({b - a:g})^{n} / 2^{2 * n - 1} = {fmt(W, nho=0)}")
     log_hs = math.log(2) + n * math.log((b - a) / 4) - math.lgamma(n + 1)   # log(W / n!)
     he_so = math.exp(log_hs) if log_hs < 709 else math.inf
     print(f"  => |f(x) - P(x)| <= M_{n} / {n}! * W = M_{n} * {fmt(he_so, nho=0)}")

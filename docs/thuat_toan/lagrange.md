@@ -21,7 +21,7 @@ $D_i$ tính một lần, dùng chung cho mục 1 và mục 2. Giá trị $P_n(\b
 > Ghi chú: file `Ví dụ nội suy Lagrange.xlsx` (Sheet2, $\bar x=3.95$) tính bằng Horner trên hệ số chính tắc (cỡ $10^6$) được $P(3.95)=17.01307655$; giá trị đúng (tính bằng phân số) là $17.0130764509$, đúng như mục 2. Đạo hàm vẫn tính qua hệ số chính tắc nên mang sai số cùng cỡ ($\sim10^{-7}$ ở ví dụ này).
 
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
-* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.`; bỏ ký tự lạ không phải chữ (vd `*`, khoảng trắng đặc biệt).
+* Đọc bảng: hàng $x$ và hàng $y$ (hoặc 2 cột $x$, $y$); ô tách theo khoảng trắng, `;` hoặc tab; nhãn đầu hàng (`x`, `y`) bỏ qua. Dấu trừ Unicode `−` `–` → `-`; dấu `,` giữa hai chữ số → `.` (riêng file `.csv` và dòng dạng `1.0,2.5`: `,` là dấu tách ô); bỏ ký tự lạ không phải chữ (vd `*`, khoảng trắng đặc biệt).
 * Hàng $x$ và hàng $y$ khác số ô → dừng, báo lỗi.
 * Ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp $(x_i,y_i)$; báo vị trí và lý do.
 * Mốc trùng: cùng $y$ → giữ 1; khác $y$ nhưng $\max y-\min y\le\varepsilon_y=10^{-3}\max(1,\max_i|y_i|)$ → thay bằng trung bình; ngược lại hỏi giữ giá trị nào (1 = đầu, 2 = sau, 3 = trung bình, 0 = dừng; Enter = đầu), đọc từ file trả lời thì giữ giá trị đầu; báo số dòng của từng $y$ và lựa chọn.
