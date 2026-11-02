@@ -637,48 +637,138 @@ def y_tai(x, y, xb, m):
 CHIEU = {1: "tang", -1: "giam", 0: "hang"}
 
 
+def in_ngang(hang, le="  ", rong_max=110):
+    """In bang ngang: hang = [(ten, [o, ...]), ...]; qua rong -> ngat thanh nhieu khoi cot."""
+    S = [(ten, [v if isinstance(v, str) else fmt(v) for v in o]) for ten, o in hang]
+    w0 = max(len(t) for t, _ in S) + 1
+    so = len(S[0][1])
+    rong = [max(len(o[j]) for _, o in S) + 2 for j in range(so)]
+    dau = 0
+    while dau < so:
+        cuoi, tong = dau, w0
+        while cuoi < so and (cuoi == dau or tong + rong[cuoi] <= rong_max):
+            tong += rong[cuoi]
+            cuoi += 1
+        for ten, o in S:
+            print(le + f"{ten:<{w0}}" + "".join(f"{o[j]:>{rong[j]}}" for j in range(dau, cuoi)))
+        dau = cuoi
+
+
+def ngat_dong(muc, dau, le="  ", rong_max=110):
+    """In 'dau' + cac muc noi tiep, ngat dong khi qua rong (dong sau thut vao)."""
+    dong, thut = le + dau, le + " " * len(dau)
+    for s in muc:
+        if len(dong) + len(s) > rong_max and dong.strip() != dau.strip():
+            print(dong)
+            dong = thut + s.lstrip()
+        else:
+            dong += s
+    print(dong)
+
+
+def o_bang(v, d):
+    """O bang sai phan: d chu so thap phan cua du lieu (giu so 0 cuoi, vd 0.0000350); d = None -> fmt."""
+    if d is None:
+        return fmt(v)
+    s = format(round(v, d), f".{d}f")
+    return s[1:] if s.startswith("-") and float(s) == 0 else s
+
+
+def tich_t(j, sigma, gon=False):
+    """w_j(t) = t(t + sigma)...(t + (j-1) sigma) dang chu; gon: j >= 4 viet t(t - 1)...(t - j + 1)."""
+    d = "-" if sigma < 0 else "+"
+    if gon and j >= 4:
+        return f"t(t {d} 1)...(t {d} {j - 1})"
+    return "t" + "".join(f"(t {d} {i})" for i in range(1, j))
+
+
+def in_cong_thuc_lap(cac, eps):
+    """Khoi cong thuc phuong phap lap, in 1 lan truoc Nghiem 1 (moi chieu / so moc 1 khoi)."""
+    for lan, (huong, m) in enumerate(sorted({(kq["huong"], kq["m"]) for kq in cac}, reverse=True)):
+        if lan:
+            print()
+        if huong == "tien":
+            sigma, ky, y0, d1, x0 = -1, "D", "y_k", "Dy_k", "x_k"
+            print(f"Cong thuc lap (khoang (x_k; x_(k+1)) du {m} moc x_k..x_(k+{m - 1}) ben phai nen lap Newton tien,"
+                  f" t = (x - x_k)/h, eps = {eps:g}):")
+            print("  D^0 y_i = y_i,  D^j y_i = D^(j-1) y_(i+1) - D^(j-1) y_i  (bang sai phan, o [ ]: D^j y_k)")
+        else:
+            sigma, ky, y0, d1, x0 = 1, "N", "y_(k+1)", "Ny_(k+1)", "x_(k+1)"
+            trai = "x_k" if m == 2 else f"x_(k-{m - 2})"
+            print(f"Cong thuc lap (khoang (x_k; x_(k+1)) khong du {m} moc ben phai, dung {m} moc {trai}..x_(k+1)"
+                  f" ben trai nen lap Newton lui, t = (x - x_(k+1))/h, eps = {eps:g}):")
+            print("  N^0 y_i = y_i,  N^j y_i = N^(j-1) y_i - N^(j-1) y_(i-1)  (bang sai phan, o [ ]: N^j y_(k+1))")
+        cs = list(range(2, m))
+        if len(cs) > 2:
+            cs = [2, None, m - 1]
+        pt, phi = f"ybar = {y0} + {d1} t", f"t = phi(t) = (ybar - {y0})/{d1}"
+        for j in cs:
+            if j is None:
+                pt, phi = pt + " + ...", phi + " - ..."
+            else:
+                kj, w = f"{ky}^{j}{y0}", tich_t(j, sigma, gon=True)
+                pt += f" + {kj}/{j}! {w}"
+                phi += f" - {kj}/({j}! {d1}) {w}"
+        print("  " + pt)
+        print("  => " + phi)
+        print(f"  t_0 = (ybar - {y0})/{d1},  t_(l+1) = phi(t_l),  dung khi h|t_(l+1) - t_l| < eps,"
+              f"  xbar = {x0} + t_(l+1) h")
+
+
 def in_ham_nguoc(x, y, yb, kq):
     print(f"  Phuong phap ham nguoc (muc 3): chon moc co |y_j - ybar| nho nhat trong doan don dieu:")
     in_bang(["lan", "j", "x_j", "y_j", "|y_j - ybar|"],
-            [[str(s), str(j), f"{x[j]:.10g}", f"{y[j]:.10g}", f"{abs(y[j] - yb):.10g}"]
+            [[str(s), str(j), f"{x[j]:.10g}", f"{y[j]:.10g}", abs(y[j] - yb)]
              for s, j in enumerate(kq["thu_tu"], 1)], le="    ")
     if kq["thieu"]:
         print(f"    (doan don dieu chi co {kq['R'] - kq['L'] + 1} moc -> dung het)")
     r = len(kq["u"]) - 1
-    print(f"    Bang ty sai phan cua x theo y (u_s = y, v_s = x, u tang dan; duong cheo = c_j):")
-    in_bang(["s", "u_s = y", "v_s = x"] + [f"TSP{j}" for j in range(1, r + 1)],
-            [[str(s), f"{kq['u'][s]:.10g}"] + kq["T"][s][:s + 1] + [None] * (r - s) for s in range(r + 1)],
-            le="    ")
+    print(f"    Bang ty sai phan cua x theo y (u_s = y, v_s = x, u tang dan; duong cheo [ ] = c_j):")
+    print("    v[u_(s-k), ..., u_s] = (v[u_(s-k+1), ..., u_s] - v[u_(s-k), ..., u_(s-1)]) / (u_s - u_(s-k))")
+    hang = []
+    for s in range(r + 1):
+        o = [f"{kq['T'][s][j]:.10g}" if j == 0 else fmt(kq["T"][s][j]) for j in range(s + 1)]
+        o[s] = f"[{o[s]}]"
+        hang.append([str(s), f"{kq['u'][s]:.10g}"] + o + [None] * (r - s))
+    in_bang(["s", "u_s = y", "v_s = x"] + [f"TSP{j}" for j in range(1, r + 1)], hang, le="    ")
     print(f"    xbar = sum c_j w_j(ybar),  w_0 = 1,  w_j = w_(j-1) (ybar - u_(j-1)):")
     tong, hang = 0.0, []
     for j in range(r + 1):
         tong += kq["so_hang"][j]
-        hang.append([str(j), kq["c"][j], kq["omega"][j], kq["so_hang"][j], fmt(tong, ".10f")])
+        hang.append([str(j), kq["c"][j], kq["omega"][j], kq["so_hang"][j], tong])
     in_bang(["j", "c_j", "w_j(ybar)", "c_j * w_j", "tong"], hang, le="    ")
-    print(f"    => xbar ~ {kq['xbar']:.10g}   (so hang cuoi: {abs(kq['so_hang'][-1]):.2e})")
 
 
-def in_lap(x, y, yb, h, eps, kq):
+def in_lap(x, y, yb, h, eps, kq, r):
     k = kq["idx"]
     s, m = kq["s"], kq["m"]
-    if kq["huong"] == "tien":
+    tien = kq["huong"] == "tien"
+    if tien:
         print(f"  Phuong phap lap (muc 4), TH1 Newton tien tu x_{s} = {x[s]:.10g}, {m} moc x_{k[0]}..x_{k[-1]}:")
-        ten_d = [f"D^{j}y_{s}" for j in range(m)]
     else:
         print(f"  Phuong phap lap (muc 4), TH2 Newton lui tu x_{s} = {x[s]:.10g}, {m} moc x_{k[0]}..x_{k[-1]}:")
-        ten_d = [f"N^{j}y_{s}" for j in range(m)]
     for b in kq["bao"]:
         print("    " + b)
-    print("    Bang sai phan (hang i: T_(i,j); " + ("duong cheo" if kq["huong"] == "tien" else "hang cuoi")
-          + " = d_j):")
+    print("    Bang sai phan (hang i: T_(i,j); " + ("duong cheo" if tien else "hang cuoi") + " [ ] = d_j):")
     D = kq["D"]
-    in_bang(["i", "x_i", "y_i"] + [f"SP{j}" for j in range(1, m)],
-            [[str(k[r]), f"{x[k[r]]:.10g}"] + D[r][:r + 1] + [None] * (m - 1 - r) for r in range(m)], le="    ")
-    w = "t(t-1)...(t-j+1)" if kq["huong"] == "tien" else "t(t+1)...(t+j-1)"
-    print(f"    phi(t) = A - sum_(j=2..{m - 1}) B_j w_j(t),  A = (ybar - d_0)/d_1,  B_j = d_j / (j! d_1),  w_j = {w}")
-    in_bang(["j", "d_j", "", "B_j"],
-            [[str(j), kq["d"][j], ten_d[j], "" if j < 2 else kq["B"][j]] for j in range(m)], le="    ")
-    print(f"    A = ({yb:.10g} - {kq['d'][0]:.10g}) / {so_ngoac(kq['d'][1])} = {kq['A']:.10g} = t_0")
+    d = so_le([y[i] for i in k])
+    hang = []
+    for i in range(m):
+        o = [o_bang(D[i][j], d) for j in range(i + 1)]
+        if tien:
+            o[i] = f"[{o[i]}]"
+        elif i == m - 1:
+            o = [f"[{v}]" for v in o]
+        hang.append([str(k[i]), f"{x[k[i]]:.10g}"] + o + [None] * (m - 1 - i))
+    in_bang(["i", "x_i", "y_i"] + [f"SP{j}" for j in range(1, m)], hang, le="    ")
+    print("    Thay cac o [ ] vao phi:")
+    muc = [fmt(kq["A"])]
+    for j in range(2, m):
+        c = -kq["B"][j]                            # phi(t) = A - sum B_j w_j(t)
+        so = fmt(abs(c))
+        if so != "0":
+            muc.append((" - " if c < 0 else " + ") + so + ("*" if "e" in so else "") + tich_t(j, kq["sigma"]))
+    ngat_dong(muc, "phi(t) = ", le="    ")
     t = kq["t"]
     L = len(t) - 1
     hang = []
@@ -686,88 +776,115 @@ def in_lap(x, y, yb, h, eps, kq):
         if l > 3 and l == L - 1 and L > 4:
             hang.append(["...", "...", "..."])
         hang.append([str(l), t[l], h * abs(t[l] - t[l - 1])])
-    print(f"    Lap t_(l+1) = phi(t_l), dung khi h|t_(l+1) - t_l| < eps = {eps:g}, xbar = x_{s} + t_(l+1) h:")
+    print(f"    t_0 = {fmt(t[0])}:")
     in_bang(["l", "t_l", "h|t_l - t_(l-1)|"], hang, le="    ")
     if kq["hoi_tu"]:
-        print(f"    Dung sau {L} lan: xbar = x_{s} + t_{L} h = {x[s]:.10g} + {so_ngoac(t[L])} * {h:.10g}"
+        print(f"    Dung sau {L} lan: xbar_{r} = x_{s} + t_{L} h = {x[s]:.10g} + {so_ngoac(t[L])} * {h:.10g}"
               f" = {fmt(kq['xbar'])}")
     else:
         print(f"    => KHONG HOI TU sau {L} lan lap (t_N = {t[-1]:.10g}, x = {kq['xbar']:.10g} chi de tham khao)")
 
 
-def giai(x, y, yb, pp, m, eps, N, h):
+def in_dau(x, y, ybars, h):
+    """Phan chung moi ybar: khoang don dieu (muc 2), 1 bang khoang cach ly (muc 1). Tra ve danh sach doan."""
+    print(f"\nBang {len(x)} moc [{x[0]:.10g}, {x[-1]:.10g}]"
+          + (f", moc cach deu h = {h:.10g}" if h else ", moc bat ky") + f", ybar = {vec(ybars, '.10g')}")
+    print("\nTINH TOAN (chung moi ybar):")
+    doan = khoang_don_dieu(y)                      # Muc 2
+    doi = [str(b) for _, b, _ in doan[:-1]]
+    print("Khoang don dieu (muc 2): Dy_i = y_(i+1) - y_i "
+          + (f"doi dau tai i = {', '.join(doi)}:" if doi else "khong doi dau:"))
+    in_ngang([("doan", [f"[{x[a]:.10g}; {x[b]:.10g}]" for a, b, _ in doan]),
+              ("chi so", [f"{a}..{b}" for a, b, _ in doan]),
+              ("y_a", [f"{y[a]:.10g}" for a, _, _ in doan]),
+              ("y_b", [f"{y[b]:.10g}" for _, b, _ in doan]),
+              ("chieu", [CHIEU[s] for _, _, s in doan])])
+    d = so_le(list(y) + list(ybars))
+    hang, tai_moc = [], []
+    for yb in ybars:
+        moc, khoang = khoang_cach_ly(y, yb)        # Muc 1
+        tai_moc += [(yb, i) for i in moc]
+        for k in khoang:
+            a, b, s = next(dd for dd in doan if dd[0] <= k < dd[1])
+            hang.append([f"{yb:.10g}", str(k), f"({x[k]:.10g}; {x[k + 1]:.10g})", o_bang(y[k] - yb, d),
+                         o_bang(y[k + 1] - yb, d), f"[{x[a]:.10g}; {x[b]:.10g}] {CHIEU[s]}"])
+    print("\nKhoang cach ly (muc 1): g_i = y_i - ybar doi dau giua x_k va x_(k+1)"
+          + (":" if tai_moc else ", khong co g_i = 0:"))
+    if hang:
+        in_bang(["ybar", "k", "(x_k; x_(k+1))", "g_k = y_k - ybar", "g_(k+1)", "nam trong doan"], hang)
+    else:
+        print("  (khong co khoang doi dau)")
+    for yb, i in tai_moc:
+        print(f"  ybar = {yb:.10g}: y_{i} = ybar -> x_{i} = {x[i]:.10g} la nghiem dung tai moc")
+    for yb in ybars:
+        for a, b, s in doan:
+            if s == 0 and y[a] == yb:
+                print(f"  CHU Y: y hang = ybar = {yb:.10g} tren [{x[a]:.10g}, {x[b]:.10g}]"
+                      " -> theo bang, moi x trong doan deu la nghiem")
+    return doan
+
+
+def giai(x, y, yb, pp, m, eps, N, h, doan):
     n = len(x) - 1
     print(f"\nGiai f(x) = ybar = {yb:.10g} tu bang {n + 1} moc [{x[0]:.10g}, {x[-1]:.10g}]"
           + (f", moc cach deu h = {h:.10g}" if h else ", moc bat ky"))
-
-    print("\nCONG THUC:")
-    print("  Khoang cach ly : g_i = y_i - ybar;  g_i * g_(i+1) < 0 -> (x_i, x_(i+1)) chua nghiem;  g_i = 0 -> x_i la nghiem")
-    print("  Khoang don dieu: dau cua y_(i+1) - y_i khong doi")
-    if 1 in pp:
-        print("  Ham nguoc: x = P(y) = sum c_j w_j(y), c_j = x[u_0..u_j] (ty sai phan x theo y),"
-              " w_j = (y - u_0)...(y - u_(j-1));  xbar = P(ybar)")
-    if 2 in pp:
-        print("  Lap tien : t = phi(t) = (ybar - y_k)/Dy_k - 1/Dy_k * sum_(j>=2) D^j y_k / j! * t(t-1)...(t-j+1),"
-              "  x = x_k + t h")
-        print("  Lap lui  : t = phi(t) = (ybar - y_(k+1))/Ny_(k+1) - 1/Ny_(k+1) * sum_(j>=2) N^j y_(k+1) / j!"
-              " * t(t+1)...(t+j-1),  x = x_(k+1) + t h")
-        print("  t_0 = (ybar - d_0)/d_1,  t_(j+1) = phi(t_j);  dung khi h |t_(j+1) - t_j| < eps")
-
-    print("\nTINH TOAN:")
-    doan = khoang_don_dieu(y)                      # Muc 2
-    print("Khoang don dieu (muc 2):")
-    in_bang(["doan", "[x_a, x_b]", "chi so", "chieu"],
-            [[str(r), f"[{x[a]:.10g}, {x[b]:.10g}]", f"{a}..{b}", CHIEU[s]] for r, (a, b, s) in enumerate(doan, 1)])
     tai_moc, khoang = khoang_cach_ly(y, yb)        # Muc 1
-    print(f"\nKhoang cach ly cua f(x) = {yb:.10g} (muc 1):")
-    if khoang:
-        in_bang(["k", "x_k", "x_(k+1)", "g_k = y_k - ybar", "g_(k+1)"],
-                [[str(k), f"{x[k]:.10g}", f"{x[k + 1]:.10g}", fmt(y[k] - yb, ".7f"), fmt(y[k + 1] - yb, ".7f")]
-                 for k in khoang])
-    else:
-        print("  (khong co khoang doi dau)")
-    for i in tai_moc:
-        print(f"  y_{i} = ybar -> x_{i} = {x[i]:.10g} la nghiem dung tai moc")
     hang = [(a, b) for a, b, s in doan if s == 0 and y[a] == yb]
-    for a, b in hang:
-        print(f"  CHU Y: y hang = ybar tren [{x[a]:.10g}, {x[b]:.10g}] -> theo bang, moi x trong doan deu la nghiem")
 
     kq = []
-    for r, k in enumerate(khoang, 1):
+    for k in khoang:
         a, b, s = next(dd for dd in doan if dd[0] <= k < dd[1])
-        print(f"\nNghiem {r}: khoang cach ly (x_{k}, x_{k + 1}) = ({x[k]:.10g}, {x[k + 1]:.10g}),"
-              f" thuoc doan don dieu [{x[a]:.10g}, {x[b]:.10g}] ({CHIEU[s]})")
-        mot = dict(k=k, a=a, b=b)
+        mot = dict(k=k, a=a, b=b, s=s)
         if 1 in pp:
             mot["hn"] = ham_nguoc(x, y, yb, k, a, b, m)
-            in_ham_nguoc(x, y, yb, mot["hn"])
         if 2 in pp and h:
             mot["lap"] = lap(x, y, yb, k, h, m, eps, N)
-            in_lap(x, y, yb, h, eps, mot["lap"])
         kq.append(mot)
+
+    if kq:
+        print("\nTINH TOAN:")
+    if any("lap" in mot for mot in kq):
+        in_cong_thuc_lap([mot["lap"] for mot in kq if "lap" in mot], eps)
+    for r, mot in enumerate(kq, 1):
+        k, a, b, s = mot["k"], mot["a"], mot["b"], mot["s"]
+        if "hn" in mot:
+            so = f" {r}" if len(kq) > 1 else ""
+            print(("\n" if r > 1 or "lap" in mot else "") + f"Nghiem{so} trong (x_{k}; x_{k + 1}) = ({x[k]:.10g}; {x[k + 1]:.10g}) thuoc"
+                  f" [{x[a]:.10g}; {x[b]:.10g}], doan {CHIEU[s]} nen co ham nguoc.")
+            in_ham_nguoc(x, y, yb, mot["hn"])
+        else:
+            print(f"\nNghiem {r}: khoang cach ly (x_{k}, x_{k + 1}) = ({x[k]:.10g}, {x[k + 1]:.10g}),"
+                  f" thuoc doan don dieu [{x[a]:.10g}, {x[b]:.10g}] ({CHIEU[s]})")
+        if "lap" in mot:
+            in_lap(x, y, yb, h, eps, mot["lap"], r)
 
     print("\nKET QUA:")
     if not khoang and not tai_moc:
-        print(f"  f(x) = {yb:.10g} khong co nghiem trong [{x[0]:.10g}, {x[-1]:.10g}]")
+        print(f"  f(x) = {yb:.10g} khong co nghiem trong [{x[0]:.10g}; {x[-1]:.10g}]")
     for i in tai_moc:
         print(f"  x = {x[i]:.10g} (nghiem dung tai moc)")
     for a, b in hang:
         print(f"  moi x trong [{x[a]:.10g}, {x[b]:.10g}] (y hang = ybar, vo so nghiem)")
-    for r, mot in enumerate(kq, 1):
-        k = mot["k"]
-        dong = f"  Nghiem {r} trong ({x[k]:.10g}, {x[k + 1]:.10g}):"
-        if "hn" in mot:
-            dong += f"  ham nguoc x ~ {mot['hn']['xbar']:.10g}"
-        if "lap" in mot:
-            L = mot["lap"]
-            dong += (f"  |  lap x ~ {L['xbar']:.10g} ({len(L['t']) - 1} lan, eps = {eps:g})" if L["hoi_tu"]
-                     else f"  |  lap: KHONG HOI TU sau {N} lan")
-        print(dong)
     nghiem = [("hn", "ham nguoc"), ("lap", "lap")]
-    vec_kq = {ten: [mot[kk]["xbar"] for mot in kq if kk in mot] for kk, ten in nghiem}
-    for ten, v in vec_kq.items():
-        if v:
-            print(f"  vector nghiem ({ten}) = {vec(v)}")
+    co = [(kk, ten) for kk, ten in nghiem if any(kk in mot for mot in kq)]
+    so_nghiem = len(khoang) + len(tai_moc)
+    for kk, ten in co:
+        duoc = [mot for mot in kq if kk in mot and (kk != "lap" or mot[kk]["hoi_tu"])]
+        for r, mot in enumerate(kq, 1):
+            if mot not in duoc:
+                print(f"  Nghiem {r} trong ({x[mot['k']]:.10g}; {x[mot['k'] + 1]:.10g}):"
+                      f" lap KHONG HOI TU sau {N} lan")
+        gia_tri = sorted([x[i] for i in tai_moc] + [mot[kk]["xbar"] for mot in duoc])
+        if not duoc:
+            continue
+        dong = (f"  f(x) = {yb:.10g} co " + ("dung mot nghiem" if so_nghiem == 1 else f"{so_nghiem} nghiem")
+                + f" trong [{x[0]:.10g}; {x[-1]:.10g}]" + (f" ({ten})" if len(co) > 1 else ""))
+        dong += f": xbar ~ {fmt(gia_tri[0])}" if len(gia_tri) == 1 else f": xbar = {vec(gia_tri)}"
+        if kk == "hn":
+            cuoi = [abs(mot["hn"]["so_hang"][-1]) for mot in duoc]
+            dong += (f" (so hang cuoi {fmt(cuoi[0], nho=0)} - uoc luong sai so)" if len(cuoi) == 1 else
+                     f" (so hang cuoi [{', '.join(fmt(v, nho=0) for v in cuoi)}] - uoc luong sai so)")
+        print(dong)
 
     print("\nKIEM TRA (thay nghiem vao da thuc noi suy truc tiep y(x) qua m moc gan x nhat):")
     for r, mot in enumerate(kq, 1):
@@ -902,9 +1019,11 @@ def main():
         print(f"    y = {ngan(vec(y, '.10g'))}")
         print(f"    ybar = {vec(ybars)},  m = {m}" + (f",  eps = {eps:g},  N = {N}" if 2 in pp else ""))
 
-    for yb in ybars:
-        if min(y) <= yb <= max(y):
-            giai(x, y, yb, pp, m, eps, N, h)
+    hop_le = [yb for yb in ybars if min(y) <= yb <= max(y)]
+    if hop_le:
+        doan = in_dau(x, y, hop_le, h)
+    for yb in hop_le:
+        giai(x, y, yb, pp, m, eps, N, h, doan)
 
 
 if __name__ == "__main__":
