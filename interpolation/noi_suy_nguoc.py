@@ -16,7 +16,7 @@ Cach chay:
                                                            phuong phap / x / y / ybar / m / eps / N
   python interpolation/noi_suy_nguoc.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau,
                                                            .xlsx: sheet dau, can pandas + openpyxl); cau con lai nhap tay
-  VD cau 19a: python interpolation/noi_suy_nguoc.py "slide_example/data Câu 19.xlsx"  roi nhap: 1 / 2.5 / 6 / 1e-6 / 100
+  VD cau 19a: python interpolation/noi_suy_nguoc.py "data/data Câu 19.xlsx"  roi nhap: 1 / 2.5 / 6 / 1e-6 / 100
 O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
 """
 
@@ -609,9 +609,13 @@ def lap(x, y, yb, k, h, m, eps, N):
             hoi_tu = True
             break
     xbar = x[s] + t[-1] * h                        # Buoc 5.2 / Buoc 6 (khong hoi tu -> tham khao)
+    trong = -1e-9 <= (t[-1] if huong == "tien" else -t[-1]) <= 1 + 1e-9   # 5.2: t* thuoc [0,1] / [-1,0]
+    if hoi_tu and not trong:
+        bao.append(f"t* = {t[-1]:.6g} nam ngoai {'[0, 1]' if huong == 'tien' else '[-1, 0]'}: nghiem lap khong thuoc "
+                   f"khoang cach ly (x_{k}, x_{k + 1}) -> bo")
     q = abs(horner_dao_ham(Q, t[-1], 1)[1][1]) if m > 2 else 0.0   # |phi'(t*)|
     return dict(huong=huong, s=s, sigma=sigma, idx=idx, D=D, d=d, A=A, B=B, w=w, Q=Q, t=t, xbar=xbar,
-                hoi_tu=hoi_tu, q=q, bao=bao, m=m)
+                hoi_tu=hoi_tu and trong, ngoai=hoi_tu and not trong, q=q, bao=bao, m=m)
 
 
 # ===== GIAI =====
@@ -781,6 +785,9 @@ def in_lap(x, y, yb, h, eps, kq, r):
     if kq["hoi_tu"]:
         print(f"    Dung sau {L} lan: xbar_{r} = x_{s} + t_{L} h = {x[s]:.10g} + {so_ngoac(t[L])} * {h:.10g}"
               f" = {fmt(kq['xbar'])}")
+    elif kq.get("ngoai"):
+        print(f"    => Dung sau {L} lan nhung t* = {fmt(t[L])} nam ngoai "
+              f"{'[0, 1]' if kq['huong'] == 'tien' else '[-1, 0]'}: khong thuoc khoang cach ly -> bo (doi so moc m)")
     else:
         print(f"    => KHONG HOI TU sau {L} lan lap (t_N = {t[-1]:.10g}, x = {kq['xbar']:.10g} chi de tham khao)")
 

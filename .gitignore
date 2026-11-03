@@ -31,3 +31,9 @@ giua_ky/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# File sinh tu sinh_loi_giai.py gk
+docs/loi_giai/giua_ky_*.tex
+
+# File de thi nen (co mat khau) - giu o may, khong day len
+data/*.rar

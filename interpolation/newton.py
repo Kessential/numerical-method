@@ -19,7 +19,7 @@ Cach chay:
                                                     dong x, y duoc co nhan 'x', 'y')
   python interpolation/newton.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau,
                                                     .xlsx: sheet dau, can pandas + openpyxl); cau con lai nhap tu ban phim
-  VD cau 11: python interpolation/newton.py "slide_example/data Câu 11.xlsx"  roi nhap: 1 3 4 / 3.52 / 1 / 9
+  VD cau 11: python interpolation/newton.py "data/data Câu 11.xlsx"  roi nhap: 1 3 4 / 1 / 3.52 / 1 / 9 (1 = sheet dau)
 O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
 """
 
@@ -788,9 +788,10 @@ def giai(x, y, muc, xbars, k, trich=None):
     for chieu in [c for c in can if c in chon]:
         R = kq[chieu]
         print(f"  {TEN[chieu]}:")
-        if h is not None:
+        if h is not None:                          # moc cach deu: ket qua la P(t) nhu loi giai; P(x) khai trien
             print(f"    P_{n}(t) = b = (b_{n}, ..., b_0) = {vec(R['b'])},  t = ({nhan_tu('x', R['s'])}) / {h:.10g}")
-            print(f"    P_{n}(t) = {da_thuc_str(R['b'], 't')}")
+            print(f"    P_{n}(t) = {da_thuc_str(R['b'], 't')}")   # voi he so lam tron 6 chu so thay xbar vao sai lon
+            continue
         print(f"    P_{n}(x) = a = (a_{n}, ..., a_0) = {vec(R['a'])}" if n else f"    P_0(x) = a = (a_0) = {vec(R['a'])}")
         print(f"    P_{n}(x) = {da_thuc_str(R['a'])}")
     for xb, v in tinh.items():
@@ -876,7 +877,7 @@ def main():
             print("  2. Da thuc noi suy Newton lui")
             print("  3. Gia tri f(xbar) va dao ham f^(j)(xbar), j = 1..k")
             print("  4. Bang dai: trich xuat m moc gan xbar nhat roi lam 1/2/3 tren cac moc do")
-        goc["muc dich"] = nhap("Chon muc dich", "1 3")
+        goc["muc dich"] = nhap("Chon muc dich", "1 3 4" if bang is not None else "1 3")   # file bang: thuong la bang dai
         so_muc = doc_day_so(goc["muc dich"], "muc dich", bao)
         muc = {int(v) for v in so_muc if v in (1, 2, 3, 4)}
         if len(muc) != len(set(so_muc)):

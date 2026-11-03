@@ -14,19 +14,23 @@ Slide hiện có: `slide_example/13…19_*.pdf`; slide các chương sau sẽ đ
 ```
 slide_example/             # slide, đề cương, bài tập, đề thi — CHỈ ĐỌC, không sửa
 docs/thuat_toan/<ten>.md   # mỗi thuật toán (nhóm thuật toán) 1 file markdown riêng
-docs/loi_giai/             # lời giải LaTeX (xelatex) câu 3-23: mau_loi_giai.tex (văn bản, chỗ <<khoa>>)
-                           #   + sinh_loi_giai.py (gọi hàm trong interpolation/ để điền số) -> loi_giai_bai_tap.tex/.pdf
+docs/loi_giai/             # lời giải câu 3-23 sinh từ data/: mau_loi_giai.tex (văn bản, chỗ <<khoa>>)
+                           #   + sinh_loi_giai.py (gọi hàm trong interpolation/) -> loi_giai_bai_tap.md
+                           #   hoặc loi_giai_bai_tap.tex/.pdf (chọn khi chạy); `gk` -> hỏi file đề (.xlsx/.rar) và
+                           #   từng câu -> giua_ky_<tên>.md/.pdf (form đáp án giữa kỳ 20251), trả lời lưu ở
+                           #   data/giua_ky_<tên>_tra_loi.txt
 interpolation/             # Ch.1: horner, moc_toi_uu, lagrange, newton, trung_tam,
                            #       noi_suy_nguoc, spline, binh_phuong_toi_thieu
 derivative_integral/       # Ch.2: dao_ham_so, trung_diem, hinh_thang, simpson, newton_cotes
 ode/                       # Ch.3: euler, runge_kutta, adams, sai_phan
-data/                      # dữ liệu mẫu để chạy thử, luôn có cả bộ "bẩn"
+data/                      # dữ liệu mẫu để chạy thử, luôn có cả bộ "bẩn"; dữ liệu bài tập (*_cauN.txt,
+                           #   data Câu 11/19/23.xlsx) + loi_giai.ini (câu nào lấy file nào, xbar, ybar, m...)
 ```
 
 - Tên `.md` trùng tên `.py`: `docs/thuat_toan/newton.md` ↔ `interpolation/newton.py`.
 - Chương mới → thêm thư mục/dòng tương ứng vào bảng trên.
 - **Không** làm LaTeX hay lời giải bài tập dạng văn bản (người dùng tự chép vào vở) trừ khi được yêu cầu.
-- Lời giải LaTeX đã yêu cầu: quy tắc sửa / build / trình bày ở `docs/loi_giai/CLAUDE.md` (tự nạp khi đọc file trong `docs/loi_giai/`).
+- Lời giải đã yêu cầu (Markdown hoặc LaTeX, sinh từ `data/`): quy tắc sửa / build / trình bày ở `docs/loi_giai/CLAUDE.md` (tự nạp khi đọc file trong `docs/loi_giai/`).
 
 ## 1. Quy trình cho mỗi chủ đề
 
@@ -75,7 +79,7 @@ KIEM TRA        -> tu kiem tra (P(x_i) vs y_i, phan du, so voi numpy...)
   - Ô (tỷ) sai phân được chọn in trong `[ ]`.
   - Bảng tích khoanh ma trận A (cột `|`); hệ số in `C = (tên từng thành phần) = (số)`, đa thức in `P_n = C.A = [...]`.
   - Trích xuất mốc: bảng quá trình rồi bảng ngang các mốc đã đánh số lại (`i`, `x_i`, `y_i`).
-  - Không in bảng đổi biến $t\to x$ (vẫn in $P(x)$ ở KET QUA).
+  - Đa thức theo $t$ (mốc cách đều, trung tâm): KET QUA in $P(t)$ như lời giải; không in bảng đổi biến $t\to x$ và không in $P(x)$ khai triển (hệ số làm tròn 6 chữ số, thay $\bar x$ vào sai lệch lớn: Câu 12 ra 13.0 thay vì 9.415).
 - **Lặp:** in lần lặp **1, 2, áp chót và cuối**, giữa in `...`; tổng số lần ≤ 4 thì in hết.
 - **Bảng** (Horner, sai phân, tỷ sai phân, RK, spline, mốc…): **in toàn bộ**, không cắt. Riêng bảng tổng BPTT: 2 hàng đầu, 2 hàng cuối, giữa in `...`, rồi hàng `sum`; tổng số hàng ≤ 4 thì in hết.
 - Trong chat chỉ tóm tắt kết quả + lệnh chạy; không tính tay số liệu.
@@ -93,7 +97,7 @@ Mẫu chuẩn: `interpolation/horner.py`, `interpolation/moc_toi_uu.py`. Phong c
 - **Nhập liệu:** đọc file (csv/txt; xlsx qua pandas nếu có) từ đối số dòng lệnh, nếu không có thì `input()` với giá trị mặc định ghi dạng `(VD [...])` (Enter hoặc EOF → dùng VD). Menu nhiều lựa chọn in mỗi lựa chọn 1 dòng (chỉ khi nhập từ bàn phím). Dấu phân tách là khoảng trắng hoặc `;`; dấu `,` giữa hai chữ số hiểu là dấu thập phân. Bọc `try/except` khi mở file, file rỗng, sai kích thước, sai kiểu.
 - **In:** chữ **không dấu** (tránh lỗi mã hoá console), theo khối ở mục 3. Số tính ra in qua `fmt`: tối đa 6 chữ số thập phân, bỏ số 0 thừa, $|v|<10^{-4}$ in dạng e (`9.14e-04`), $|v|<10^{-12}$ in thành 0 (riêng đánh giá sai số dùng `fmt(E, nho=0)` để không mất số rất nhỏ). Số liệu đề cho giữ nguyên (`.10g`); sai phân của số liệu cách đều giữ đúng số chữ số thập phân của dữ liệu (`0.0008739`).
 - **Đọc file bảng** (6 script đọc bảng): tự nhận `.csv` / `.xlsx` / `.txt` dạng bảng; in khối `DOC FILE` (cột x, y, dòng, ô bị bỏ) để xác nhận; $\bar x$, $\bar y$ có trong file làm giá trị mặc định (Enter = đồng ý); nhiều sheet có số liệu → menu chọn sheet; số dòng báo lỗi là số dòng gốc trong file; file chỉ có y → hỏi cách sinh x (cách đều, Chebyshev giảm dần theo công thức cos, hoặc tăng dần).
-- **BPTT:** giải hệ chuẩn $Ma=d$ bằng Cholesky; hiệu chỉnh Gauss–Newton ẩn, chỉ chạy khi có cờ `--gn`. Dạng mũ, luỹ thừa không loại điểm vì $y$, $x$: $y$ lẫn dấu hoặc có 0 tự tịnh tiến $S_y$, $\min x\le0$ (luỹ thừa) tự tịnh tiến $S_x$. Đầu `main()` gọi `sys.stdout.reconfigure(errors="backslashreplace")` để in dữ liệu gốc có ký tự lạ không bị crash. Công thức có luỹ thừa / giai thừa lớn tính qua `log`/`math.lgamma` để không tràn số; kiểm tra trên lưới thì nhân dần từng thừa số, không tạo mảng 2 chiều lớn.
+- **BPTT:** giải hệ chuẩn $Ma=d$ bằng Cholesky; hiệu chỉnh Gauss–Newton ẩn, chỉ chạy khi có cờ `--gn`. Dạng mũ, luỹ thừa theo đáp án giữa kỳ 20251: điểm $y$ trái dấu với đa số (hoặc $=0$) chiếm $\le10\%$ thì loại, nhiều hơn thì tịnh tiến $S_y=\pm(\lfloor\max|y|\text{ của các điểm đó}\rfloor+1)$; $x\le0$ (luỹ thừa) tương tự với $S_x=\lfloor|\min x|\rfloor+1$ (hàm `xu_ly_dau`). Đầu `main()` gọi `sys.stdout.reconfigure(errors="backslashreplace")` để in dữ liệu gốc có ký tự lạ không bị crash. Công thức có luỹ thừa / giai thừa lớn tính qua `log`/`math.lgamma` để không tràn số; kiểm tra trên lưới thì nhân dần từng thừa số, không tạo mảng 2 chiều lớn.
 - Chọn lần lặp cần in khi biết trước tổng số N: `k <= 2 or k >= N - 1`; khi chưa biết N (lặp tới hội tụ): lưu 2 lần đầu + `deque(maxlen=2)` cho 2 lần cuối rồi in sau vòng lặp.
 - Chạy: `python interpolation/<ten>.py [data/<file>]`.
 

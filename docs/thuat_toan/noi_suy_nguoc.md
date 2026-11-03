@@ -108,7 +108,7 @@ $$\varphi(t)=\frac{\bar y-d_0}{d_1}-\frac{1}{d_1}\sum_{j=2}^{m-1}\frac{d_j}{j!}\
 
 **Bước 5 — Lặp, với $j=0,1,\dots,N-1$:**
 * **5.1:** $t_{j+1}:=\varphi(t_j)$.
-* **5.2 — Dừng:** nếu $h\,|t_{j+1}-t_j|<\varepsilon$: $\bar x:=x_s+t_{j+1}h$, trả về $\bar x$, $j+1$; dừng thuật toán.
+* **5.2 — Dừng:** nếu $h\,|t_{j+1}-t_j|<\varepsilon$: nếu $t_{j+1}\in[0,1]$ (TH1) hoặc $t_{j+1}\in[-1,0]$ (TH2) thì $\bar x:=x_s+t_{j+1}h$, trả về $\bar x$, $j+1$; ngược lại báo "nghiệm lặp nằm ngoài khoảng cách ly" (như bước B3e của đáp án giữa kỳ 20251); dừng thuật toán.
 
 **Bước 6 — Không hội tụ:** hết $N$ lần lặp → báo "Không hội tụ sau $N$ lần lặp", trả về $t_N$ để tham khảo.
 

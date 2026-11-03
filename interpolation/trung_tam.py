@@ -12,9 +12,8 @@ Cong thuc (chon 1 hoac nhieu, cach nhau boi khoang trang):
 Bang dai hon m moc -> trich xuat m moc gan xbar nhat (muc 1); Stirling can m le, Bessel can m chan
 (sai -> m - 1, co bao). Moi cong thuc: bang sai phan (o duoc chon dat trong [ ]), bang tich, P,
 Horner chia lap tai xbar -> f(xbar), f^(j)(xbar) = P^(j)/h^j.
-Gauss I/II: bang tich theo t. Stirling/Bessel: tach he so le / chan nhu file Excel mau
-(slide_example/VD noi suy moc cach deu.xlsx): bang tich theo u = t^2 (Bessel: u = v^2, v = t - 1/2),
-ghep xen ke P(t) = y_0 + t P_le(t^2) + t^2 P_chan(t^2)  /  P(v) = P_chan(v^2) + v P_le(v^2).
+Gauss I/II: bang tich theo t. Stirling/Bessel (nhu dap an giua ky 20251 va truy hoi trong slide): bang nhan
+day du cac tich co so theo t (Bessel: u = t - 1/2), vd t^2(t^2-1), (u^2-1/4)(u^2-9/4); P = sum c_k * pi_k.
 
 Cach chay:
   python interpolation/trung_tam.py                 -> nhap tu ban phim (Enter = mac dinh)
@@ -22,7 +21,7 @@ Cach chay:
                                                        cong thuc / x / y / xbar / k / m
   python interpolation/trung_tam.py data/<file>.csv -> file chi chua bang: 2 hang hoac 2 cot x, y (lay 2 cot dau,
                                                        .xlsx: sheet dau, can pandas + openpyxl); cau con lai nhap tay
-  VD cau 16: python interpolation/trung_tam.py "slide_example/data Câu 11.xlsx"  roi nhap: 3 / 7.83 / 1 / 9
+  VD cau 16: python interpolation/trung_tam.py "data/data Câu 11.xlsx"  roi nhap: 3 / 1 / 7.83 / 1 / 9 (1 = sheet dau)
 O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
 """
 
@@ -597,14 +596,23 @@ def bang_tich(n, ct):
     return pi, z
 
 
-def bang_tich_u(s, ct):
-    """Muc 3, Buoc 3.2 (Stirling/Bessel): Pi_0..Pi_(s-1) theo u va nut zeta_j = j^2 hoac (j - 1/2)^2."""
-    Pi, zeta = [[1.0]], []
-    for j in range(1, s):                          # Pi_j = Pi_(j-1) (u - zeta_j)
-        zj = float(j * j) if ct == 3 else (j - 0.5) ** 2
-        Pi.append(horner_nhan(Pi[j - 1], zj))
-        zeta.append(zj)
-    return Pi, zeta
+def bang_tich_sb(n, ct):
+    """Muc 3, Buoc 3.1 (Stirling/Bessel, nhu slide): pi_0..pi_n theo w (Stirling w = t; Bessel w = u = t - 1/2) va
+    thua so nhan them zeta_k (None: nhan w; so z: nhan (w^2 - z)).
+    Stirling: pi_1 = t, pi_2j = t pi_(2j-1), pi_(2j+1) = pi_(2j-1) (t^2 - j^2);
+    Bessel:   pi_1 = u, pi_2j = pi_(2j-2) (u^2 - (j - 1/2)^2), pi_(2j+1) = u pi_2j."""
+    pi, zeta = [[1.0]], [None]
+    for k in range(1, n + 1):
+        if k == 1 or (k % 2 == 0) == (ct == 3):   # nhan w: Stirling k chan, Bessel k le (ca hai: k = 1)
+            pi.append(pi[k - 1] + [0.0])
+            zeta.append(None)
+            continue
+        j = k // 2                                 # Stirling k = 2j+1, Bessel k = 2j
+        z = float(j * j) if ct == 3 else (j - 0.5) ** 2
+        p = pi[k - 2]                              # pi_(k-2) (w^2 - z) = pi_(k-2) w^2 - z pi_(k-2)
+        pi.append([a - z * b for a, b in zip(p + [0.0, 0.0], [0.0, 0.0] + p)])
+        zeta.append(z)
+    return pi, zeta
 
 
 def to_hop(c, pi):
@@ -618,24 +626,23 @@ def to_hop(c, pi):
 
 
 def lap_P(c, n, ct):
-    """Muc 3, Buoc 2-4: P theo bien w (t; Bessel: v = t - 1/2). Tra ve dict(b, bien, lech = t - w, bang tich...)."""
+    """Muc 3, Buoc 2-4: P theo bien w (t; Bessel: u = t - 1/2). Tra ve dict(b, bien, lech = t - w, bang tich...)."""
     if ct in (1, 2):                               # Buoc 2 - TH1 Gauss I / II: bang tich theo t
         pi, z = bang_tich(n, ct)
         return dict(b=to_hop(c, pi), bien="t", lech=0.0, pi=pi, z=z)
-    s = n // 2 if ct == 3 else (n + 1) // 2        # Buoc 3 - TH2 Stirling / Bessel
-    if ct == 3:                                    # Buoc 3.1 - Tach he so le / chan
-        cl, cc = [c[2 * j + 1] for j in range(s)], [c[2 * j + 2] for j in range(s)]
-    else:
-        cc, cl = [c[2 * j] for j in range(s)], [c[2 * j + 1] for j in range(s)]
-    Pi, zeta = bang_tich_u(s, ct)                  # Buoc 3.2 - Bang tich theo u
-    Pl, Pc = to_hop(cl, Pi), to_hop(cc, Pi)        # Buoc 3.3 - Cong don
-    b = []
-    for l in range(s):                             # Buoc 3.4 - Ghep xen ke
-        b += [Pc[l], Pl[l]] if ct == 3 else [Pl[l], Pc[l]]
+    pi, zeta = bang_tich_sb(n, ct)                 # Buoc 3 - TH2 Stirling / Bessel: bang tich theo t / u
+    return dict(b=to_hop(c, pi), bien="t" if ct == 3 else "u", lech=0.0 if ct == 3 else 0.5, pi=pi, zeta=zeta)
+
+
+def ten_pi(k, ct, w):
+    """Ten co so pi_k (ASCII) cua Stirling / Bessel: 1, t, t^2, t(t^2-1), ...; 1, u, (u^2-1/4), u(u^2-1/4), ..."""
     if ct == 3:
-        b.append(c[0])
-    return dict(b=b, bien="t" if ct == 3 else "v", lech=0.0 if ct == 3 else 0.5,
-                Pi=Pi, zeta=zeta, cl=cl, cc=cc, Pl=Pl, Pc=Pc)
+        j = (k - 1) // 2 if k % 2 else k // 2 - 1      # so thua so (t^2 - i^2), i = 1..j
+        dau = "1" if k == 0 else w if k % 2 else f"{w}^2"
+        return dau if k <= 2 else dau + "".join(f"({w}^2-{i * i})" for i in range(1, j + 1))
+    j = k // 2                                     # Bessel: (u^2 - (i - 1/2)^2), i = 1..j
+    thua = "".join(f"({w}^2-{(2 * i - 1) ** 2}/4)" for i in range(1, j + 1))
+    return (w if k % 2 else "") + thua or "1"
 
 
 def tai_xbar(b, tb, h, k):
@@ -674,10 +681,8 @@ HE_SO = {
 TICH = {
     1: "pi_0 = 1,  pi_k = pi_(k-1) (t - z_(k-1)),  z = 0, 1, -1, 2, -2, ...  (Horner nhan)",
     2: "pi_0 = 1,  pi_k = pi_(k-1) (t - z_(k-1)),  z = 0, -1, 1, -2, 2, ...  (Horner nhan)",
-    3: "u = t^2,  Pi_0 = 1,  Pi_j = Pi_(j-1) (u - j^2)  (Horner nhan);"
-       "  P_le(u) = sum_j c_(2j+1) Pi_j,  P_chan(u) = sum_j c_(2j+2) Pi_j",
-    4: "v = t - 1/2,  u = v^2,  Pi_0 = 1,  Pi_j = Pi_(j-1) (u - (j - 1/2)^2)  (Horner nhan);"
-       "  P_chan(u) = sum_j c_(2j) Pi_j,  P_le(u) = sum_j c_(2j+1) Pi_j",
+    3: "pi_0 = 1,  pi_1 = t,  pi_2j = t pi_(2j-1),  pi_(2j+1) = pi_(2j-1) (t^2 - j^2)",
+    4: "u = t - 1/2,  pi_0 = 1,  pi_1 = u,  pi_2j = pi_(2j-2) (u^2 - (j - 1/2)^2),  pi_(2j+1) = u pi_2j",
 }
 
 
@@ -768,7 +773,7 @@ def giai(x, y, ct, xbar, k, m, h):
     else:
         print(f"Phuong phap: {m} moc cach deu (so chan) nen dung Bessel, x_0 = {x0:.10g},"
               f" x_1 = {xs[q + 1]:.10g} {chi_so}")
-        print(f"  v = t - 1/2 = {tb - 0.5:.10g}")
+        print(f"  u = t - 1/2 = {tb - 0.5:.10g}")
     for dong in CHUOI[ct]:
         print("  " + dong)
 
@@ -791,21 +796,11 @@ def giai(x, y, ct, xbar, k, m, h):
     b, w, lech = P["b"], P["bien"], P["lech"]
     print("\nHe so:")
     print("  " + HE_SO[ct])
-    if ct in (1, 2):
-        in_vec_ten("C", [ten_he_so(kk, chon[kk]) for kk in range(n + 1)], c)
-    else:
-        if ct == 3:
-            print(f"  c_0 = y_0 = {ys[q]:.10g}")
-            k_chan, k_le = range(2, n + 1, 2), range(1, n + 1, 2)
-        else:
-            k_chan, k_le = range(0, n + 1, 2), range(1, n + 1, 2)
-        for ten, ks, he in (("C_chan", k_chan, P["cc"]), ("C_le", k_le, P["cl"])):
-            if he:
-                in_vec_ten(ten, [ten_he_so(kk, chon[kk]) for kk in ks], he)
+    in_vec_ten("C", [ten_he_so(kk, chon[kk]) for kk in range(n + 1)], c)
 
-    s0 = x0 + lech * h                                                  # Bessel: v = (x - (x_0 + h/2))/h
+    s0 = x0 + lech * h                                                  # Bessel: u = (x - (x_0 + h/2))/h
     voi = "  voi " + (f"t = ({nhan_tu('x', x0)}) / {h:.10g}" if ct != 4 else
-                      f"v = t - 1/2 = ({nhan_tu('x', s0)}) / {h:.10g}")
+                      f"u = t - 1/2 = ({nhan_tu('x', s0)}) / {h:.10g}")
     if ct in (1, 2):
         print("\nBang tich theo t (hang k: pi_k = pi_(k-1) (t - z_(k-1)), he so bac cao -> thap); "
               "P(t) = sum c_k * hang k:")
@@ -817,28 +812,15 @@ def giai(x, y, ct, xbar, k, m, h):
         print(f"  P_{n} = C.A = {vec(b)}")
         print(f"  P_{n}(t) = {da_thuc_str(b, 't')}")
         print(voi)
-    elif not P["cl"]:
-        print("\n1 moc: P(t) = y_0")
     else:
-        s = len(P["cl"])
-        nut = "j^2" if ct == 3 else "(j-1/2)^2"
-        ten_c, cot_c = ((("c_(2j+1)", "c_(2j+2)"), (P["cl"], P["cc"])) if ct == 3 else
-                        (("c_(2j)", "c_(2j+1)"), (P["cc"], P["cl"])))
-        tong = ((("P_le(u)", P["Pl"]), ("P_chan(u)", P["Pc"])) if ct == 3 else
-                (("P_chan(u)", P["Pc"]), ("P_le(u)", P["Pl"])))
-        print(f"\nBang tich theo {'u = t^2' if ct == 3 else 'u = v^2, v = t - 1/2'} "
-              f"(hang j: Pi_j = Pi_(j-1) (u - {nut}), he so bac cao -> thap):")
+        print(f"\nBang nhan theo {w} (khai trien cac tich co so pi_k theo luy thua cua {w}, he so bac cao -> thap); "
+              f"P({w}) = sum c_k * hang k:")
         print("  " + TICH[ct])
-        in_bang(["j", nut, ten_c[0], ten_c[1]] + cot_mu(s - 1, "u"),
-                [[str(j), "" if j == 0 else f"{P['zeta'][j - 1]:.10g}", cot_c[0][j], cot_c[1][j]]
-                 + [None] * (s - 1 - j) + P["Pi"][j] for j in range(s)]
-                + [None] + [[ten, "", "", ""] + list(he) for ten, he in tong],
-                khung=4, nhan_khung="ma tran A (hang j: he so cua Pi_j(u))")
-        print(f"  P_chan = C_chan.A = {vec(P['Pc'])}")
-        print(f"  P_le   = C_le.A   = {vec(P['Pl'])}")
-        print("  Ghep xen ke he so chan / le: " + ("P(t) = y_0 + t P_le(t^2) + t^2 P_chan(t^2)" if ct == 3 else
-                                                  "P(v) = P_chan(v^2) + v P_le(v^2)"))
-        print(f"  b = {vec(b)}")
+        in_bang(["k", "pi_k", "c_k"] + cot_mu(n, w),
+                [[str(kk), ten_pi(kk, ct, w), c[kk]] + [0.0] * (n - kk) + pk
+                 for kk, pk in enumerate(P["pi"])] + [None] + [[f"P({w})", "", ""] + b],
+                khung=3, nhan_khung=f"ma tran A (hang k: he so cua pi_k({w}))")
+        print(f"  P_{n} = C.A = {vec(b)}")
         print(f"  P_{n}({w}) = {da_thuc_str(b, w)}")
         print(voi)
 
@@ -860,9 +842,7 @@ def giai(x, y, ct, xbar, k, m, h):
     print("\nKET QUA (vector he so bac cao -> thap):")
     print(f"  {TEN[ct]}, x_0 = {x0:.10g}, h = {h:.10g}, {w} = ({nhan_tu('x', s0)}) / {h:.10g}:")
     print(f"    P_{n}({w}) = b = (b_{n}, ..., b_0) = {vec(b)}")
-    print(f"    P_{n}({w}) = {da_thuc_str(b, w)}")
-    print(f"    P_{n}(x) = a = (a_{n}, ..., a_0) = {vec(a)}")
-    print(f"    P_{n}(x) = {da_thuc_str(a)}")
+    print(f"    P_{n}({w}) = {da_thuc_str(b, w)}")   # khong in P(x) khai trien: he so lam tron 6 chu so thay xbar vao sai lon
     ten = "(f(xbar))" if k == 0 else f"(f(xbar), ..., f^({k})(xbar))"
     print(f"  xbar = {xbar:.10g} ({w} = {wb:.10g}): {ten} ~ {vec(v)}")
     print(f"    f({xbar:.10g}) ~ {fmt(v[0])}" + (f",  f'({xbar:.10g}) ~ {fmt(v[1])}" if k else ""))
@@ -969,7 +949,7 @@ def main():
         if len(ks) != 1 or ks[0] < 0 or ks[0] != int(ks[0]):
             raise ValueError("k phai la 1 so nguyen >= 0.")
         k = int(ks[0])
-        goc["m"] = nhap("So moc dung m", str(len(x)))
+        goc["m"] = nhap("So moc dung m", str(min(len(x), 9)))     # bang dai: mac dinh 9 moc quanh xbar
         ms = doc_day_so(goc["m"], "m", bao)
         if len(ms) != 1 or ms[0] < 2 or ms[0] != int(ms[0]):
             raise ValueError("m phai la 1 so nguyen >= 2.")

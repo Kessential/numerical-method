@@ -7,14 +7,14 @@ $$\Phi=\big(\varphi_j(x_i)\big)_{n\times m},\qquad M=\Phi^t\Phi,\quad d=\Phi^ty,
 | Dạng | Đưa về tuyến tính | Điều kiện |
 |---|---|---|
 | $y=\sum a_j\varphi_j(x)$ | sẵn tuyến tính theo $a$ | $\varphi_j$ độc lập tuyến tính trên lưới ($M$ không suy biến) |
-| $y=a\,e^{b_1\varphi_1(x)+\dots+b_m\varphi_m(x)}$ | $\ln(s(y+S_y))=\ln(sa)+b_1\varphi_1+\dots+b_m\varphi_m$, $s=\operatorname{sign}(y+S_y)$ | $y$ lẫn dấu hoặc có 0 → tịnh tiến $S_y$ (Bước 0), hàm thành $y=a\,e^{\dots}-S_y$; $\varphi_j$ không là hằng (hằng trùng vai trò với $\ln a$) |
-| $y=a\,x^b$ | $\ln(s(y+S_y))=\ln(sa)+b\ln(x+S_x)$ (dạng trên với $\varphi_1=\ln(x+S_x)$) | $\min x\le0$ → tịnh tiến $S_x$; $y$ như dạng trên; hàm thành $y=a(x+S_x)^b-S_y$ |
+| $y=a\,e^{b_1\varphi_1(x)+\dots+b_m\varphi_m(x)}$ | $\ln(s(y+S_y))=\ln(sa)+b_1\varphi_1+\dots+b_m\varphi_m$, $s=$ dấu của đa số $y_i$ | điểm trái dấu (hoặc $=0$) ít ($\le10\%$) → loại; nhiều → tịnh tiến $S_y$ (Bước 0), hàm thành $y=a\,e^{\dots}-S_y$; $\varphi_j$ không là hằng (hằng trùng vai trò với $\ln a$) |
+| $y=a\,x^b$ | $\ln(s(y+S_y))=\ln(sa)+b\ln(x+S_x)$ (dạng trên với $\varphi_1=\ln(x+S_x)$) | $x_i\le0$ ít → loại, nhiều → tịnh tiến $S_x$; $y$ như dạng trên; hàm thành $y=a(x+S_x)^b-S_y$ |
 
 > Ghi chú: slide `19_binhphuongtoithieu_20261.pdf` — hệ chuẩn bậc nhất, bậc hai, tổng quát $Ma=\Phi^ty$ ($M=\Phi^t\Phi$) và cách tuyến tính hoá $y=ae^{b_1\varphi_1+\dots}$ (kể cả trường hợp $y_i<0$: $\ln(-y)=\ln(-a)+\dots$) đúng (tr.5–9). Tr.7 viết $S=a^tMa-2y^t\Phi a+y^ty$, $S'=2a^tM-2y^t\Phi=0$ — đúng.
 >
 > **Lưu ý tuyến tính hoá:** bình phương tối thiểu trên $\ln y$ cực tiểu hoá $\sum(\ln y_i-\ln g_i)^2\approx\sum\big((y_i-g_i)/y_i\big)^2$ — tức sai số **tương đối**, nên các điểm có $|y_i|$ rất nhỏ (cỡ nhiễu đo) bị khuếch đại. Data câu 23c có đuôi $y\approx10^{-3}$ toàn nhiễu: tuyến tính hoá thẳng cho $\sigma\approx1.1$ (rất tệ) trong khi nghiệm đúng của bài toán $\sum(y_i-g_i)^2\to\min$ có $\sigma\approx0.0042$. Vì vậy dạng mũ/luỹ thừa có thêm **mục 4 (hiệu chỉnh Gauss–Newton)**, luôn so sánh $\sigma$ trên $y$ gốc. Mục 4 ẩn mặc định (kết quả mặc định như slide/lời giải: chỉ tuyến tính hoá), bật bằng cờ `--gn` khi chạy script.
 
-> **Lưu ý tịnh tiến:** slide chỉ nêu hai trường hợp mọi $y_i>0$ và mọi $y_i<0$ (tr.9), không nói dữ liệu lẫn dấu. Ở đây tịnh tiến theo repo `D:\Project\Interpolation` để không loại điểm. Khi $S_y\ne0$ hoặc $S_x\ne0$, kết quả là hàm đã dịch, không còn đúng dạng $a\,e^{\dots}$, $a\,x^b$ của đề, và phụ thuộc đơn vị đo vì số $1$ trong $S_y$, $S_x$ cố định. Dữ liệu cùng dấu, $x>0$ thì $S_y=S_x=0$, kết quả như slide.
+> **Lưu ý dữ liệu lẫn dấu:** slide chỉ nêu hai trường hợp mọi $y_i>0$ và mọi $y_i<0$ (tr.9), không nói dữ liệu lẫn dấu. Ở đây theo đáp án giữa kỳ 20251: Đề 1 có 2/104 điểm dương (đa số âm) → **loại** 2 điểm đó; Đề 2 có 27/104 điểm $y_i\le0$ → **tịnh tiến** $y+1$. Quy tắc chung: $s:=$ dấu của đa số $y_i$; $q:=$ số điểm có $s\,y_i\le0$; $q\le10\%\,n$ → loại $q$ điểm; $q>10\%\,n$ → $S_y:=s\big(\lfloor\max_{s y_i\le0}|y_i|\rfloor+1\big)$ (Đề 2: $\lfloor0.007\rfloor+1=1$). $x\le0$ ở dạng luỹ thừa xử lý tương tự ($S_x:=\lfloor|\min x|\rfloor+1$). Khi $S_y\ne0$ hoặc $S_x\ne0$, kết quả là hàm đã dịch, không còn đúng dạng $a\,e^{\dots}$, $a\,x^b$ của đề. Dữ liệu cùng dấu, $x>0$ thì không loại, không dịch, kết quả như slide.
 
 **Chọn biến thể theo mục đích:**
 
@@ -27,10 +27,10 @@ $$\Phi=\big(\varphi_j(x_i)\big)_{n\times m},\qquad M=\Phi^t\Phi,\quad d=\Phi^ty,
 **Bước 0 — Xử lý dữ liệu (dùng chung):**
 * Đọc bảng: hàng $x$ / hàng $y$, hoặc cặp cột $x,y$ (file `.csv`/`.xlsx`/`.txt` dạng bảng; file có **nhiều bộ dữ liệu cạnh nhau** — vd data câu 23 có 4 bộ "Câu a…d" — thì liệt kê các bộ và cho chọn). Dấu trừ Unicode → `-`; `,` giữa hai chữ số → `.`; bỏ ký tự lạ; ô rỗng, ô chữ, NaN, $\pm\infty$ → loại cả cặp, báo vị trí và lý do.
 * **Không** gộp mốc trùng $x$ (bình phương tối thiểu cho phép nhiều quan sát tại cùng $x$) — chỉ báo số mốc trùng. Không cần sắp xếp.
-* Cơ sở: biểu thức theo `x`, cách nhau bởi `;` (vd `x; 1/x`, `x^2; cos(x); 1`), hàm cho phép: `sin cos tan exp ln log sqrt abs arctan`, hằng `pi e`; `^` hiểu là luỹ thừa. Biểu thức sai cú pháp → dừng, báo lỗi. Điểm làm $\varphi_j(x_i)$ không xác định (vd $1/x$ tại $x=0$, $\ln x$ tại $x\le0$) → loại điểm, báo. Dạng luỹ thừa: $x\le0$ không loại mà tịnh tiến (xem $S_x$ bên dưới).
+* Cơ sở: biểu thức theo `x`, cách nhau bởi `;` (vd `x; 1/x`, `x^2; cos(x); 1`), hàm cho phép: `sin cos tan exp ln log sqrt abs arctan`, hằng `pi e`; `^` hiểu là luỹ thừa. Biểu thức sai cú pháp → dừng, báo lỗi. Điểm làm $\varphi_j(x_i)$ không xác định (vd $1/x$ tại $x=0$, $\ln x$ tại $x\le0$) → loại điểm, báo. Dạng luỹ thừa: $x\le0$ xử lý theo dòng $S_x$ bên dưới.
 * Dạng mũ / luỹ thừa có hằng số biết trước $d$ (nhập, mặc định 0; vd $y=a\,e^{bx}-2$ thì $d=-2$): trong các dòng dưới và mục 3, 4, $y_i$ hiểu là $y_i-d$, hàm kết quả cộng thêm $d$; $\sigma$ vẫn so với $y$ gốc.
-* Dạng mũ / luỹ thừa: $y$ có cả số dương và số âm, hoặc có $y_i=0$ → không loại điểm mà tịnh tiến: $S_y:=|\min y|+1$ nếu $|\min y|\le|\max y|$, ngược lại $S_y:=-(|\max y|+1)$; còn lại $S_y:=0$. Báo $S_y$.
-* Dạng luỹ thừa: $\min x\le0$ → $S_x:=|\min x|+1$, ngược lại $S_x:=0$. Báo $S_x$.
+* Dạng mũ / luỹ thừa (theo đáp án giữa kỳ 20251): $s:=1$ nếu số điểm $y_i>0$ không ít hơn số điểm $y_i<0$, ngược lại $s:=-1$; $q:=$ số điểm có $s\,y_i\le0$. $q=0$ → $S_y:=0$; $0<q\le10\%\,n$ → **loại** $q$ điểm đó (không lấy được $\ln$), báo từng điểm; $q>10\%\,n$ → tịnh tiến $S_y:=s\big(\lfloor\max_{s y_i\le0}|y_i|\rfloor+1\big)$, báo $S_y$.
+* Dạng luỹ thừa: $q_x:=$ số điểm $x_i\le0$; $0<q_x\le10\%\,n$ → loại; $q_x>10\%\,n$ → $S_x:=\lfloor|\min x|\rfloor+1$; còn lại $S_x:=0$. Báo $S_x$.
 * Dạng mũ có $\varphi_j$ là hằng trên lưới → dừng, báo (trùng vai trò với $a$).
 * Cần $n\ge m$ điểm (số tham số), ngược lại dừng, báo lỗi.
 

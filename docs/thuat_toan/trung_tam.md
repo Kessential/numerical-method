@@ -8,15 +8,14 @@ $$P(x_0+th)=\sum_{k=0}^{n}c_k\,\pi_k(t),\qquad f^{(j)}(\bar x)\approx\frac{P^{(j
 |---|---|---|---|
 | Gauss I | $x_{-\lfloor n/2\rfloor},\dots,x_{\lceil n/2\rceil}$ | $\dfrac{\Delta^ky_{-\lfloor k/2\rfloor}}{k!}$ | $\pi_k=\pi_{k-1}\,(t-z_{k-1})$, $z=0,1,-1,2,-2,\dots$ |
 | Gauss II | $x_{-\lceil n/2\rceil},\dots,x_{\lfloor n/2\rfloor}$ | $\dfrac{\Delta^ky_{-\lceil k/2\rceil}}{k!}$ | $\pi_k=\pi_{k-1}\,(t-z_{k-1})$, $z=0,-1,1,-2,2,\dots$ |
-| Stirling | $n=2s$ chẵn: $x_{-s},\dots,x_s$ | $c_{2j-1}=\dfrac{\Delta^{2j-1}y_{-j}+\Delta^{2j-1}y_{-j+1}}{2\,(2j-1)!}$, $c_{2j}=\dfrac{\Delta^{2j}y_{-j}}{(2j)!}$ | $\pi_{2j+1}=t\,\Pi_j(u)$, $\pi_{2j+2}=t^2\,\Pi_j(u)$; $u=t^2$, $\Pi_0=1$, $\Pi_j=\Pi_{j-1}\,(u-j^2)$ |
-| Bessel | $n=2s-1$ lẻ: $x_{-s+1},\dots,x_s$ | $c_{2j}=\dfrac{\Delta^{2j}y_{-j}+\Delta^{2j}y_{-j+1}}{2\,(2j)!}$, $c_{2j+1}=\dfrac{\Delta^{2j+1}y_{-j}}{(2j+1)!}$ | $\pi_{2j}=\Pi_j(u)$, $\pi_{2j+1}=v\,\Pi_j(u)$; $v=t-\frac12$, $u=v^2$, $\Pi_0=1$, $\Pi_j=\Pi_{j-1}\big(u-(j-\tfrac12)^2\big)$ |
+| Stirling | $n=2s$ chẵn: $x_{-s},\dots,x_s$ | $c_{2j-1}=\dfrac{\Delta^{2j-1}y_{-j}+\Delta^{2j-1}y_{-j+1}}{2\,(2j-1)!}$, $c_{2j}=\dfrac{\Delta^{2j}y_{-j}}{(2j)!}$ | $\pi_1=t$, $\pi_{2j}=t\,\pi_{2j-1}$, $\pi_{2j+1}=\pi_{2j-1}\,(t^2-j^2)$ |
+| Bessel | $n=2s-1$ lẻ: $x_{-s+1},\dots,x_s$ | $c_{2j}=\dfrac{\Delta^{2j}y_{-j}+\Delta^{2j}y_{-j+1}}{2\,(2j)!}$, $c_{2j+1}=\dfrac{\Delta^{2j+1}y_{-j}}{(2j+1)!}$ | theo $u=t-\frac12$: $\pi_1=u$, $\pi_{2j}=\pi_{2j-2}\big(u^2-(j-\tfrac12)^2\big)$, $\pi_{2j+1}=u\,\pi_{2j}$ |
 
 Gauss I kết nạp mốc theo thứ tự $x_0,x_1,x_{-1},x_2,\dots$ (phải trước); Gauss II: $x_0,x_{-1},x_1,x_{-2},\dots$ (trái trước); Stirling $=\frac12$(Gauss I + Gauss II) với số mốc lẻ; Bessel $=\frac12$(Gauss I tại $x_0$ + Gauss II tại $x_1$) với số mốc chẵn. Cùng một bộ mốc thì mọi công thức cho **cùng một đa thức** (tính duy nhất), chỉ khác cách viết.
 
-**Stirling, Bessel — tách số hạng lẻ / chẵn** (như file Excel mẫu `slide_example/VD nội suy mốc cách đều.xlsx`, sheet *Stirlin, Bessel*). Slide viết $\pi_{2j+1}=\pi_{2j-1}(t^2-j^2)$, $\pi_{2j}=t\,\pi_{2j-1}$ (Stirling) và $\pi_{2j}=\pi_{2j-2}(t+j-1)(t-j)$, $\pi_{2j+1}=(t-\frac12)\pi_{2j}$ (Bessel); vì $(t+j-1)(t-j)=v^2-(j-\frac12)^2$ nên mọi $\pi_k$ chỉ là $\Pi_j(u)$ nhân $1$, $t$, $t^2$ hoặc $v$:
-$$\text{Stirling: }P(t)=y_0+t\,P_{\text{lẻ}}(t^2)+t^2P_{\text{chẵn}}(t^2),\qquad P_{\text{lẻ}}(u)=\sum_{j=0}^{s-1}c_{2j+1}\Pi_j(u),\quad P_{\text{chẵn}}(u)=\sum_{j=0}^{s-1}c_{2j+2}\Pi_j(u);$$
-$$\text{Bessel: }P(v)=P_{\text{chẵn}}(v^2)+v\,P_{\text{lẻ}}(v^2),\qquad P_{\text{chẵn}}(u)=\sum_{j=0}^{s-1}c_{2j}\Pi_j(u),\quad P_{\text{lẻ}}(u)=\sum_{j=0}^{s-1}c_{2j+1}\Pi_j(u).$$
-Bảng tích chỉ đến bậc $s-1\approx n/2$ (thay vì $n$). Bessel cho $P$ theo biến $v=t-\frac12$: giá trị, đạo hàm tính tại $\bar v=\bar t-\frac12$ ($f^{(j)}(\bar x)\approx P^{(j)}(\bar v)/h^j$), đổi về $x$ với $v=\big(x-(x_0+\frac h2)\big)/h$.
+**Stirling, Bessel — bảng nhân đầy đủ** (như đáp án giữa kỳ 20251 và truy hồi trong slide). Slide viết $\pi_{2j+1}=\pi_{2j-1}(t^2-j^2)$, $\pi_{2j}=t\,\pi_{2j-1}$ (Stirling) và $\pi_{2j}=\pi_{2j-2}(t+j-1)(t-j)$, $\pi_{2j+1}=(t-\frac12)\pi_{2j}$ (Bessel); vì $(t+j-1)(t-j)=u^2-(j-\frac12)^2$ với $u=t-\frac12$ nên Bessel viết theo $u$: $\pi_1=u$, $\pi_{2j}=\pi_{2j-2}\big(u^2-(j-\frac12)^2\big)$, $\pi_{2j+1}=u\,\pi_{2j}$. Bảng nhân: hàng $k$ là hệ số của $\pi_k$ (vd $t^2(t^2-1)$, $(u^2-\frac14)(u^2-\frac94)$) theo luỹ thừa của $t$ (Bessel: $u$); nhân từng hàng với $c_k$ rồi cộng theo cột được dạng chính tắc. Bessel cho $P$ theo $u$: giá trị, đạo hàm tính tại $\bar u=\bar t-\frac12$ ($f^{(j)}(\bar x)\approx P^{(j)}(\bar u)/h^j$), đổi về $x$ với $u=\big(x-(x_0+\frac h2)\big)/h$.
+
+> Ghi chú: file Excel mẫu `slide_example/VD nội suy mốc cách đều.xlsx` (sheet *Stirlin, Bessel*) tách số hạng lẻ / chẵn theo $u=t^2$ (bảng tích chỉ đến bậc $\approx n/2$). Cùng một đa thức; lời giải dùng bảng nhân đầy đủ theo đáp án giữa kỳ.
 
 > Ghi chú: slide `16_NoisuyTrungtam_20261.pdf`:
 > * tr.3 và tr.8 ghi dạng $P(x)$ của Gauss I/II với cùng hệ số $a_2$ cho các số hạng bậc 2, 3, 4 — đúng là $a_2,a_3,a_4$.
@@ -75,7 +74,7 @@ Bảng sai phân (mục 2) lập **một lần** dùng chung cho mọi công th�
 
 Khi đó $p:=-q$ (mốc thứ $s$ của bộ con có chỉ số tương đối $s-q$).
 
-**Bước 2 — Biến:** $\bar t:=\dfrac{\bar x-x_0}{h}$; điểm tính $\bar w:=\bar t$ (Gauss I, II, Stirling) hoặc $\bar w:=\bar v=\bar t-\frac12$ (Bessel).
+**Bước 2 — Biến:** $\bar t:=\dfrac{\bar x-x_0}{h}$; điểm tính $\bar w:=\bar t$ (Gauss I, II, Stirling) hoặc $\bar w:=\bar u=\bar t-\frac12$ (Bessel).
 
 **Bước 3 — Cột 0:** $D_{i,0}:=y_i$, $i=p..p+n$.
 
@@ -91,8 +90,8 @@ Khi đó $p:=-q$ (mốc thứ $s$ của bộ con có chỉ số tương đối $
 
 **Output:**
 * vector $c=(c_0,\dots,c_n)$ và danh sách ô được chọn trong bảng $D$;
-* bảng tích: Gauss I/II — hệ số của $\pi_0,\dots,\pi_n$ theo $t$; Stirling/Bessel — hệ số của $\Pi_0,\dots,\Pi_{s-1}$ theo $u$, và $P_{\text{lẻ}}$, $P_{\text{chẵn}}$;
-* vector $b=(b_n,\dots,b_0)$ với $P=\sum_l b_lw^l$, biến $w=t$ (Gauss I, II, Stirling) hoặc $w=v=t-\frac12$ (Bessel).
+* bảng tích (bảng nhân): hệ số của $\pi_0,\dots,\pi_n$ theo $w$;
+* vector $b=(b_n,\dots,b_0)$ với $P=\sum_l b_lw^l$, biến $w=t$ (Gauss I, II, Stirling) hoặc $w=u=t-\frac12$ (Bessel).
 
 **Bước 1 — Hệ số:** với $k=0..n$ ($k!$ tính dần):
 * Gauss I: $c_k:=D_{-\lfloor k/2\rfloor,k}/k!$;
@@ -104,11 +103,9 @@ Khi đó $p:=-q$ (mốc thứ $s$ của bộ con có chỉ số tương đối $
 * **2.1:** $\pi_0:=(1)$; với $k=1..n$: $\pi_k:=\pi_{k-1}\cdot(t-z_{k-1})$ theo mục 3, `horner.md`, với Gauss I: $z_{2j-1}=j$, $z_{2j}=-j$ ($z=0,1,-1,2,-2,\dots$); Gauss II: $z_{2j-1}=-j$, $z_{2j}=j$ ($z=0,-1,1,-2,2,\dots$).
 * **2.2 — Cộng dồn:** $b_l:=\sum_{k=0}^{n}c_k\,\pi_{k,l}$ ($\pi_{k,l}$ là hệ số của $t^l$ trong $\pi_k$), $l=0..n$. Sang bước 4.
 
-**Bước 3 — TH2 Stirling ($s:=n/2$) / Bessel ($s:=(n+1)/2$) (tách lẻ / chẵn, bảng tích theo $u$):**
-* **3.1 — Tách hệ số,** $j=0..s-1$: Stirling $c^{\text{lẻ}}_j:=c_{2j+1}$, $c^{\text{chẵn}}_j:=c_{2j+2}$; Bessel $c^{\text{chẵn}}_j:=c_{2j}$, $c^{\text{lẻ}}_j:=c_{2j+1}$.
-* **3.2 — Bảng tích:** $\Pi_0:=(1)$; với $j=1..s-1$: $\Pi_j:=\Pi_{j-1}\cdot(u-\zeta_j)$ theo mục 3, `horner.md`, với $\zeta_j=j^2$ (Stirling) hoặc $\zeta_j=(j-\frac12)^2$ (Bessel).
-* **3.3 — Cộng dồn:** $P_{\text{lẻ}}:=\sum_{j=0}^{s-1}c^{\text{lẻ}}_j\,\Pi_j$, $P_{\text{chẵn}}:=\sum_{j=0}^{s-1}c^{\text{chẵn}}_j\,\Pi_j$; gọi $\alpha_l$, $\beta_l$ là hệ số của $u^l$ trong $P_{\text{lẻ}}$, $P_{\text{chẵn}}$ ($l=0..s-1$).
-* **3.4 — Ghép (xen kẽ):** Stirling ($P=y_0+t\,P_{\text{lẻ}}(t^2)+t^2P_{\text{chẵn}}(t^2)$): $b:=(\beta_{s-1},\alpha_{s-1},\dots,\beta_0,\alpha_0,y_0)$; Bessel ($P=P_{\text{chẵn}}(v^2)+v\,P_{\text{lẻ}}(v^2)$): $b:=(\alpha_{s-1},\beta_{s-1},\dots,\alpha_0,\beta_0)$.
+**Bước 3 — TH2 Stirling / Bessel (bảng nhân theo $w=t$ / $w=u=t-\frac12$):**
+* **3.1 — Bảng nhân:** $\pi_0:=(1)$, $\pi_1:=w$; với $k=2..n$: nếu (Stirling, $k$ chẵn) hoặc (Bessel, $k$ lẻ) thì $\pi_k:=w\,\pi_{k-1}$ (thêm $0$ vào cuối vector hệ số); còn lại $\pi_k:=\pi_{k-2}\cdot(w^2-\zeta_k)$ với $\zeta_k=j^2$ (Stirling, $k=2j+1$) hoặc $\zeta_k=(j-\frac12)^2$ (Bessel, $k=2j$).
+* **3.2 — Cộng dồn:** $b_l:=\sum_{k=0}^{n}c_k\,\pi_{k,l}$ ($\pi_{k,l}$ là hệ số của $w^l$ trong $\pi_k$), $l=0..n$.
 
 **Bước 4 — Kết thúc:** trả về $c$, bảng tích, $b$ và biến $w$.
 

@@ -9,7 +9,8 @@ Dang ham (chon 1):
   2. y = a e^(b_1 phi_1(x) + ... + b_m phi_m(x)) + d -> tuyen tinh hoa ln(s(y - d)) (muc 3); hieu chinh Gauss-Newton (muc 4) an, bat bang --gn
   3. y = a x^b + d                                  -> nhu 2 voi phi_1 = ln(x + S_x)
 (d la hang so biet truoc, mac dinh 0, vd y = a e^(bx) - 2 thi d = -2.)
-Buoc 0 dang 2, 3: y - d lan dau hoac co so 0 -> tu tinh tien y + S_y; dang 3 co x <= 0 -> tu tinh tien x + S_x.
+Buoc 0 dang 2, 3 (theo dap an giua ky 20251): y - d co diem trai dau so voi da so (hoac = 0): it (<= 10% so diem)
+-> loai cac diem do; nhieu -> tinh tien y + S_y, S_y = floor(|min|) + 1. Dang 3 co x <= 0: tuong tu (loai / S_x).
 Sai so trung binh phuong sigma = sqrt(1/n sum (g(x_i) - y_i)^2) luon tinh tren y goc.
 
 Cach chay:
@@ -18,7 +19,7 @@ Cach chay:
                                          dang ham / x / y / co so (dang 1, 2) / d (dang 2, 3)
   python interpolation/binh_phuong_toi_thieu.py <file>.xlsx|.csv|.txt bang -> bang du lieu; file co nhieu bo du lieu canh nhau
                                          (vd data cau 23) -> chon bo; cac cau con lai nhap tu ban phim
-  VD cau 23a: python interpolation/binh_phuong_toi_thieu.py "slide_example/data Câu 23.xlsx"  roi nhap: 1 / 1 / x; 1/x
+  VD cau 23a: python interpolation/binh_phuong_toi_thieu.py "data/data Câu 23.xlsx"  roi nhap: 1 / 1 / x; 1/x
   Them --gn (vd python interpolation/binh_phuong_toi_thieu.py --gn <file>) -> dang 2, 3 chay them hieu chinh Gauss-Newton.
 O tach bang khoang trang, ';' hoac tab. Dau ',' giua hai chu so = dau thap phan.
 """
@@ -315,12 +316,24 @@ def gia_tri_co_so(co_so, x, bao):
     return Phi[tot], np.where(tot)[0]
 
 
-def tinh_tien_y(Y):
-    """Buoc 0: Y lan dau hoac co so 0 -> S_y de moi Y_i + S_y cung dau, khac 0; nguoc lai 0."""
-    Y = np.asarray(Y, dtype=float)
-    if not (np.any(Y == 0) or (np.any(Y > 0) and np.any(Y < 0))):
-        return 0.0
-    return abs(Y.min()) + 1 if abs(Y.min()) <= abs(Y.max()) else -(abs(Y.max()) + 1)
+TY_LE_LOAI = 0.1             # Buoc 0: so diem trai dau <= 10% so diem -> loai, nhieu hon -> tinh tien
+
+
+def xu_ly_dau(v, s=None):
+    """Buoc 0 dang mu / luy thua (theo dap an giua ky 20251): s = dau can co (None: dau cua da so v_i);
+    q = so diem co s*v_i <= 0. q = 0 -> giu nguyen; q <= 10% so diem -> loai q diem do;
+    q > 10% -> tinh tien S = s*(floor(max |v_i| cua q diem do) + 1) de moi s*(v_i + S) > 0.
+    Tra ve (s, giu: mang bool cac diem giu lai, S)."""
+    v = np.asarray(v, dtype=float)
+    if s is None:
+        s = 1.0 if np.sum(v > 0) >= np.sum(v < 0) else -1.0
+    sai = s * v <= 0
+    q = int(np.sum(sai))
+    if q == 0:
+        return s, np.ones(len(v), dtype=bool), 0.0
+    if q <= TY_LE_LOAI * len(v):
+        return s, ~sai, 0.0
+    return s, np.ones(len(v), dtype=bool), s * (math.floor(float(np.max(np.abs(v[sai])))) + 1)
 
 
 # ===== THUAT TOAN =====
@@ -712,21 +725,30 @@ def main():
                 raise ValueError("d phai la 1 so.")
             d = ds[0]
             hieu_chinh = gn
-        # loai diem lam co so khong xac dinh (dang 3 khong loai: x <= 0 tinh tien)
-        if dang == 3 and x and min(x) <= 0:
-            Sx = abs(min(x)) + 1
-            bao.append(f"min x = {min(x):.10g} <= 0 -> tinh tien x + S_x: S_x = |min x| + 1 = {fmt(Sx)}")
+        # loai diem lam co so khong xac dinh (dang 3: x <= 0 xu ly theo xu_ly_dau)
+        if dang == 3 and x:
+            _, giu, Sx = xu_ly_dau(x, 1.0)
+            if not giu.all():
+                bo = [f"x = {x[i]:.10g}" for i in range(len(x)) if not giu[i]]
+                bao.append(f"{len(bo)}/{len(x)} diem co x <= 0 (<= 10%) -> loai: {', '.join(bo)}")
+                x, y = [x[i] for i in range(len(x)) if giu[i]], [y[i] for i in range(len(y)) if giu[i]]
+            if Sx:
+                bao.append(f"nhieu diem x <= 0 (> 10%) -> tinh tien x + S_x: S_x = floor(|min x|) + 1 = {fmt(Sx)}")
         if dang != 3:
             _, giu = gia_tri_co_so(co_so, x, bao)
             x, y = [x[i] for i in giu], [y[i] for i in giu]
         if dang in (2, 3) and x:
-            Y = [v - d for v in y]
-            Sy = tinh_tien_y(Y)
+            ten_y = "(y - d)" if d else "y"
+            s_y, giu, Sy = xu_ly_dau([v - d for v in y])
+            dau_sai = "<= 0" if s_y > 0 else ">= 0"
+            if not giu.all():
+                bo = [f"y = {y[i]:.10g}" for i in range(len(y)) if not giu[i]]
+                bao.append(f"{len(bo)}/{len(y)} diem co {ten_y} {dau_sai} (<= 10%, khong lay ln duoc) -> loai: "
+                           + ", ".join(bo))
+                x, y = [x[i] for i in range(len(x)) if giu[i]], [y[i] for i in range(len(y)) if giu[i]]
             if Sy:
-                ten_y = "(y - d)" if d else "y"
-                ly_do = ", ".join(t for t, co in (("lan dau", min(Y) < 0 < max(Y)), ("co so 0", 0 in Y)) if co)
-                cach = f"|min {ten_y}| + 1" if Sy > 0 else f"-(|max {ten_y}| + 1)"
-                bao.append(f"{ten_y} {ly_do} -> tinh tien {ten_y} + S_y: S_y = {cach} = {fmt(Sy)}")
+                cach = "floor(|min|) + 1" if Sy > 0 else "-(floor(max) + 1)"
+                bao.append(f"nhieu diem {ten_y} {dau_sai} (> 10%) -> tinh tien {ten_y} + S_y: S_y = {cach} = {fmt(Sy)}")
                 d -= Sy
             if dang == 2:
                 for t, f in co_so:

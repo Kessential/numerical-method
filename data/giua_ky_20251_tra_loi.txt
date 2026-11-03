@@ -1,0 +1,38 @@
+# File tra loi de giua ky. Chay lai: python docs/loi_giai/sinh_loi_giai.py gk data/giua_ky_20251_tra_loi.txt
+# Moi cau hoi 2 dong: dong '#' la cau hoi, dong sau la tra loi (de trong = mac dinh).
+# File du lieu de: so thu tu, hoac duong dan (tuong doi voi data/)
+de_20251/20251GKtest1.xlsx
+# Ten file loi giai giua_ky_<ten>
+20251
+# Dang cau a (Enter = het cau)
+14
+# Dang ham (1 tuyen tinh theo tham so, 2 mu y = a e^(...), 3 luy thua y = a x^b)
+2
+# Cac ham co so cach nhau ';' (1, x, x^2, x^3, 1/x, 1/x^2, cos x, ln x)
+x; 1/x
+# Dang cau b (Enter = het cau)
+12
+# ybar
+
+# So moc noi suy m (dap an dung 6; du lieu nhieu dung 3-4)
+3
+# Sai so eps
+
+# So lan lap toi da N
+
+# Ghi thuat toan lap (c/k)
+c
+# Ghi chu ly do chon so moc (LaTeX; Enter = khong)
+Dữ liệu có nhiễu ($|\Delta^5y_{13}|=0.7185>\Delta y_{13}=0.115$), lặp với 6 mốc hội tụ rất chậm ($|\varphi'|\approx0.86$) nên dùng $m=3$.
+# Dang cau c (Enter = het cau)
+8
+# xbar
+
+# So moc m
+7
+# Cap dao ham k (0 = chi gia tri)
+1
+# Dang cau d (Enter = het cau)
+
+# Dinh dang file loi giai (1 Markdown, 2 PDF, 3 ca hai)
+3
